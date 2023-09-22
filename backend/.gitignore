@@ -1,0 +1,18 @@
+node_modules
+dist
+public/*
+!public/logotipos/
+.env
+.env.test
+certs/certificadoEfi.p12
+contacts.csv
+
+package-lock.json
+yarn.lock
+yarn-error.log
+
+/src/config/sentry.js
+
+# Ignore test-related files
+/coverage.data
+/coverage/
