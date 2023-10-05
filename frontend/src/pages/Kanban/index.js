@@ -202,8 +202,8 @@ const popularCards = (jsonString) => {
 
       return {
         id: tag.id.toString(),
-        title: tag.name + " " + filteredTickets.length,
-        label: tag.id.toString() + " " + somaTotalValorDoLead,
+        title: tag.name + " " + filteredTickets.length + " (" + somaTotalValorDoLead + ")",
+        label: tag.id.toString() ,
         cards: filteredTickets.map(ticket => ({
           id: ticket.id.toString(),
           label: "Ticket nº " + ticket.id.toString(),
