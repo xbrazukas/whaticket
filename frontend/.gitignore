@@ -2,6 +2,7 @@ node_modules
 build
 .env
 .env.test
+.DS_Store
 
 package-lock.json
 yarn.lock
