@@ -11,7 +11,7 @@ module.exports = {
           [
             {
               name: "Admin",
-              email: "admin@whaticket-saas.com",
+              email: "admin@admin.com",
               profile: "admin",
               passwordHash,
               companyId: 1,
