@@ -1,29 +1,28 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext } from 'react';
 
-import Grid from "@material-ui/core/Grid";
-import MenuItem from "@material-ui/core/MenuItem";
-import FormControl from "@material-ui/core/FormControl";
-import InputLabel from "@material-ui/core/InputLabel";
-import Select from "@material-ui/core/Select";
-import FormHelperText from "@material-ui/core/FormHelperText";
-import TextField from "@material-ui/core/TextField";
-import Title from "../Title";
-import Paper from "@material-ui/core/Paper";
-import Typography from "@material-ui/core/Typography";
-import useSettings from "../../hooks/useSettings";
+import Grid from '@material-ui/core/Grid';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import Select from '@material-ui/core/Select';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import TextField from '@material-ui/core/TextField';
+import Title from '../Title';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
+import useSettings from '../../hooks/useSettings';
 import { ToastContainer, toast } from 'react-toastify';
-import { makeStyles } from "@material-ui/core/styles";
-import { grey, blue } from "@material-ui/core/colors";
-import { Tabs, Tab } from "@material-ui/core";
-import { SketchPicker } from "react-color";
-import Popover from "@material-ui/core/Popover";
+import { makeStyles } from '@material-ui/core/styles';
+import { grey, blue } from '@material-ui/core/colors';
+import { Tabs, Tab } from '@material-ui/core';
+import { SketchPicker } from 'react-color';
+import Popover from '@material-ui/core/Popover';
 //import 'react-toastify/dist/ReactToastify.css';
-import { AuthContext } from "../../context/Auth/AuthContext";
-import { Can } from "../Can";
-import useAuth from "../../hooks/useAuth.js"; 
-import OnlyForSuperUser from "../../components/OnlyForSuperUser";
+import { AuthContext } from '../../context/Auth/AuthContext';
+import { Can } from '../Can';
+import useAuth from '../../hooks/useAuth.js';
+import OnlyForSuperUser from '../../components/OnlyForSuperUser';
 
- 
 const useStyles = makeStyles((theme) => ({
   container: {
     paddingTop: theme.spacing(4),
@@ -31,58 +30,55 @@ const useStyles = makeStyles((theme) => ({
   },
   fixedHeightPaper: {
     padding: theme.spacing(2),
-    display: "flex",
-    overflow: "auto",
-    flexDirection: "column",
+    display: 'flex',
+    overflow: 'auto',
+    flexDirection: 'column',
     height: 240,
   },
   tab: {
-    background: "#f2f5f3",
+    background: '#f2f5f3',
     borderRadius: 4,
-    width: "100%",
-    "& .MuiTab-wrapper": {
-      color: "#128c7e"
+    width: '100%',
+    '& .MuiTab-wrapper': {
+      color: '#128c7e',
     },
-    "& .MuiTabs-flexContainer": {
-      justifyContent: "center"
-    }
-
-
+    '& .MuiTabs-flexContainer': {
+      justifyContent: 'center',
+    },
   },
   paper: {
     padding: theme.spacing(2),
-    display: "flex",
-    alignItems: "center",
+    display: 'flex',
+    alignItems: 'center',
     marginBottom: 12,
-    width: "100%",
+    width: '100%',
   },
   cardAvatar: {
-    fontSize: "55px",
+    fontSize: '55px',
     color: grey[500],
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
     width: theme.spacing(7),
     height: theme.spacing(7),
   },
   cardTitle: {
-    fontSize: "18px",
+    fontSize: '18px',
     color: blue[700],
   },
   cardSubtitle: {
     color: grey[600],
-    fontSize: "14px",
+    fontSize: '14px',
   },
   alignRight: {
-    textAlign: "right",
+    textAlign: 'right',
   },
   fullWidth: {
-    width: "100%",
+    width: '100%',
   },
   selectContainer: {
-    width: "100%",
-    textAlign: "left",
+    width: '100%',
+    textAlign: 'left',
   },
 }));
-
 
 export default function Options(props) {
   const { settings, scheduleTypeChanged } = props;
@@ -95,7 +91,6 @@ export default function Options(props) {
     async function findData() {
       setLoading(true);
       try {
-        
         const user = await getCurrentUserInfo();
         setCurrentUser(user);
       } catch (e) {
@@ -108,63 +103,63 @@ export default function Options(props) {
   }, []);
 
   const isSuper = () => {
-     return currentUser.super;
+    return currentUser.super;
   };
 
   //console.log(currentUser);
 
-  
-  const [scheduleType, setScheduleType] = useState("disabled");
-  const [callType, setCallType] = useState("enabled");
-  const [outsideMessageType, setOutsideMessageType] = useState("disabled");
-  const [outsideQueueType, setOutsideQueueType] = useState("disabled");
-  const [chatbotType, setChatbotType] = useState("");
+  const [scheduleType, setScheduleType] = useState('disabled');
+  const [callType, setCallType] = useState('enabled');
+  const [outsideMessageType, setOutsideMessageType] = useState('disabled');
+  const [outsideQueueType, setOutsideQueueType] = useState('disabled');
+  const [chatbotType, setChatbotType] = useState('');
 
-  const [CheckMsgIsGroup, setCheckMsgIsGroupType] = useState("enabled");
-  
-  const [userRating, setUserRating] = useState("disabled");
+  const [CheckMsgIsGroup, setCheckMsgIsGroupType] = useState('enabled');
+
+  const [userRating, setUserRating] = useState('disabled');
   const [loadingUserRating, setLoadingUserRating] = useState(false);
 
-  const [userRatingOut, setUserRatingOut] = useState("disabled");
+  const [userRatingOut, setUserRatingOut] = useState('disabled');
   const [loadingUserRatingOut, setLoadingUserRatingOut] = useState(false);
 
   const [loadingScheduleType, setLoadingScheduleType] = useState(false);
   const [loadingCallType, setLoadingCallType] = useState(false);
-  const [loadingOutsideMessageType, setLoadingOutsideMessageType] = useState(false);
+  const [loadingOutsideMessageType, setLoadingOutsideMessageType] =
+    useState(false);
   const [loadingOutsideQueueType, setLoadingOutsideQueueType] = useState(false);
   const [loadingChatbotType, setLoadingChatbotType] = useState(false);
   const [loadingCheckMsgIsGroup, setCheckMsgIsGroup] = useState(false);
 
-
-  const [eficlientidType, setEfiClientidType] = useState("");
+  const [eficlientidType, setEfiClientidType] = useState('');
   const [loadingEfiClientidType, setLoadingEfiClientidType] = useState(false);
 
+  const [eficlientsecretType, setEfiClientsecretType] = useState('');
+  const [loadingEfiClientsecretType, setLoadingEfiClientsecretType] =
+    useState(false);
 
-  const [eficlientsecretType, setEfiClientsecretType] = useState("");
-  const [loadingEfiClientsecretType, setLoadingEfiClientsecretType] = useState(false);
-
-  const [efichavepixType, setEfiChavepixType] = useState("");
+  const [efichavepixType, setEfiChavepixType] = useState('');
   const [loadingEfiChavepixType, setLoadingEfiChavepixType] = useState(false);
 
-  const [mpaccesstokenType, setmpaccesstokenType] = useState("");
-  const [loadingmpaccesstokenType, setLoadingmpaccesstokenType] = useState(false);
+  const [mpaccesstokenType, setmpaccesstokenType] = useState('');
+  const [loadingmpaccesstokenType, setLoadingmpaccesstokenType] =
+    useState(false);
 
-  const [stripeprivatekeyType, setstripeprivatekeyType] = useState("");
-  const [loadingstripeprivatekeyType, setLoadingstripeprivatekeyType] = useState(false);
+  const [stripeprivatekeyType, setstripeprivatekeyType] = useState('');
+  const [loadingstripeprivatekeyType, setLoadingstripeprivatekeyType] =
+    useState(false);
 
-  const [asaastokenType, setasaastokenType] = useState("");
+  const [asaastokenType, setasaastokenType] = useState('');
   const [loadingasaastokenType, setLoadingasaastokenType] = useState(false);
 
-  const [sendgridapiType, setsendgridapiType] = useState("");
+  const [sendgridapiType, setsendgridapiType] = useState('');
   const [loadingsendgridapiType, setLoadingsendgridapiType] = useState(false);
 
-  const [emailsenderType, setemailsenderType] = useState("");
+  const [emailsenderType, setemailsenderType] = useState('');
   const [loadingemailsenderType, setLoadingemailsenderType] = useState(false);
 
-  const [ratingurlType, setratingurlType] = useState("");
+  const [ratingurlType, setratingurlType] = useState('');
   const [loadingratingurlType, setLoadingratingurlType] = useState(false);
-  
-  
+
   //const [tokenixcType, setTokenIxcType] = useState("");
   //const [loadingTokenIxcType, setLoadingTokenIxcType] = useState(false);
 
@@ -179,151 +174,166 @@ export default function Options(props) {
   //const [loadingAsaasType, setLoadingAsaasType] = useState(false);
 
   // ADICIONAIS
-  const [SendGreetingAccepted, setSendGreetingAccepted] = useState("enabled");
-  const [loadingSendGreetingAccepted, setLoadingSendGreetingAccepted] = useState(false);
+  const [SendGreetingAccepted, setSendGreetingAccepted] = useState('enabled');
+  const [loadingSendGreetingAccepted, setLoadingSendGreetingAccepted] =
+    useState(false);
 
-  const [SendTransferAlert, setSendTransferAlert] = useState("enabled");
-  const [loadingSendTransferAlert, setLoadingSendTransferAlert] = useState(false);
+  const [SendTransferAlert, setSendTransferAlert] = useState('enabled');
+  const [loadingSendTransferAlert, setLoadingSendTransferAlert] =
+    useState(false);
 
-  const [sendFarewellWaitingTicket, setSendFarewellWaitingTicket] = useState("disabled");
-  const [loadingSendFarewellWaitingTicket, setLoadingSendFarewellWaitingTicket] = useState(false);
+  const [sendFarewellWaitingTicket, setSendFarewellWaitingTicket] =
+    useState('disabled');
+  const [
+    loadingSendFarewellWaitingTicket,
+    setLoadingSendFarewellWaitingTicket,
+  ] = useState(false);
 
-  const [sendSignMessage, setSendSignMessage] = useState("enabled");
+  const [sendSignMessage, setSendSignMessage] = useState('enabled');
   const [loadingSendSignMessage, setLoadingSendSignMessage] = useState(false);
 
-  const [sendGreetingMessageOneQueues, setSendGreetingMessageOneQueues] = useState("enabled");
-  const [loadingSendGreetingMessageOneQueues, setLoadingSendGreetingMessageOneQueues] = useState(false);
+  const [sendGreetingMessageOneQueues, setSendGreetingMessageOneQueues] =
+    useState('enabled');
+  const [
+    loadingSendGreetingMessageOneQueues,
+    setLoadingSendGreetingMessageOneQueues,
+  ] = useState(false);
 
-  const [sendQueuePosition, setSendQueuePosition] = useState("enabled");
-  const [loadingSendQueuePosition, setLoadingSendQueuePosition] = useState(false);
+  const [sendQueuePosition, setSendQueuePosition] = useState('enabled');
+  const [loadingSendQueuePosition, setLoadingSendQueuePosition] =
+    useState(false);
 
-  const [viewclosed, setviewclosed] = useState("disabled");
+  const [viewclosed, setviewclosed] = useState('disabled');
   const [loadingviewclosed, setLoadingviewclosed] = useState(false);
 
-  const [viewgroups, setviewgroups] = useState("disabled");
+  const [viewgroups, setviewgroups] = useState('disabled');
   const [loadingviewgroups, setLoadingviewgroups] = useState(false);
 
-  const [viewnoti, setviewnoti] = useState("disabled");
+  const [viewnoti, setviewnoti] = useState('disabled');
   const [loadingviewnoti, setLoadingviewnoti] = useState(false);
 
-  const [viewppw, setviewppw] = useState("disabled");
+  const [viewppw, setviewppw] = useState('disabled');
   const [loadingviewppw, setLoadingviewppw] = useState(false);
 
-  const [viewterms, setviewterms] = useState("disabled");
+  const [viewterms, setviewterms] = useState('disabled');
   const [loadingviewterms, setLoadingviewterms] = useState(false);
 
-  const [viewprivacy, setviewprivacy] = useState("disabled");
+  const [viewprivacy, setviewprivacy] = useState('disabled');
   const [loadingviewprivacy, setLoadingviewprivacy] = useState(false);
 
-  const [viewregister, setviewregister] = useState("disabled");
+  const [viewregister, setviewregister] = useState('disabled');
   const [loadingviewregister, setLoadingviewregister] = useState(false);
 
-  const [externaldownload, setexternaldownload] = useState("disabled");
+  const [externaldownload, setexternaldownload] = useState('disabled');
   const [loadingexternaldownload, setLoadingexternaldownload] = useState(false);
 
-  const [camposfixos, setcamposfixos] = useState("disabled");
+  const [camposfixos, setcamposfixos] = useState('disabled');
   const [loadingcamposfixos, setLoadingcamposfixos] = useState(false);
 
-  const [allowupserts, setallowupserts] = useState("disabled");
+  const [allowupserts, setallowupserts] = useState('disabled');
   const [loadingallowupserts, setLoadingallowupserts] = useState(false);
 
-  const [allowregister, setallowregister] = useState("disabled");
+  const [allowregister, setallowregister] = useState('disabled');
   const [loadingallowregister, setLoadingallowregister] = useState(false);
 
-  const [trial, settrial] = useState("3");
+  const [trial, settrial] = useState('3');
   const [loadingtrial, setLoadingtrial] = useState(false);
 
-  const [emfila, setemfila] = useState("disabled");
+  const [emfila, setemfila] = useState('disabled');
   const [loadingemfila, setLoadingemfila] = useState(false);
 
   const { update } = useSettings();
 
   useEffect(() => {
     if (Array.isArray(settings) && settings.length) {
-      const userRating = settings.find((s) => s.key === "userRating");
+      const userRating = settings.find((s) => s.key === 'userRating');
       if (userRating) {
         setUserRating(userRating.value);
       }
 
-      const userRatingOut = settings.find((s) => s.key === "userRatingOut");
+      const userRatingOut = settings.find((s) => s.key === 'userRatingOut');
       if (userRatingOut) {
         setUserRatingOut(userRatingOut.value);
       }
 
-      const scheduleType = settings.find((s) => s.key === "scheduleType");
+      const scheduleType = settings.find((s) => s.key === 'scheduleType');
       if (scheduleType) {
         setScheduleType(scheduleType.value);
       }
-      const callType = settings.find((s) => s.key === "call");
+      const callType = settings.find((s) => s.key === 'call');
       if (callType) {
         setCallType(callType.value);
       }
-    
-      const outsideMessageType = settings.find((s) => s.key === "outsidemessage");
+
+      const outsideMessageType = settings.find(
+        (s) => s.key === 'outsidemessage'
+      );
       if (outsideMessageType) {
         setOutsideMessageType(outsideMessageType.value);
       }
-    
-      const outsideQueueType = settings.find((s) => s.key === "outsidequeue");
+
+      const outsideQueueType = settings.find((s) => s.key === 'outsidequeue');
       if (outsideQueueType) {
         setOutsideQueueType(outsideQueueType.value);
       }
-    
-      const CheckMsgIsGroup = settings.find((s) => s.key === "CheckMsgIsGroup");
+
+      const CheckMsgIsGroup = settings.find((s) => s.key === 'CheckMsgIsGroup');
       if (CheckMsgIsGroup) {
         setCheckMsgIsGroupType(CheckMsgIsGroup.value);
       }
-      const chatbotType = settings.find((s) => s.key === "chatBotType");
+      const chatbotType = settings.find((s) => s.key === 'chatBotType');
       if (chatbotType) {
         setChatbotType(chatbotType.value);
       }
 
-
-      const eficlientidType = settings.find((s) => s.key === "eficlientid");
+      const eficlientidType = settings.find((s) => s.key === 'eficlientid');
       if (eficlientidType) {
         setEfiClientidType(eficlientidType.value);
       }
 
-      const eficlientsecretType = settings.find((s) => s.key === "eficlientsecret");
+      const eficlientsecretType = settings.find(
+        (s) => s.key === 'eficlientsecret'
+      );
       if (eficlientsecretType) {
         setEfiClientsecretType(eficlientsecretType.value);
       }
 
-      const efichavepixType = settings.find((s) => s.key === "efichavepix");
+      const efichavepixType = settings.find((s) => s.key === 'efichavepix');
       if (efichavepixType) {
         setEfiChavepixType(efichavepixType.value);
       }
 
-      const mpaccesstokenType = settings.find((s) => s.key === "mpaccesstoken");
+      const mpaccesstokenType = settings.find((s) => s.key === 'mpaccesstoken');
       if (mpaccesstokenType) {
         setmpaccesstokenType(mpaccesstokenType.value);
       }
 
-      const stripeprivatekeyType = settings.find((s) => s.key === "stripeprivatekey");
+      const stripeprivatekeyType = settings.find(
+        (s) => s.key === 'stripeprivatekey'
+      );
       if (stripeprivatekeyType) {
         setstripeprivatekeyType(stripeprivatekeyType.value);
       }
 
-      const sendgridapiType = settings.find((s) => s.key === "sendgridapi");
+      const sendgridapiType = settings.find((s) => s.key === 'sendgridapi');
       if (sendgridapiType) {
         setsendgridapiType(sendgridapiType.value);
       }
 
-      const emailsenderType = settings.find((s) => s.key === "emailsender");
+      const emailsenderType = settings.find((s) => s.key === 'emailsender');
       if (emailsenderType) {
         setemailsenderType(emailsenderType.value);
       }
 
-      const ratingurlType = settings.find((s) => s.key === "ratingurl");
+      const ratingurlType = settings.find((s) => s.key === 'ratingurl');
       if (ratingurlType) {
         setratingurlType(ratingurlType.value);
       }
 
-      const asaastokenType = settings.find((s) => s.key === "asaastoken");
+      const asaastokenType = settings.find((s) => s.key === 'asaastoken');
       if (asaastokenType) {
         setasaastokenType(asaastokenType.value);
       }
-
 
       /*
       const ipixcType = settings.find((s) => s.key === "ipixc");
@@ -356,104 +366,113 @@ export default function Options(props) {
         setAsaasType(asaasType.value);
       }
       */
-    
-      const SendGreetingAccepted = settings.find((s) => s.key === "sendGreetingAccepted");
+
+      const SendGreetingAccepted = settings.find(
+        (s) => s.key === 'sendGreetingAccepted'
+      );
       if (SendGreetingAccepted) {
         setSendGreetingAccepted(SendGreetingAccepted.value);
       }
 
-
-      const SendTransferAlert = settings.find((s) => s.key === "sendTransferAlert");
+      const SendTransferAlert = settings.find(
+        (s) => s.key === 'sendTransferAlert'
+      );
       if (SendTransferAlert) {
         setSendTransferAlert(SendTransferAlert.value);
       }
-    
-      const sendFarewellWaitingTicket = settings.find((s) => s.key === "sendFarewellWaitingTicket");
+
+      const sendFarewellWaitingTicket = settings.find(
+        (s) => s.key === 'sendFarewellWaitingTicket'
+      );
       if (sendFarewellWaitingTicket) {
-        setSendFarewellWaitingTicket(sendFarewellWaitingTicket.value)
+        setSendFarewellWaitingTicket(sendFarewellWaitingTicket.value);
       }
-    
-      const sendSignMessage = settings.find((s) => s.key === "sendSignMessage");
+
+      const sendSignMessage = settings.find((s) => s.key === 'sendSignMessage');
       if (sendSignMessage) {
-        setSendSignMessage(sendSignMessage.value)
+        setSendSignMessage(sendSignMessage.value);
       }
 
-      const sendGreetingMessageOneQueues = settings.find((s) => s.key === "sendGreetingMessageOneQueues");
+      const sendGreetingMessageOneQueues = settings.find(
+        (s) => s.key === 'sendGreetingMessageOneQueues'
+      );
       if (sendGreetingMessageOneQueues) {
-        setSendGreetingMessageOneQueues(sendGreetingMessageOneQueues.value)
+        setSendGreetingMessageOneQueues(sendGreetingMessageOneQueues.value);
       }
 
-      const sendQueuePosition = settings.find((s) => s.key === "sendQueuePosition");
+      const sendQueuePosition = settings.find(
+        (s) => s.key === 'sendQueuePosition'
+      );
       if (sendQueuePosition) {
-        setSendQueuePosition(sendQueuePosition.value)
+        setSendQueuePosition(sendQueuePosition.value);
       }
 
-      const viewclosed = settings.find((s) => s.key === "viewclosed");
+      const viewclosed = settings.find((s) => s.key === 'viewclosed');
       if (viewclosed) {
-        setviewclosed(viewclosed.value)
+        setviewclosed(viewclosed.value);
       }
 
-      const viewgroups = settings.find((s) => s.key === "viewgroups");
+      const viewgroups = settings.find((s) => s.key === 'viewgroups');
       if (viewgroups) {
-        setviewgroups(viewgroups.value)
+        setviewgroups(viewgroups.value);
       }
 
-      const viewnoti = settings.find((s) => s.key === "viewnoti");
+      const viewnoti = settings.find((s) => s.key === 'viewnoti');
       if (viewnoti) {
-        setviewnoti(viewnoti.value)
+        setviewnoti(viewnoti.value);
       }
 
-      const viewppw = settings.find((s) => s.key === "viewppw");
+      const viewppw = settings.find((s) => s.key === 'viewppw');
       if (viewppw) {
-        setviewppw(viewppw.value)
+        setviewppw(viewppw.value);
       }
 
-      const viewterms = settings.find((s) => s.key === "viewterms");
+      const viewterms = settings.find((s) => s.key === 'viewterms');
       if (viewterms) {
-        setviewterms(viewterms.value)
+        setviewterms(viewterms.value);
       }
 
-      const viewprivacy = settings.find((s) => s.key === "viewprivacy");
+      const viewprivacy = settings.find((s) => s.key === 'viewprivacy');
       if (viewprivacy) {
-        setviewprivacy(viewprivacy.value)
+        setviewprivacy(viewprivacy.value);
       }
 
-      const viewregister = settings.find((s) => s.key === "viewregister");
+      const viewregister = settings.find((s) => s.key === 'viewregister');
       if (viewregister) {
-        setviewregister(viewregister.value)
+        setviewregister(viewregister.value);
       }
 
-      const externaldownload = settings.find((s) => s.key === "externaldownload");
+      const externaldownload = settings.find(
+        (s) => s.key === 'externaldownload'
+      );
       if (externaldownload) {
-        setexternaldownload(externaldownload.value)
+        setexternaldownload(externaldownload.value);
       }
-    
-      const camposfixos = settings.find((s) => s.key === "camposfixos");
+
+      const camposfixos = settings.find((s) => s.key === 'camposfixos');
       if (camposfixos) {
-        setcamposfixos(camposfixos.value)
+        setcamposfixos(camposfixos.value);
       }
 
-      const allowupserts = settings.find((s) => s.key === "allowupserts");
+      const allowupserts = settings.find((s) => s.key === 'allowupserts');
       if (allowupserts) {
-        setallowupserts(allowupserts.value)
+        setallowupserts(allowupserts.value);
       }
 
-      const allowregister = settings.find((s) => s.key === "allowregister");
+      const allowregister = settings.find((s) => s.key === 'allowregister');
       if (allowregister) {
-        setallowregister(allowregister.value)
+        setallowregister(allowregister.value);
       }
 
-      const trial = settings.find((s) => s.key === "trial");
+      const trial = settings.find((s) => s.key === 'trial');
       if (trial) {
-        settrial(trial.value)
+        settrial(trial.value);
       }
 
-      const emfila = settings.find((s) => s.key === "emfila");
+      const emfila = settings.find((s) => s.key === 'emfila');
       if (emfila) {
-        setemfila(emfila.value)
+        setemfila(emfila.value);
       }
-
-      
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings]);
@@ -462,10 +481,10 @@ export default function Options(props) {
     setUserRating(value);
     setLoadingUserRating(true);
     await update({
-      key: "userRating",
+      key: 'userRating',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingUserRating(false);
   }
 
@@ -473,10 +492,10 @@ export default function Options(props) {
     setUserRatingOut(value);
     setLoadingUserRatingOut(true);
     await update({
-      key: "userRatingOut",
+      key: 'userRatingOut',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingUserRatingOut(false);
   }
 
@@ -484,21 +503,21 @@ export default function Options(props) {
     setScheduleType(value);
     setLoadingScheduleType(true);
     await update({
-      key: "scheduleType",
+      key: 'scheduleType',
       value,
     });
     //toast.success("Oraçãpeo atualizada com sucesso.");
     toast.success('Operação atualizada com sucesso.', {
-      position: "top-right",
+      position: 'top-right',
       autoClose: 2000,
       hideProgressBar: false,
       closeOnClick: true,
       pauseOnHover: false,
       draggable: true,
-      theme: "light",
-      });
+      theme: 'light',
+    });
     setLoadingScheduleType(false);
-    if (typeof scheduleTypeChanged === "function") {
+    if (typeof scheduleTypeChanged === 'function') {
       scheduleTypeChanged(value);
     }
   }
@@ -507,10 +526,10 @@ export default function Options(props) {
     setCallType(value);
     setLoadingCallType(true);
     await update({
-      key: "call",
+      key: 'call',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingCallType(false);
   }
 
@@ -518,10 +537,10 @@ export default function Options(props) {
     setOutsideMessageType(value);
     setLoadingOutsideMessageType(true);
     await update({
-      key: "outsidemessage",
+      key: 'outsidemessage',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingOutsideMessageType(false);
   }
 
@@ -529,10 +548,10 @@ export default function Options(props) {
     setOutsideQueueType(value);
     setLoadingOutsideQueueType(true);
     await update({
-      key: "outsidequeue",
+      key: 'outsidequeue',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingOutsideQueueType(false);
   }
 
@@ -540,10 +559,10 @@ export default function Options(props) {
     setChatbotType(value);
     setLoadingChatbotType(true);
     await update({
-      key: "chatBotType",
+      key: 'chatBotType',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingChatbotType(false);
   }
 
@@ -551,27 +570,24 @@ export default function Options(props) {
     setCheckMsgIsGroupType(value);
     setCheckMsgIsGroup(true);
     await update({
-      key: "CheckMsgIsGroup",
+      key: 'CheckMsgIsGroup',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setCheckMsgIsGroup(false);
     /*     if (typeof scheduleTypeChanged === "function") {
           scheduleTypeChanged(value);
         } */
   }
 
-
-
-
   async function handleChangeEfiClientid(value) {
     setEfiClientidType(value);
     setLoadingEfiClientidType(true);
     await update({
-      key: "eficlientid",
+      key: 'eficlientid',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingEfiClientidType(false);
   }
 
@@ -579,10 +595,10 @@ export default function Options(props) {
     setEfiClientsecretType(value);
     setLoadingEfiClientsecretType(true);
     await update({
-      key: "eficlientsecret",
+      key: 'eficlientsecret',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingEfiClientsecretType(false);
   }
 
@@ -590,22 +606,21 @@ export default function Options(props) {
     setEfiChavepixType(value);
     setLoadingEfiChavepixType(true);
     await update({
-      key: "efichavepix",
+      key: 'efichavepix',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingEfiChavepixType(false);
   }
-
 
   async function handleChangempaccesstoken(value) {
     setmpaccesstokenType(value);
     setLoadingmpaccesstokenType(true);
     await update({
-      key: "mpaccesstoken",
+      key: 'mpaccesstoken',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingmpaccesstokenType(false);
   }
 
@@ -613,10 +628,10 @@ export default function Options(props) {
     setstripeprivatekeyType(value);
     setLoadingstripeprivatekeyType(true);
     await update({
-      key: "stripeprivatekey",
+      key: 'stripeprivatekey',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingstripeprivatekeyType(false);
   }
 
@@ -624,10 +639,10 @@ export default function Options(props) {
     setasaastokenType(value);
     setLoadingasaastokenType(true);
     await update({
-      key: "asaastoken",
+      key: 'asaastoken',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingasaastokenType(false);
   }
 
@@ -635,10 +650,10 @@ export default function Options(props) {
     setemailsenderType(value);
     setLoadingemailsenderType(true);
     await update({
-      key: "emailsender",
+      key: 'emailsender',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingemailsenderType(false);
   }
 
@@ -646,10 +661,10 @@ export default function Options(props) {
     setratingurlType(value);
     setLoadingratingurlType(true);
     await update({
-      key: "ratingurl",
+      key: 'ratingurl',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingratingurlType(false);
   }
 
@@ -657,13 +672,12 @@ export default function Options(props) {
     setsendgridapiType(value);
     setLoadingsendgridapiType(true);
     await update({
-      key: "sendgridapi",
+      key: 'sendgridapi',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingsendgridapiType(false);
   }
-
 
   /*
   async function handleChangeIPIxc(value) {
@@ -739,22 +753,21 @@ export default function Options(props) {
     setSendGreetingAccepted(value);
     setLoadingSendGreetingAccepted(true);
     await update({
-      key: "sendGreetingAccepted",
+      key: 'sendGreetingAccepted',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingSendGreetingAccepted(false);
   }
-
 
   async function handleSendTransferAlert(value) {
     setSendTransferAlert(value);
     setLoadingSendTransferAlert(true);
     await update({
-      key: "sendTransferAlert",
+      key: 'sendTransferAlert',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingSendTransferAlert(false);
   }
 
@@ -762,10 +775,10 @@ export default function Options(props) {
     setSendFarewellWaitingTicket(value);
     setLoadingSendFarewellWaitingTicket(true);
     await update({
-      key: "sendFarewellWaitingTicket",
+      key: 'sendFarewellWaitingTicket',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingSendFarewellWaitingTicket(false);
   }
 
@@ -773,10 +786,10 @@ export default function Options(props) {
     setSendSignMessage(value);
     setLoadingSendSignMessage(true);
     await update({
-      key: "sendSignMessage",
+      key: 'sendSignMessage',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingSendSignMessage(false);
   }
 
@@ -784,10 +797,10 @@ export default function Options(props) {
     setSendGreetingMessageOneQueues(value);
     setLoadingSendGreetingMessageOneQueues(true);
     await update({
-      key: "sendGreetingMessageOneQueues",
+      key: 'sendGreetingMessageOneQueues',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingSendGreetingMessageOneQueues(false);
   }
 
@@ -795,22 +808,21 @@ export default function Options(props) {
     setSendQueuePosition(value);
     setLoadingSendQueuePosition(true);
     await update({
-      key: "sendQueuePosition",
+      key: 'sendQueuePosition',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingSendQueuePosition(false);
   }
-
 
   async function handleviewclosed(value) {
     setviewclosed(value);
     setLoadingviewclosed(true);
     await update({
-      key: "viewclosed",
+      key: 'viewclosed',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingviewclosed(false);
   }
 
@@ -818,10 +830,10 @@ export default function Options(props) {
     setviewgroups(value);
     setLoadingviewgroups(true);
     await update({
-      key: "viewgroups",
+      key: 'viewgroups',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingviewgroups(false);
   }
 
@@ -829,10 +841,10 @@ export default function Options(props) {
     setviewnoti(value);
     setLoadingviewnoti(true);
     await update({
-      key: "viewnoti",
+      key: 'viewnoti',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingviewnoti(false);
   }
 
@@ -840,10 +852,10 @@ export default function Options(props) {
     setviewppw(value);
     setLoadingviewppw(true);
     await update({
-      key: "viewppw",
+      key: 'viewppw',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingviewppw(false);
   }
 
@@ -851,10 +863,10 @@ export default function Options(props) {
     setviewterms(value);
     setLoadingviewterms(true);
     await update({
-      key: "viewterms",
+      key: 'viewterms',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingviewterms(false);
   }
 
@@ -862,10 +874,10 @@ export default function Options(props) {
     setviewprivacy(value);
     setLoadingviewprivacy(true);
     await update({
-      key: "viewprivacy",
+      key: 'viewprivacy',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingviewprivacy(false);
   }
 
@@ -873,10 +885,10 @@ export default function Options(props) {
     setviewregister(value);
     setLoadingviewregister(true);
     await update({
-      key: "viewregister",
+      key: 'viewregister',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingviewregister(false);
   }
 
@@ -884,10 +896,10 @@ export default function Options(props) {
     setexternaldownload(value);
     setLoadingexternaldownload(true);
     await update({
-      key: "externaldownload",
+      key: 'externaldownload',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingexternaldownload(false);
   }
 
@@ -895,10 +907,10 @@ export default function Options(props) {
     setcamposfixos(value);
     setLoadingcamposfixos(true);
     await update({
-      key: "camposfixos",
+      key: 'camposfixos',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingcamposfixos(false);
   }
 
@@ -906,10 +918,10 @@ export default function Options(props) {
     setallowupserts(value);
     setLoadingallowupserts(true);
     await update({
-      key: "allowupserts",
+      key: 'allowupserts',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingallowupserts(false);
   }
 
@@ -917,10 +929,10 @@ export default function Options(props) {
     setallowregister(value);
     setLoadingallowregister(true);
     await update({
-      key: "allowregister",
+      key: 'allowregister',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingallowregister(false);
   }
 
@@ -928,10 +940,10 @@ export default function Options(props) {
     settrial(value);
     setLoadingtrial(true);
     await update({
-      key: "trial",
+      key: 'trial',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingtrial(false);
   }
 
@@ -939,53 +951,50 @@ export default function Options(props) {
     setemfila(value);
     setLoadingemfila(true);
     await update({
-      key: "emfila",
+      key: 'emfila',
       value,
     });
-    toast.success("Operação atualizada com sucesso.");
+    toast.success('Operação atualizada com sucesso.');
     setLoadingemfila(false);
   }
 
-
-  
   return (
     <>
       <Grid spacing={3} container>
-
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="ratings-label">Enviar Avaliações</InputLabel>
+            <InputLabel id='ratings-label'>Enviar Avaliações</InputLabel>
             <Select
-              labelId="ratings-label"
+              labelId='ratings-label'
               value={userRating}
               onChange={async (e) => {
                 handleChangeUserRating(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingUserRating && "Atualizando..."}
+              {loadingUserRating && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
 
         <Grid xs={12} sm={6} md={6} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="ratingsout-label">Avaliação Externa?</InputLabel>
+            <InputLabel id='ratingsout-label'>Avaliação Externa?</InputLabel>
             <Select
-              labelId="ratingsout-label"
+              labelId='ratingsout-label'
               value={userRatingOut}
               onChange={async (e) => {
                 handleChangeUserRatingOut(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingUserRatingOut && "Atualizando..."}
+              {loadingUserRatingOut && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
@@ -993,828 +1002,784 @@ export default function Options(props) {
         <Grid xs={12} sm={6} md={6} item>
           <FormControl className={classes.selectContainer}>
             <TextField
-              id="ratingurl"
-              name="ratingurl"
-              margin="dense"
-              label="URL da Avaliação Externa"
-              variant="outlined"
+              id='ratingurl'
+              name='ratingurl'
+              margin='dense'
+              label='URL da Avaliação Externa'
+              variant='outlined'
               value={ratingurlType}
               onChange={async (e) => {
                 handleChangeratingurl(e.target.value);
               }}
-            >
-            </TextField>
+            ></TextField>
             <FormHelperText>
-              {loadingratingurlType && "Atualizando..."}
+              {loadingratingurlType && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
 
-
-
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="schedule-type-label">
+            <InputLabel id='schedule-type-label'>
               Gerenciamento de Expediente
             </InputLabel>
             <Select
-              labelId="schedule-type-label"
+              labelId='schedule-type-label'
               value={scheduleType}
               onChange={async (e) => {
                 handleScheduleType(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Desabilitado</MenuItem>
-              <MenuItem value={"queue"}>Gerenciamento Por Fila</MenuItem>
+              <MenuItem value={'disabled'}>Desabilitado</MenuItem>
+              <MenuItem value={'queue'}>Gerenciamento Por Fila</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingScheduleType && "Atualizando..."}
+              {loadingScheduleType && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="group-type-label">
+            <InputLabel id='group-type-label'>
               Ignorar Mensagens de Grupos
             </InputLabel>
             <Select
-              labelId="group-type-label"
+              labelId='group-type-label'
               value={CheckMsgIsGroup}
               onChange={async (e) => {
                 handleGroupType(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Desativado</MenuItem>
-              <MenuItem value={"enabled"}>Ativado</MenuItem>
+              <MenuItem value={'disabled'}>Desativado</MenuItem>
+              <MenuItem value={'enabled'}>Ativado</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingScheduleType && "Atualizando..."}
+              {loadingScheduleType && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="call-type-label">
-              Aceitar Chamada
-            </InputLabel>
+            <InputLabel id='call-type-label'>Aceitar Chamada</InputLabel>
             <Select
-              labelId="call-type-label"
+              labelId='call-type-label'
               value={callType}
               onChange={async (e) => {
                 handleCallType(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não Aceitar</MenuItem>
-              <MenuItem value={"enabled"}>Aceitar</MenuItem>
+              <MenuItem value={'disabled'}>Não Aceitar</MenuItem>
+              <MenuItem value={'enabled'}>Aceitar</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingCallType && "Atualizando..."}
+              {loadingCallType && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="chatbot-type-label">
-              Tipo Chatbot
-            </InputLabel>
+            <InputLabel id='chatbot-type-label'>Tipo Chatbot</InputLabel>
             <Select
-              labelId="chatbot-type-label"
+              labelId='chatbot-type-label'
               value={chatbotType}
               onChange={async (e) => {
                 handleChatbotType(e.target.value);
               }}
             >
-              <MenuItem value={"text"}>Texto</MenuItem>
+              <MenuItem value={'text'}>Texto</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingChatbotType && "Atualizando..."}
+              {loadingChatbotType && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
-    <Grid xs={12} sm={12} md={12} item>
+        <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="outsidemessage-type-label">
+            <InputLabel id='outsidemessage-type-label'>
               Abrir Tickets Fora do Expediente?
             </InputLabel>
             <Select
-              labelId="outsidemessage-type-label"
+              labelId='outsidemessage-type-label'
               value={outsideMessageType}
               onChange={async (e) => {
                 handleOutsideMessageType(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingOutsideMessageType && "Atualizando..."}
+              {loadingOutsideMessageType && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
-      
 
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="sendGreetingAccepted-label">Mensagem de Saudação do Operador?</InputLabel>
+            <InputLabel id='sendGreetingAccepted-label'>
+              Mensagem de Saudação do Operador?
+            </InputLabel>
             <Select
-              labelId="sendGreetingAccepted-label"
+              labelId='sendGreetingAccepted-label'
               value={SendGreetingAccepted}
               onChange={async (e) => {
                 handleSendGreetingAccepted(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingSendGreetingAccepted && "Atualizando..."}
+              {loadingSendGreetingAccepted && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
-      </Grid>
+        </Grid>
 
-      <Grid xs={12} sm={12} md={12} item>
+        <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="sendTransferAlert-label">Mensagem de Transferência?</InputLabel>
+            <InputLabel id='sendTransferAlert-label'>
+              Mensagem de Transferência?
+            </InputLabel>
             <Select
-              labelId="sendTransferAlert-label"
+              labelId='sendTransferAlert-label'
               value={SendTransferAlert}
               onChange={async (e) => {
                 handleSendTransferAlert(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingSendTransferAlert && "Atualizando..."}
+              {loadingSendTransferAlert && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
-      </Grid>
+        </Grid>
 
-      <Grid xs={12} sm={12} md={12} item>
+        <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="sendFarewellWaitingTicket-label">Mensagem de Despedida por Operador</InputLabel>
+            <InputLabel id='sendFarewellWaitingTicket-label'>
+              Mensagem de Despedida por Operador
+            </InputLabel>
             <Select
-              labelId="sendFarewellWaitingTicket-label"
+              labelId='sendFarewellWaitingTicket-label'
               value={sendFarewellWaitingTicket}
               onChange={async (e) => {
                 handleSendFarewellWaitingTicket(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingSendFarewellWaitingTicket && "Atualizando..."}
+              {loadingSendFarewellWaitingTicket && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
 
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="sendSignMessage-label">Atendente pode escolher ENVIAR Assinatura?</InputLabel>
+            <InputLabel id='sendSignMessage-label'>
+              Atendente pode escolher ENVIAR Assinatura?
+            </InputLabel>
             <Select
-              labelId="sendSignMessage-label"
+              labelId='sendSignMessage-label'
               value={sendSignMessage}
               onChange={async (e) => {
                 handleSendSignMessage(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingSendSignMessage && "Atualizando..."}
+              {loadingSendSignMessage && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
 
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="sendGreetingMessageOneQueues-label">Mensagem de Saudação para fila única?</InputLabel>
+            <InputLabel id='sendGreetingMessageOneQueues-label'>
+              Mensagem de Saudação para fila única?
+            </InputLabel>
             <Select
-              labelId="sendGreetingMessageOneQueues-label"
+              labelId='sendGreetingMessageOneQueues-label'
               value={sendGreetingMessageOneQueues}
               onChange={async (e) => {
                 handleSendGreetingMessageOneQueues(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingSendGreetingMessageOneQueues && "Atualizando..."}
+              {loadingSendGreetingMessageOneQueues && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
 
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="sendQueuePosition-label">Informar Posição na Fila?</InputLabel>
+            <InputLabel id='sendQueuePosition-label'>
+              Informar Posição na Fila?
+            </InputLabel>
             <Select
-              labelId="sendQueuePosition-label"
+              labelId='sendQueuePosition-label'
               value={sendQueuePosition}
               onChange={async (e) => {
                 handleSendQueuePosition(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingSendQueuePosition && "Atualizando..."}
+              {loadingSendQueuePosition && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
 
-
-
-
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="viewclosed-label">Operador Visualiza Tickets Fechados?</InputLabel>
+            <InputLabel id='viewclosed-label'>
+              Operador Visualiza Tickets Fechados?
+            </InputLabel>
             <Select
-              labelId="viewclosed-label"
+              labelId='viewclosed-label'
               value={viewclosed}
               onChange={async (e) => {
                 handleviewclosed(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingviewclosed && "Atualizando..."}
+              {loadingviewclosed && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
 
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="viewgroups-label">Operador Visualiza Grupos?</InputLabel>
+            <InputLabel id='viewgroups-label'>
+              Operador Visualiza Grupos?
+            </InputLabel>
             <Select
-              labelId="viewgroups-label"
+              labelId='viewgroups-label'
               value={viewgroups}
               onChange={async (e) => {
                 handleviewgroups(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingviewgroups && "Atualizando..."}
+              {loadingviewgroups && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
 
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="viewnoti-label">Operador Visualiza Notificação Global?</InputLabel>
+            <InputLabel id='viewnoti-label'>
+              Operador Visualiza Notificação Global?
+            </InputLabel>
             <Select
-              labelId="viewnoti-label"
+              labelId='viewnoti-label'
               value={viewnoti}
               onChange={async (e) => {
                 handleviewnoti(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingviewnoti && "Atualizando..."}
+              {loadingviewnoti && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
 
         <Grid xs={12} sm={12} md={12} item>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="viewppw-label">Operador Visualiza Prévias?</InputLabel>
+            <InputLabel id='viewppw-label'>
+              Operador Visualiza Prévias?
+            </InputLabel>
             <Select
-              labelId="viewppw-label"
+              labelId='viewppw-label'
               value={viewppw}
               onChange={async (e) => {
                 handleviewppw(e.target.value);
               }}
             >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
+              <MenuItem value={'disabled'}>Não</MenuItem>
+              <MenuItem value={'enabled'}>Sim</MenuItem>
             </Select>
             <FormHelperText>
-              {loadingviewppw && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-
-
-
-   </Grid>
-
-    <OnlyForSuperUser
-            user={currentUser}
-            yes={() => (
-
-<>
-     
-    <Grid spacing={3} container>
-        <Tabs
-          indicatorColor="primary"
-          textColor="primary"
-          scrollButtons="on"
-          variant="scrollable"
-          className={classes.tab}
-          style={{
-            marginBottom: 20,
-            marginTop: 20
-          }}
-        >
-          <Tab
-
-            label="Configurações Globais" />
-
-        </Tabs>
-
-      </Grid>
-
-    <Grid spacing={3} container
-        style={{ marginBottom: 10 }}>
-
-
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <InputLabel id="viewterms-label">Termos de Uso Visível?</InputLabel>
-            <Select
-              labelId="viewterms-label"
-              value={viewterms}
-              onChange={async (e) => {
-                handleviewterms(e.target.value);
-              }}
-            >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
-            </Select>
-            <FormHelperText>
-              {loadingviewterms && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <InputLabel id="viewprivacy-label">Política de Privacidade Visível?</InputLabel>
-            <Select
-              labelId="viewprivacy-label"
-              value={viewprivacy}
-              onChange={async (e) => {
-                handleviewprivacy(e.target.value);
-              }}
-            >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
-            </Select>
-            <FormHelperText>
-              {loadingviewprivacy && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <InputLabel id="viewregister-label">Registro (Inscrição) Visível?</InputLabel>
-            <Select
-              labelId="viewregister-label"
-              value={viewregister}
-              onChange={async (e) => {
-                handleviewregister(e.target.value);
-              }}
-            >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
-            </Select>
-            <FormHelperText>
-              {loadingviewregister && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <InputLabel id="allowregister-label">Registro (Inscrição) Permitida?</InputLabel>
-            <Select
-              labelId="allowregister-label"
-              value={allowregister}
-              onChange={async (e) => {
-                handleallowregister(e.target.value);
-              }}
-            >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
-            </Select>
-            <FormHelperText>
-              {loadingallowregister && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <InputLabel id="externaldownload-label">Permitir Download Externo?</InputLabel>
-            <Select
-              labelId="externaldownload-label"
-              value={externaldownload}
-              onChange={async (e) => {
-                handleexternaldownload(e.target.value);
-              }}
-            >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
-            </Select>
-            <FormHelperText>
-              {loadingexternaldownload && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <InputLabel id="camposfixos-label">Campos Extras Fixos no Contato?</InputLabel>
-            <Select
-              labelId="camposfixos-label"
-              value={camposfixos}
-              onChange={async (e) => {
-                handlecamposfixos(e.target.value);
-              }}
-            >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
-            </Select>
-            <FormHelperText>
-              {loadingcamposfixos && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <InputLabel id="externaldownload-label">Permitir Importação de Contatos Automática?</InputLabel>
-            <Select
-              labelId="allowupserts-label"
-              value={allowupserts}
-              onChange={async (e) => {
-                handleallowupserts(e.target.value);
-              }}
-            >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
-            </Select>
-            <FormHelperText>
-              {loadingallowupserts && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <InputLabel id="emfila-label">Mensagens em fila (Redis para Alto Volume)?</InputLabel>
-            <Select
-              labelId="emfila-label"
-              value={emfila}
-              onChange={async (e) => {
-                handleemfila(e.target.value);
-              }}
-            >
-              <MenuItem value={"disabled"}>Não</MenuItem>
-              <MenuItem value={"enabled"}>Sim</MenuItem>
-            </Select>
-            <FormHelperText>
-              {loadingemfila && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <InputLabel id="trial-label">Tempo de Trial?</InputLabel>
-            <Select
-              labelId="trial-label"
-              value={trial}
-              onChange={async (e) => {
-                handletrial(e.target.value);
-              }}
-            >
-              <MenuItem value={"1"}>1</MenuItem>
-              <MenuItem value={"2"}>2</MenuItem>
-              <MenuItem value={"3"}>3</MenuItem>
-              <MenuItem value={"4"}>4</MenuItem>
-              <MenuItem value={"5"}>5</MenuItem>
-              <MenuItem value={"6"}>6</MenuItem>
-              <MenuItem value={"7"}>7</MenuItem>
-            </Select>
-            <FormHelperText>
-              {loadingtrial && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-
-
-
-
-    </Grid>
-
-      <Grid spacing={3} container>
-        <Tabs
-          indicatorColor="primary"
-          textColor="primary"
-          scrollButtons="on"
-          variant="scrollable"
-          className={classes.tab}
-          style={{
-            marginBottom: 20,
-            marginTop: 20
-          }}
-        >
-          <Tab
-
-            label="SMTP API (SendGrid)" />
-
-        </Tabs>
-
-      </Grid>
-
-      
-      <Grid spacing={3} container
-        style={{ marginBottom: 10 }}>
-        
-        <Grid xs={12} sm={6} md={6} item>
-          <FormControl className={classes.selectContainer}>
-            <TextField
-              id="sendgridapi"
-              name="sendgridapi"
-              margin="dense"
-              label="API SendGrid"
-              variant="outlined"
-              value={sendgridapiType}
-              onChange={async (e) => {
-                handleChangesendgridapi(e.target.value);
-              }}
-            >
-            </TextField>
-            <FormHelperText>
-              {loadingsendgridapiType && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-        <Grid xs={12} sm={6} md={6} item>
-          <FormControl className={classes.selectContainer}>
-            <TextField
-              id="emailsender"
-              name="emailsender"
-              margin="dense"
-              label="Rementente de E-Mail"
-              variant="outlined"
-              value={emailsenderType}
-              onChange={async (e) => {
-                handleChangeemailsender(e.target.value);
-              }}
-            >
-            </TextField>
-            <FormHelperText>
-              {loadingemailsenderType && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-        
-      </Grid>
-
-
-     <Grid spacing={3} container>
-        <Tabs
-          indicatorColor="primary"
-          textColor="primary"
-          scrollButtons="on"
-          variant="scrollable"
-          className={classes.tab}
-          style={{
-            marginBottom: 20,
-            marginTop: 20
-          }}
-        >
-          <Tab
-
-            label="Configuração Pix Efí (GerenciaNet)" />
-
-        </Tabs>
-
-      </Grid>
-
-      
-      <Grid spacing={3} container
-        style={{ marginBottom: 10 }}>
-        
-        <Grid xs={12} sm={6} md={6} item>
-          <FormControl className={classes.selectContainer}>
-            <TextField
-              id="eficlientid"
-              name="eficlientid"
-              margin="dense"
-              label="Client ID"
-              variant="outlined"
-              value={eficlientidType}
-              onChange={async (e) => {
-                handleChangeEfiClientid(e.target.value);
-              }}
-            >
-            </TextField>
-            <FormHelperText>
-              {loadingEfiClientidType && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-        <Grid xs={12} sm={6} md={6} item>
-          <FormControl className={classes.selectContainer}>
-            <TextField
-              id="eficlientsecret"
-              name="eficlientsecret"
-              margin="dense"
-              label="Client Secret"
-              variant="outlined"
-              value={eficlientsecretType}
-              onChange={async (e) => {
-                handleChangeEfiClientsecret(e.target.value);
-              }}
-            >
-            </TextField>
-            <FormHelperText>
-              {loadingEfiClientsecretType && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <TextField
-              id="efichavepix"
-              name="efichavepix"
-              margin="dense"
-              label="Chave PIX"
-              variant="outlined"
-              value={efichavepixType}
-              onChange={async (e) => {
-                handleChangeEfiChavepix(e.target.value);
-              }}
-            >
-            </TextField>
-            <FormHelperText>
-              {loadingEfiChavepixType && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-      </Grid>
-      
-  
-    <Grid spacing={3} container>
-        <Tabs
-          indicatorColor="primary"
-          textColor="primary"
-          scrollButtons="on"
-          variant="scrollable"
-          className={classes.tab}
-          style={{
-            marginBottom: 20,
-            marginTop: 20
-          }}
-        >
-          <Tab
-
-            label="Mercado Pago" />
-
-        </Tabs>
-
-      </Grid>
-
-      <Grid spacing={3} container
-        style={{ marginBottom: 10 }}>
-        
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <TextField
-              id="mpaccesstoken"
-              name="mpaccesstoken"
-              margin="dense"
-              label="Access Token"
-              variant="outlined"
-              value={mpaccesstokenType}
-              onChange={async (e) => {
-                handleChangempaccesstoken(e.target.value);
-              }}
-            >
-            </TextField>
-            <FormHelperText>
-              {loadingmpaccesstokenType && "Atualizando..."}
+              {loadingviewppw && 'Atualizando...'}
             </FormHelperText>
           </FormControl>
         </Grid>
       </Grid>
 
+      <OnlyForSuperUser
+        user={currentUser}
+        yes={() => (
+          <>
+            <Grid spacing={3} container>
+              <Tabs
+                indicatorColor='primary'
+                textColor='primary'
+                scrollButtons='on'
+                variant='scrollable'
+                className={classes.tab}
+                style={{
+                  marginBottom: 20,
+                  marginTop: 20,
+                }}
+              >
+                <Tab label='Configurações Globais' />
+              </Tabs>
+            </Grid>
 
-      <Grid spacing={3} container>
-        <Tabs
-          indicatorColor="primary"
-          textColor="primary"
-          scrollButtons="on"
-          variant="scrollable"
-          className={classes.tab}
-          style={{
-            marginBottom: 20,
-            marginTop: 20
-          }}
-        >
-          <Tab
+            <Grid spacing={3} container style={{ marginBottom: 10 }}>
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <InputLabel id='viewterms-label'>
+                    Termos de Uso Visível?
+                  </InputLabel>
+                  <Select
+                    labelId='viewterms-label'
+                    value={viewterms}
+                    onChange={async (e) => {
+                      handleviewterms(e.target.value);
+                    }}
+                  >
+                    <MenuItem value={'disabled'}>Não</MenuItem>
+                    <MenuItem value={'enabled'}>Sim</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {loadingviewterms && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
 
-            label="Stripe" />
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <InputLabel id='viewprivacy-label'>
+                    Política de Privacidade Visível?
+                  </InputLabel>
+                  <Select
+                    labelId='viewprivacy-label'
+                    value={viewprivacy}
+                    onChange={async (e) => {
+                      handleviewprivacy(e.target.value);
+                    }}
+                  >
+                    <MenuItem value={'disabled'}>Não</MenuItem>
+                    <MenuItem value={'enabled'}>Sim</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {loadingviewprivacy && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
 
-        </Tabs>
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <InputLabel id='viewregister-label'>
+                    Registro (Inscrição) Visível?
+                  </InputLabel>
+                  <Select
+                    labelId='viewregister-label'
+                    value={viewregister}
+                    onChange={async (e) => {
+                      handleviewregister(e.target.value);
+                    }}
+                  >
+                    <MenuItem value={'disabled'}>Não</MenuItem>
+                    <MenuItem value={'enabled'}>Sim</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {loadingviewregister && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
 
-      </Grid>
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <InputLabel id='allowregister-label'>
+                    Registro (Inscrição) Permitida?
+                  </InputLabel>
+                  <Select
+                    labelId='allowregister-label'
+                    value={allowregister}
+                    onChange={async (e) => {
+                      handleallowregister(e.target.value);
+                    }}
+                  >
+                    <MenuItem value={'disabled'}>Não</MenuItem>
+                    <MenuItem value={'enabled'}>Sim</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {loadingallowregister && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
 
-      <Grid spacing={3} container
-        style={{ marginBottom: 10 }}>
-        
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <TextField
-              id="stripeprivatekey"
-              name="stripeprivatekey"
-              margin="dense"
-              label="Stripe Private Key"
-              variant="outlined"
-              value={stripeprivatekeyType}
-              onChange={async (e) => {
-                handleChangestripeprivatekey(e.target.value);
-              }}
-            >
-            </TextField>
-            <FormHelperText>
-              {loadingstripeprivatekeyType && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-      </Grid>
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <InputLabel id='externaldownload-label'>
+                    Permitir Download Externo?
+                  </InputLabel>
+                  <Select
+                    labelId='externaldownload-label'
+                    value={externaldownload}
+                    onChange={async (e) => {
+                      handleexternaldownload(e.target.value);
+                    }}
+                  >
+                    <MenuItem value={'disabled'}>Não</MenuItem>
+                    <MenuItem value={'enabled'}>Sim</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {loadingexternaldownload && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
 
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <InputLabel id='camposfixos-label'>
+                    Campos Extras Fixos no Contato?
+                  </InputLabel>
+                  <Select
+                    labelId='camposfixos-label'
+                    value={camposfixos}
+                    onChange={async (e) => {
+                      handlecamposfixos(e.target.value);
+                    }}
+                  >
+                    <MenuItem value={'disabled'}>Não</MenuItem>
+                    <MenuItem value={'enabled'}>Sim</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {loadingcamposfixos && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
 
-      <Grid spacing={3} container>
-        <Tabs
-          indicatorColor="primary"
-          textColor="primary"
-          scrollButtons="on"
-          variant="scrollable"
-          className={classes.tab}
-          style={{
-            marginBottom: 20,
-            marginTop: 20
-          }}
-        >
-          <Tab
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <InputLabel id='externaldownload-label'>
+                    Permitir Importação de Contatos Automática?
+                  </InputLabel>
+                  <Select
+                    labelId='allowupserts-label'
+                    value={allowupserts}
+                    onChange={async (e) => {
+                      handleallowupserts(e.target.value);
+                    }}
+                  >
+                    <MenuItem value={'disabled'}>Não</MenuItem>
+                    <MenuItem value={'enabled'}>Sim</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {loadingallowupserts && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
 
-            label="ASAAS" />
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <InputLabel id='emfila-label'>
+                    Mensagens em fila (Redis para Alto Volume)?
+                  </InputLabel>
+                  <Select
+                    labelId='emfila-label'
+                    value={emfila}
+                    onChange={async (e) => {
+                      handleemfila(e.target.value);
+                    }}
+                  >
+                    <MenuItem value={'disabled'}>Não</MenuItem>
+                    <MenuItem value={'enabled'}>Sim</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {loadingemfila && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
 
-        </Tabs>
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <InputLabel id='trial-label'>Tempo de Trial?</InputLabel>
+                  <Select
+                    labelId='trial-label'
+                    value={trial}
+                    onChange={async (e) => {
+                      handletrial(e.target.value);
+                    }}
+                  >
+                    <MenuItem value={'1'}>1</MenuItem>
+                    <MenuItem value={'2'}>2</MenuItem>
+                    <MenuItem value={'3'}>3</MenuItem>
+                    <MenuItem value={'4'}>4</MenuItem>
+                    <MenuItem value={'5'}>5</MenuItem>
+                    <MenuItem value={'6'}>6</MenuItem>
+                    <MenuItem value={'7'}>7</MenuItem>
+                  </Select>
+                  <FormHelperText>
+                    {loadingtrial && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
 
-      </Grid>
+            <Grid spacing={3} container>
+              <Tabs
+                indicatorColor='primary'
+                textColor='primary'
+                scrollButtons='on'
+                variant='scrollable'
+                className={classes.tab}
+                style={{
+                  marginBottom: 20,
+                  marginTop: 20,
+                }}
+              >
+                <Tab label='SMTP API (SendGrid)' />
+              </Tabs>
+            </Grid>
 
-      <Grid spacing={3} container
-        style={{ marginBottom: 10 }}>
-        
-        <Grid xs={12} sm={12} md={12} item>
-          <FormControl className={classes.selectContainer}>
-            <TextField
-              id="asaastoken"
-              name="asaastoken"
-              margin="dense"
-              label="Token Asaas"
-              variant="outlined"
-              value={asaastokenType}
-              onChange={async (e) => {
-                handleChangeasaastoken(e.target.value);
-              }}
-            >
-            </TextField>
-            <FormHelperText>
-              {loadingasaastokenType && "Atualizando..."}
-            </FormHelperText>
-          </FormControl>
-        </Grid>
-    </Grid>
+            <Grid spacing={3} container style={{ marginBottom: 10 }}>
+              <Grid xs={12} sm={6} md={6} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id='sendgridapi'
+                    name='sendgridapi'
+                    margin='dense'
+                    label='API SendGrid'
+                    variant='outlined'
+                    value={sendgridapiType}
+                    onChange={async (e) => {
+                      handleChangesendgridapi(e.target.value);
+                    }}
+                  ></TextField>
+                  <FormHelperText>
+                    {loadingsendgridapiType && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+              <Grid xs={12} sm={6} md={6} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id='emailsender'
+                    name='emailsender'
+                    margin='dense'
+                    label='Rementente de E-Mail'
+                    variant='outlined'
+                    value={emailsenderType}
+                    onChange={async (e) => {
+                      handleChangeemailsender(e.target.value);
+                    }}
+                  ></TextField>
+                  <FormHelperText>
+                    {loadingemailsenderType && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
 
+            <Grid spacing={3} container>
+              <Tabs
+                indicatorColor='primary'
+                textColor='primary'
+                scrollButtons='on'
+                variant='scrollable'
+                className={classes.tab}
+                style={{
+                  marginBottom: 20,
+                  marginTop: 20,
+                }}
+              >
+                <Tab label='Configuração Pix Efí (GerenciaNet)' />
+              </Tabs>
+            </Grid>
 
+            <Grid spacing={3} container style={{ marginBottom: 10 }}>
+              <Grid xs={12} sm={6} md={6} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id='eficlientid'
+                    name='eficlientid'
+                    margin='dense'
+                    label='Client ID'
+                    variant='outlined'
+                    value={eficlientidType}
+                    onChange={async (e) => {
+                      handleChangeEfiClientid(e.target.value);
+                    }}
+                  ></TextField>
+                  <FormHelperText>
+                    {loadingEfiClientidType && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+              <Grid xs={12} sm={6} md={6} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id='eficlientsecret'
+                    name='eficlientsecret'
+                    margin='dense'
+                    label='Client Secret'
+                    variant='outlined'
+                    value={eficlientsecretType}
+                    onChange={async (e) => {
+                      handleChangeEfiClientsecret(e.target.value);
+                    }}
+                  ></TextField>
+                  <FormHelperText>
+                    {loadingEfiClientsecretType && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id='efichavepix'
+                    name='efichavepix'
+                    margin='dense'
+                    label='Chave PIX'
+                    variant='outlined'
+                    value={efichavepixType}
+                    onChange={async (e) => {
+                      handleChangeEfiChavepix(e.target.value);
+                    }}
+                  ></TextField>
+                  <FormHelperText>
+                    {loadingEfiChavepixType && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
 
-</>
+            <Grid spacing={3} container>
+              <Tabs
+                indicatorColor='primary'
+                textColor='primary'
+                scrollButtons='on'
+                variant='scrollable'
+                className={classes.tab}
+                style={{
+                  marginBottom: 20,
+                  marginTop: 20,
+                }}
+              >
+                <Tab label='Mercado Pago' />
+              </Tabs>
+            </Grid>
 
-  )}
-          />
+            <Grid spacing={3} container style={{ marginBottom: 10 }}>
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id='mpaccesstoken'
+                    name='mpaccesstoken'
+                    margin='dense'
+                    label='Access Token'
+                    variant='outlined'
+                    value={mpaccesstokenType}
+                    onChange={async (e) => {
+                      handleChangempaccesstoken(e.target.value);
+                    }}
+                  ></TextField>
+                  <FormHelperText>
+                    {loadingmpaccesstokenType && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
 
-   </>
+            <Grid spacing={3} container>
+              <Tabs
+                indicatorColor='primary'
+                textColor='primary'
+                scrollButtons='on'
+                variant='scrollable'
+                className={classes.tab}
+                style={{
+                  marginBottom: 20,
+                  marginTop: 20,
+                }}
+              >
+                <Tab label='Stripe' />
+              </Tabs>
+            </Grid>
+
+            <Grid spacing={3} container style={{ marginBottom: 10 }}>
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id='stripeprivatekey'
+                    name='stripeprivatekey'
+                    margin='dense'
+                    label='Stripe Private Key'
+                    variant='outlined'
+                    value={stripeprivatekeyType}
+                    onChange={async (e) => {
+                      handleChangestripeprivatekey(e.target.value);
+                    }}
+                  ></TextField>
+                  <FormHelperText>
+                    {loadingstripeprivatekeyType && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
+
+            <Grid spacing={3} container>
+              <Tabs
+                indicatorColor='primary'
+                textColor='primary'
+                scrollButtons='on'
+                variant='scrollable'
+                className={classes.tab}
+                style={{
+                  marginBottom: 20,
+                  marginTop: 20,
+                }}
+              >
+                <Tab label='ASAAS' />
+              </Tabs>
+            </Grid>
+
+            <Grid spacing={3} container style={{ marginBottom: 10 }}>
+              <Grid xs={12} sm={12} md={12} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id='asaastoken'
+                    name='asaastoken'
+                    margin='dense'
+                    label='Token Asaas'
+                    variant='outlined'
+                    value={asaastokenType}
+                    onChange={async (e) => {
+                      handleChangeasaastoken(e.target.value);
+                    }}
+                  ></TextField>
+                  <FormHelperText>
+                    {loadingasaastokenType && 'Atualizando...'}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </>
+        )}
+      />
+    </>
   );
 }

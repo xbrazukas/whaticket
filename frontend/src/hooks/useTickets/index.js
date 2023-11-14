@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import toastError from "../../errors/toastError";
+import { useState, useEffect } from 'react';
+import toastError from '../../errors/toastError';
 
-import api from "../../services/api";
+import api from '../../services/api';
 
 const useTickets = ({
   searchParam,
@@ -24,7 +24,7 @@ const useTickets = ({
     const delayDebounceFn = setTimeout(() => {
       const fetchTickets = async () => {
         try {
-          const { data } = await api.get("/tickets", {
+          const { data } = await api.get('/tickets', {
             params: {
               searchParam,
               pageNumber,
