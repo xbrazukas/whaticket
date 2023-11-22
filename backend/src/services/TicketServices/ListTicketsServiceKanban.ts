@@ -25,6 +25,8 @@ interface Request {
   tags: number[];
   users: number[];
   companyId: number;
+  dateFrom: string;
+  dateUntil: string;
 }
 
 interface Response {
@@ -45,19 +47,29 @@ const ListTicketsServiceKanban = async ({
   showAll,
   userId,
   withUnreadMessages,
-  companyId
+  companyId,
+  dateFrom,
+  dateUntil
 }: Request): Promise<Response> => {
   let whereCondition: Filterable["where"] = {
     [Op.or]: [{ userId }, { status: "pending" }],
     queueId: { [Op.or]: [queueIds, null] }
   };
+
   let includeCondition: Includeable[];
 
   includeCondition = [
     {
       model: Contact,
       as: "contact",
-      attributes: ["id", "name", "number", "email", "profilePicUrl", "acceptAudioMessage"],
+      attributes: [
+        "id",
+        "name",
+        "number",
+        "email",
+        "profilePicUrl",
+        "acceptAudioMessage"
+      ],
       include: ["extraInfo"]
     },
     {
@@ -79,7 +91,7 @@ const ListTicketsServiceKanban = async ({
       model: Whatsapp,
       as: "whatsapp",
       attributes: ["name"]
-    },
+    }
   ];
 
   if (showAll === "true") {
@@ -155,6 +167,17 @@ const ListTicketsServiceKanban = async ({
     };
   }
 
+  if (dateFrom && dateUntil) {
+    whereCondition = {
+      updatedAt: {
+        [Op.between]: [
+          +startOfDay(parseISO(dateFrom)),
+          +endOfDay(parseISO(dateUntil))
+        ]
+      }
+    };
+  }
+
   if (withUnreadMessages === "true") {
     const user = await ShowUserService(userId);
     const userQueueIds = user.queues.map(queue => queue.id);
@@ -193,6 +216,7 @@ const ListTicketsServiceKanban = async ({
       const ticketUsers = await Ticket.findAll({
         where: { userId: user }
       });
+
       if (ticketUsers) {
         ticketsUserFilter.push(ticketUsers.map(t => t.id));
       }
@@ -215,6 +239,8 @@ const ListTicketsServiceKanban = async ({
     ...whereCondition,
     companyId
   };
+
+  console.log({ where: whereCondition, include: includeCondition });
 
   const { count, rows: tickets } = await Ticket.findAndCountAll({
     where: whereCondition,

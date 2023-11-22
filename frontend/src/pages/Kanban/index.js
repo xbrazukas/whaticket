@@ -1,18 +1,12 @@
-import React, {
-  useState,
-  useEffect,
-  useReducer,
-  useContext,
-  useCallback,
-} from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import api from '../../services/api';
 import { AuthContext } from '../../context/Auth/AuthContext';
 import Board from 'react-trello';
 import { toast } from 'react-toastify';
-import { i18n } from '../../translate/i18n';
+
 import { useHistory } from 'react-router-dom';
-import { socketConnection } from '../../services/socket';
+
 import usePlans from '../../hooks/usePlans';
 import useTickets from '../../hooks/useTickets';
 import { DatePickerMoment } from '../../components/DatePickerMoment';
@@ -58,6 +52,7 @@ const Kanban = () => {
   const { user } = useContext(AuthContext);
   const { profile, queues } = user;
   const jsonString = user.queues.map((queue) => queue.UserQueue.queueId);
+  const [t, setT] = useState(0);
 
   const [searchParams, setSearchParams] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -68,15 +63,15 @@ const Kanban = () => {
 
   const { getPlanCompany } = usePlans();
 
-  const { tickets, hasMore, loading } = useTickets({
-    searchParam: searchParams
-      .toLowerCase()
-      .trim()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]]/g, ''),
-    users: JSON.stringify(selectedUsers),
-    queueIds: JSON.stringify(jsonString),
-  });
+  // const { tickets, hasMore, loading } = useTickets({
+  //   searchParam: searchParams
+  //     .toLowerCase()
+  //     .trim()
+  //     .normalize('NFD')
+  //     .replace(/[\u0300-\u036f]]/g, ''),
+  //   users: JSON.stringify(selectedUsers),
+  //   queueIds: JSON.stringify(jsonString),
+  // });
 
   useEffect(() => {
     async function fetchData() {
@@ -110,7 +105,7 @@ const Kanban = () => {
 
   useEffect(() => {
     fetchTags();
-  }, []);
+  }, [selectedUsers, selectedDate, searchParams]);
 
   const [file, setFile] = useState({
     lanes: [],
@@ -118,15 +113,19 @@ const Kanban = () => {
 
   const fetchTickets = async (jsonString) => {
     try {
+      setT(t + 1);
       const { data } = await api.get('/tickets/kanban', {
         params: {
+          showAll: true,
+          searchParam: searchParams,
+          users: JSON.stringify(selectedUsers),
           queueIds: JSON.stringify(jsonString),
-          teste: true,
+          dateFrom: selectedDate?.from,
+          dateUntil: selectedDate?.until,
         },
       });
 
-      setTicketList(tickets);
-      // setTicketList(data.tickets);
+      setTicketList(data.tickets);
     } catch (err) {
       console.log(err);
       setTicketList([]);
@@ -281,26 +280,28 @@ const Kanban = () => {
   //   [classes, handleCardClick, tags, tickets]
   // );
 
-  const filterByDateRange = useCallback(
-    (filterItemList) => {
-      if (!selectedDate) {
-        return filterItemList;
-      }
+  // const filterByDateRange = useCallback(
+  //   (filterItemList) => {
+  //     if (!selectedDate) {
+  //       return filterItemList;
+  //     }
 
-      const filteredList = filterItemList.filter((filterItem) => {
-        return moment(
-          moment(filterItem.updatedAt).format('YYYY-MM-DD')
-        ).isBetween(selectedDate?.from, selectedDate?.until, 'days', '[]');
-      });
+  //     const filteredList = filterItemList.filter((filterItem) => {
+  //       return moment(
+  //         moment(filterItem.updatedAt).format('YYYY-MM-DD')
+  //       ).isBetween(selectedDate?.from, selectedDate?.until, 'days', '[]');
+  //     });
 
-      return filteredList.length === 0 ? filterItemList : filteredList;
-    },
-    [selectedDate]
-  );
+  //     return filteredList.length === 0 ? filterItemList : filteredList;
+  //   },
+  //   [selectedDate]
+  // );
+
+  // console.log(profile);
 
   useEffect(() => {
     const { button } = classes;
-    const filteredTickets = filterByDateRange(tickets).filter(
+    const filteredTickets = ticketList.filter(
       (ticket) => ticket.tags.length === 0
     );
 
@@ -335,7 +336,7 @@ const Kanban = () => {
         })),
       },
       ...tags.map((tag) => {
-        const filteredTickets = filterByDateRange(tickets).filter((ticket) => {
+        const filteredTickets = ticketList.filter((ticket) => {
           const tagIds = ticket.tags.map((tag) => tag.id);
           return tagIds.includes(tag.id);
         });
@@ -392,14 +393,7 @@ const Kanban = () => {
     ];
 
     setFile({ lanes });
-  }, [
-    classes,
-    handleCardClick,
-    tags,
-    tickets,
-    filterByDateRange,
-    searchParams,
-  ]);
+  }, [classes, handleCardClick, tags, ticketList, searchParams]);
 
   const handleCardMove = async (cardId, sourceLaneId, targetLaneId) => {
     try {

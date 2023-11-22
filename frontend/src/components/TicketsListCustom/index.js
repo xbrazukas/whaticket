@@ -11,7 +11,6 @@ import useTickets from '../../hooks/useTickets';
 import { i18n } from '../../translate/i18n';
 import { AuthContext } from '../../context/Auth/AuthContext';
 import { socketConnection } from '../../services/socket';
-import moment from 'moment';
 
 const useStyles = makeStyles((theme) => ({
   ticketsListWrapper: {
@@ -73,7 +72,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const reducer = (state, action) => {
+const reducer = (state = [], action) => {
   if (action.type === 'LOAD_TICKETS') {
     const newTickets = action.payload;
 
@@ -114,6 +113,10 @@ const reducer = (state, action) => {
     }
 
     return [...state];
+  }
+
+  if (action.type === 'SYNC_TICKETS_WITH_API') {
+    state = action.payload;
   }
 
   if (action.type === 'UPDATE_TICKET_UNREAD_MESSAGES') {
@@ -187,21 +190,15 @@ const TicketsListCustom = (props) => {
     tags: JSON.stringify(tags),
     users: JSON.stringify(users),
     queueIds: JSON.stringify(selectedQueueIds),
+    dateFrom: dateRange?.from,
+    dateUntil: dateRange?.until,
   });
 
-  const filterByDateRange = (filterItemList) => {
-    if (!dateRange) {
-      return filterItemList;
+  useEffect(() => {
+    if (tickets) {
+      dispatch({ type: 'SYNC_TICKETS_WITH_API', payload: tickets });
     }
-
-    const filteredList = filterItemList.filter((filterItem) => {
-      return moment(
-        moment(filterItem.updatedAt).format('YYYY-MM-DD')
-      ).isBetween(dateRange?.from, dateRange?.until, 'days', '[]');
-    });
-
-    return filteredList.length === 0 ? filterItemList : filteredList;
-  };
+  }, [tickets]);
 
   useEffect(() => {
     const queueIds = queues.map((q) => q.id);
@@ -246,8 +243,6 @@ const TicketsListCustom = (props) => {
       }
 
       if (data.action === 'update') {
-        //console.log(data);
-
         if (profile === 'user') {
           const queueIds = queues.map((q) => q.id);
 
@@ -281,8 +276,6 @@ const TicketsListCustom = (props) => {
       }
 
       if (data.action === 'update' && shouldUpdateTicket(data.ticket)) {
-        //console.log(data);
-
         dispatch({
           type: 'UPDATE_TICKET',
           payload: data.ticket,
@@ -372,7 +365,7 @@ const TicketsListCustom = (props) => {
             </div>
           ) : (
             <>
-              {filterByDateRange(ticketsList)
+              {ticketsList
                 .filter((ticket) => ticket.isGroup.toString() === 'false')
                 .map((ticket) => (
                   <TicketListItem ticket={ticket} key={ticket.id} />
