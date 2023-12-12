@@ -1,8 +1,8 @@
-import { Box, Chip, TextField } from "@material-ui/core";
-import Autocomplete from "@material-ui/lab/Autocomplete";
-import React, { useEffect, useState } from "react";
-import toastError from "../../errors/toastError";
-import api from "../../services/api";
+import { Box, Chip, TextField } from '@material-ui/core';
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import React, { useEffect, useState } from 'react';
+import toastError from '../../errors/toastError';
+import api from '../../services/api';
 
 export function UsersFilter({ onFiltered, initialUsers }) {
   const [users, setUsers] = useState([]);
@@ -43,10 +43,10 @@ export function UsersFilter({ onFiltered, initialUsers }) {
   };
 
   return (
-    <Box style={{ padding: "0px 10px 10px" }}>
+    <Box style={{ padding: '0px 10px 10px' }}>
       <Autocomplete
         multiple
-        size="small"
+        size='small'
         options={users}
         value={selecteds}
         onChange={(e, v, r) => onChange(v)}
@@ -60,23 +60,23 @@ export function UsersFilter({ onFiltered, initialUsers }) {
         renderTags={(value, getUserProps) =>
           value.map((option, index) => (
             <Chip
-              variant="outlined"
+              variant='outlined'
               style={{
-                backgroundColor: "#bfbfbf",
-                textShadow: "1px 1px 1px #000",
-                color: "white",
+                backgroundColor: '#bfbfbf',
+                textShadow: '1px 1px 1px #000',
+                color: 'white',
               }}
               label={option.name}
               {...getUserProps({ index })}
-              size="small"
+              size='small'
             />
           ))
         }
         renderInput={(params) => (
           <TextField
             {...params}
-            variant="outlined"
-            placeholder="Filtro por Users"
+            variant='outlined'
+            placeholder='Filtro por Users'
           />
         )}
       />

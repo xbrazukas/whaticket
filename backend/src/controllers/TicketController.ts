@@ -22,6 +22,8 @@ type IndexQuery = {
   queueIds: string;
   tags: string;
   users: string;
+  dateFrom: string;
+  dateUntil: string;
 };
 
 interface TicketData {
@@ -45,9 +47,10 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     queueIds: queueIdsStringified,
     tags: tagIdsStringified,
     users: userIdsStringified,
-    withUnreadMessages
+    withUnreadMessages,
+    dateFrom,
+    dateUntil
   } = req.query as IndexQuery;
-
 
   const userId = req.user.id;
   const { companyId } = req.user;
@@ -68,8 +71,6 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     usersIds = JSON.parse(userIdsStringified);
   }
 
-
-
   const { tickets, count, hasMore } = await ListTicketsService({
     searchParam,
     tags: tagsIds,
@@ -82,14 +83,15 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     userId,
     queueIds,
     withUnreadMessages,
-    companyId
+    companyId,
+    dateFrom,
+    dateUntil
   });
 
   //console.log("ticket controller 82");
-  
+
   return res.status(200).json({ tickets, count, hasMore });
 };
-
 
 export const dash = async (req: Request, res: Response): Promise<Response> => {
   const {
@@ -105,7 +107,6 @@ export const dash = async (req: Request, res: Response): Promise<Response> => {
     withUnreadMessages
   } = req.query as IndexQuery;
 
-
   const userId = req.user.id;
   const { companyId } = req.user;
 
@@ -124,8 +125,6 @@ export const dash = async (req: Request, res: Response): Promise<Response> => {
   if (userIdsStringified) {
     usersIds = JSON.parse(userIdsStringified);
   }
-
-
 
   const { tickets, count, hasMore } = await ListTicketsServiceDash({
     searchParam,
@@ -143,12 +142,14 @@ export const dash = async (req: Request, res: Response): Promise<Response> => {
   });
 
   //console.log("ticket controller 82");
-  
+
   return res.status(200).json({ tickets, count, hasMore });
 };
 
-
-export const kanban = async (req: Request, res: Response): Promise<Response> => {
+export const kanban = async (
+  req: Request,
+  res: Response
+): Promise<Response> => {
   const {
     pageNumber,
     status,
@@ -159,9 +160,10 @@ export const kanban = async (req: Request, res: Response): Promise<Response> => 
     queueIds: queueIdsStringified,
     tags: tagIdsStringified,
     users: userIdsStringified,
-    withUnreadMessages
+    withUnreadMessages,
+    dateFrom,
+    dateUntil
   } = req.query as IndexQuery;
-
 
   const userId = req.user.id;
   const { companyId } = req.user;
@@ -169,7 +171,6 @@ export const kanban = async (req: Request, res: Response): Promise<Response> => 
   let queueIds: number[] = [];
   let tagsIds: number[] = [];
   let usersIds: number[] = [];
-
 
   if (queueIdsStringified) {
     queueIds = JSON.parse(queueIdsStringified);
@@ -183,7 +184,6 @@ export const kanban = async (req: Request, res: Response): Promise<Response> => 
     usersIds = JSON.parse(userIdsStringified);
   }
 
-
   const { tickets, count, hasMore } = await ListTicketsServiceKanban({
     searchParam,
     tags: tagsIds,
@@ -196,17 +196,19 @@ export const kanban = async (req: Request, res: Response): Promise<Response> => 
     userId,
     queueIds,
     withUnreadMessages,
-    companyId
-
+    companyId,
+    dateFrom,
+    dateUntil
   });
 
   //console.log("ticket controller 82");
-  
+
   return res.status(200).json({ tickets, count, hasMore });
 };
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
-  const { contactId, status, userId, queueId, whatsappId }: TicketData = req.body;
+  const { contactId, status, userId, queueId, whatsappId }: TicketData =
+    req.body;
   const { companyId } = req.user;
 
   const ticket = await CreateTicketService({
@@ -214,7 +216,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     status,
     userId,
     companyId,
-    queueId, 
+    queueId,
     whatsappId
   });
 
@@ -224,8 +226,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     ticket
   });
 
-  //console.log("ticket controller 106"); 
-
+  //console.log("ticket controller 106");
 
   return res.status(200).json(ticket);
 };
@@ -263,8 +264,7 @@ export const update = async (
     companyId
   });
 
-
-  //console.log("ticket controller 146"); 
+  //console.log("ticket controller 146");
 
   return res.status(200).json(ticket);
 };
@@ -292,11 +292,12 @@ export const remove = async (
   return res.status(200).json({ message: "ticket deleted" });
 };
 
-
 export const kbu = async (req: Request, res: Response): Promise<Response> => {
   const { queueIds: queueIdsStringified } = req.query as IndexQuery;
   //console.log(req.query);
-  const queueIds: number[] = queueIdsStringified ? JSON.parse(queueIdsStringified) : [];
+  const queueIds: number[] = queueIdsStringified
+    ? JSON.parse(queueIdsStringified)
+    : [];
 
   return res.status(200).json({ message: "teste" });
 };

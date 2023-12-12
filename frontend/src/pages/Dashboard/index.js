@@ -1,45 +1,43 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext } from 'react';
 
-import Paper from "@material-ui/core/Paper";
-import Container from "@material-ui/core/Container";
-import Grid from "@material-ui/core/Grid";
-import MenuItem from "@material-ui/core/MenuItem";
-import FormControl from "@material-ui/core/FormControl";
-import InputLabel from "@material-ui/core/InputLabel";
-import Select from "@material-ui/core/Select";
-import TextField from "@material-ui/core/TextField";
-import FormHelperText from "@material-ui/core/FormHelperText";
+import Paper from '@material-ui/core/Paper';
+import Container from '@material-ui/core/Container';
+import Grid from '@material-ui/core/Grid';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import Select from '@material-ui/core/Select';
+import TextField from '@material-ui/core/TextField';
+import FormHelperText from '@material-ui/core/FormHelperText';
 
-import SpeedIcon from "@material-ui/icons/Speed";
-import GroupIcon from "@material-ui/icons/Group";
-import AssignmentIcon from "@material-ui/icons/Assignment";
-import PersonIcon from "@material-ui/icons/Person";
+import SpeedIcon from '@material-ui/icons/Speed';
+import GroupIcon from '@material-ui/icons/Group';
+import AssignmentIcon from '@material-ui/icons/Assignment';
+import PersonIcon from '@material-ui/icons/Person';
 import TodayIcon from '@material-ui/icons/Today';
 import BlockIcon from '@material-ui/icons/Block';
 import DoneIcon from '@material-ui/icons/Done';
 import MobileFriendlyIcon from '@material-ui/icons/MobileFriendly';
 import StoreIcon from '@material-ui/icons/Store';
 
+import { makeStyles } from '@material-ui/core/styles';
+import { grey, blue } from '@material-ui/core/colors';
+import { toast } from 'react-toastify';
 
-import { makeStyles } from "@material-ui/core/styles";
-import { grey, blue } from "@material-ui/core/colors";
-import { toast } from "react-toastify";
+import Chart from './Chart';
+import ButtonWithSpinner from '../../components/ButtonWithSpinner';
 
-import Chart from "./Chart";
-import ButtonWithSpinner from "../../components/ButtonWithSpinner";
+import CardCounter from '../../components/Dashboard/CardCounter';
+import TableAttendantsStatus from '../../components/Dashboard/TableAttendantsStatus';
+import { isArray } from 'lodash';
 
-import CardCounter from "../../components/Dashboard/CardCounter";
-import TableAttendantsStatus from "../../components/Dashboard/TableAttendantsStatus";
-import { isArray } from "lodash";
+import useDashboard from '../../hooks/useDashboard';
+import useCompanies from '../../hooks/useCompanies';
 
-import useDashboard from "../../hooks/useDashboard";
-import useCompanies from "../../hooks/useCompanies";
+import { AuthContext } from '../../context/Auth/AuthContext';
 
-import { AuthContext } from "../../context/Auth/AuthContext";
-
-
-import { isEmpty } from "lodash";
-import moment from "moment";
+import { isEmpty } from 'lodash';
+import moment from 'moment';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -48,36 +46,36 @@ const useStyles = makeStyles((theme) => ({
   },
   fixedHeightPaper: {
     padding: theme.spacing(2),
-    display: "flex",
-    flexDirection: "column",
+    display: 'flex',
+    flexDirection: 'column',
     height: 240,
-    overflowY: "auto",
+    overflowY: 'auto',
     ...theme.scrollbarStyles,
   },
   cardAvatar: {
-    fontSize: "55px",
+    fontSize: '55px',
     color: grey[500],
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
     width: theme.spacing(7),
     height: theme.spacing(7),
   },
   cardTitle: {
-    fontSize: "18px",
+    fontSize: '18px',
     color: blue[700],
   },
   cardSubtitle: {
     color: grey[600],
-    fontSize: "14px",
+    fontSize: '14px',
   },
   alignRight: {
-    textAlign: "right",
+    textAlign: 'right',
   },
   fullWidth: {
-    width: "100%",
+    width: '100%',
   },
   selectContainer: {
-    width: "100%",
-    textAlign: "left",
+    width: '100%',
+    textAlign: 'left',
   },
 }));
 
@@ -89,9 +87,9 @@ const Dashboard = () => {
   const [period, setPeriod] = useState(0);
   const [companyDueDate, setCompanyDueDate] = useState();
   const [dateFrom, setDateFrom] = useState(
-    moment("1", "D").format("YYYY-MM-DD")
+    moment('1', 'D').format('YYYY-MM-DD')
   );
-  const [dateTo, setDateTo] = useState(moment().format("YYYY-MM-DD"));
+  const [dateTo, setDateTo] = useState(moment().format('YYYY-MM-DD'));
   const [loading, setLoading] = useState(false);
   const { find } = useDashboard();
   const { finding } = useCompanies();
@@ -106,7 +104,6 @@ const Dashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  
   async function handleChangePeriod(value) {
     setPeriod(value);
   }
@@ -116,8 +113,8 @@ const Dashboard = () => {
     if (value === 1) {
       setPeriod(0);
     } else {
-      setDateFrom("");
-      setDateTo("");
+      setDateFrom('');
+      setDateTo('');
     }
   }
 
@@ -135,26 +132,24 @@ const Dashboard = () => {
     if (!isEmpty(dateFrom) && moment(dateFrom).isValid()) {
       params = {
         ...params,
-        date_from: moment(dateFrom).format("YYYY-MM-DD"),
+        date_from: moment(dateFrom).format('YYYY-MM-DD'),
       };
     }
 
     if (!isEmpty(dateTo) && moment(dateTo).isValid()) {
       params = {
         ...params,
-        date_to: moment(dateTo).format("YYYY-MM-DD"),
+        date_to: moment(dateTo).format('YYYY-MM-DD'),
       };
     }
 
     if (Object.keys(params).length === 0) {
-      toast.error("Parametrize o filtro");
+      toast.error('Parametrize o filtro');
       setLoading(false);
       return;
     }
 
     const data = await find(params);
-
-
 
     setCounters(data.counters);
     if (isArray(data.attendants)) {
@@ -171,17 +166,17 @@ const Dashboard = () => {
       await loadCompanies();
     }
     fetchData();
-  }, [])
+  }, []);
   //let companyDueDate = localStorage.getItem("companyDueDate");
   //const companyDueDate = localStorage.getItem("companyDueDate").toString();
-  const companyId = localStorage.getItem("companyId");
+  const companyId = localStorage.getItem('companyId');
   const loadCompanies = async () => {
     setLoading(true);
     try {
       const companiesList = await finding(companyId);
-      setCompanyDueDate(moment(companiesList.dueDate).format("DD/MM/yyyy"));
+      setCompanyDueDate(moment(companiesList.dueDate).format('DD/MM/yyyy'));
     } catch (e) {
-      console.log("ð??? Console Log : e", e);
+      console.log('ï¿½??? Console Log : e', e);
       // toast.error("NÃ£o foi possÃ­vel carregar a lista de registros");
     }
     setLoading(false);
@@ -189,9 +184,9 @@ const Dashboard = () => {
 
   function formatTime(minutes) {
     return moment()
-      .startOf("day")
-      .add(minutes, "minutes")
-      .format("HH[h] mm[m]");
+      .startOf('day')
+      .add(minutes, 'minutes')
+      .format('HH[h] mm[m]');
   }
 
   function renderFilters() {
@@ -200,8 +195,8 @@ const Dashboard = () => {
         <>
           <Grid item xs={12} sm={6} md={4}>
             <TextField
-              label="Data Inicial"
-              type="date"
+              label='Data Inicial'
+              type='date'
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
               className={classes.fullWidth}
@@ -212,8 +207,8 @@ const Dashboard = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
             <TextField
-              label="Data Final"
-              type="date"
+              label='Data Final'
+              type='date'
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               className={classes.fullWidth}
@@ -228,20 +223,20 @@ const Dashboard = () => {
       return (
         <Grid item xs={12} sm={6} md={4}>
           <FormControl className={classes.selectContainer}>
-            <InputLabel id="period-selector-label">PerÃ­odo</InputLabel>
+            <InputLabel id='period-selector-label'>PerÃ­odo</InputLabel>
             <Select
-              labelId="period-selector-label"
-              id="period-selector"
+              labelId='period-selector-label'
+              id='period-selector'
               value={period}
               onChange={(e) => handleChangePeriod(e.target.value)}
             >
               <MenuItem value={0}>Nenhum selecionado</MenuItem>
-              <MenuItem value={3}>Ã?ltimos 3 dias</MenuItem>
-              <MenuItem value={7}>Ã?ltimos 7 dias</MenuItem>
-              <MenuItem value={15}>Ã?ltimos 15 dias</MenuItem>
-              <MenuItem value={30}>Ã?ltimos 30 dias</MenuItem>
-              <MenuItem value={60}>Ã?ltimos 60 dias</MenuItem>
-              <MenuItem value={90}>Ã?ltimos 90 dias</MenuItem>
+              <MenuItem value={3}>ï¿½?ltimos 3 dias</MenuItem>
+              <MenuItem value={7}>ï¿½?ltimos 7 dias</MenuItem>
+              <MenuItem value={15}>ï¿½?ltimos 15 dias</MenuItem>
+              <MenuItem value={30}>ï¿½?ltimos 30 dias</MenuItem>
+              <MenuItem value={60}>ï¿½?ltimos 60 dias</MenuItem>
+              <MenuItem value={90}>ï¿½?ltimos 90 dias</MenuItem>
             </Select>
             <FormHelperText>Selecione o perÃ­odo desejado</FormHelperText>
           </FormControl>
@@ -252,20 +247,20 @@ const Dashboard = () => {
 
   return (
     <div>
-      <Container maxWidth="lg" className={classes.container}>
-        <Grid container spacing={3} justifyContent="flex-end">
-          {user.profile === "admin" && (
-          <>
-          <Grid item xs={12} sm={6} md={3}>
-            <CardCounter
-              icon={<TodayIcon fontSize="inherit" />}
-              title="Data Vencimento"
-              value={companyDueDate}
-              loading={loading}
-            />
-          </Grid>
-          </>
-		  )}
+      <Container maxWidth='lg' className={classes.container}>
+        <Grid container spacing={3} justifyContent='flex-end'>
+          {user.profile === 'admin' && (
+            <>
+              <Grid item xs={12} sm={6} md={3}>
+                <CardCounter
+                  icon={<TodayIcon fontSize='inherit' />}
+                  title='Data Vencimento'
+                  value={companyDueDate}
+                  loading={loading}
+                />
+              </Grid>
+            </>
+          )}
           <Grid item xs={12}>
             <Paper className={classes.fixedHeightPaper}>
               <Chart />
@@ -273,9 +268,9 @@ const Dashboard = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
             <FormControl className={classes.selectContainer}>
-              <InputLabel id="period-selector-label">Tipo de Filtro</InputLabel>
+              <InputLabel id='period-selector-label'>Tipo de Filtro</InputLabel>
               <Select
-                labelId="period-selector-label"
+                labelId='period-selector-label'
                 value={filterType}
                 onChange={(e) => handleChangeFilterType(e.target.value)}
               >
@@ -292,90 +287,90 @@ const Dashboard = () => {
             <ButtonWithSpinner
               loading={loading}
               onClick={() => fetchData()}
-              variant="contained"
-              color="primary"
+              variant='contained'
+              color='primary'
             >
               Filtrar
             </ButtonWithSpinner>
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
             <CardCounter
-              icon={<GroupIcon fontSize="inherit" />}
-              title="Atd. Pendentes"
+              icon={<GroupIcon fontSize='inherit' />}
+              title='Atd. Pendentes'
               value={counters.supportPending}
               loading={loading}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
             <CardCounter
-              icon={<GroupIcon fontSize="inherit" />}
-              title="Atd. Acontecendo"
+              icon={<GroupIcon fontSize='inherit' />}
+              title='Atd. Acontecendo'
               value={counters.supportHappening}
               loading={loading}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
             <CardCounter
-              icon={<AssignmentIcon fontSize="inherit" />}
-              title="Atd. Realizados"
+              icon={<AssignmentIcon fontSize='inherit' />}
+              title='Atd. Realizados'
               value={counters.supportFinished}
               loading={loading}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
             <CardCounter
-              icon={<PersonIcon fontSize="inherit" />}
-              title="Leads"
+              icon={<PersonIcon fontSize='inherit' />}
+              title='Leads'
               value={counters.leads}
               loading={loading}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
             <CardCounter
-              icon={<SpeedIcon fontSize="inherit" />}
-              title="T.M. de Atendimento"
+              icon={<SpeedIcon fontSize='inherit' />}
+              title='T.M. de Atendimento'
               value={formatTime(counters.avgSupportTime)}
               loading={loading}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={4}>
             <CardCounter
-              icon={<SpeedIcon fontSize="inherit" />}
-              title="T.M. de Espera"
+              icon={<SpeedIcon fontSize='inherit' />}
+              title='T.M. de Espera'
               value={formatTime(counters.avgWaitTime)}
               loading={loading}
             />
           </Grid>
           {user.super && (
-          <>
-		  <Grid item xs={12} sm={6} md={4}>
-            <CardCounter
-              icon={<StoreIcon fontSize="inherit" />}
-              title="Empresas Cadastradas"
-              value={counters.totalCompanies}
-              loading={loading}
-            />
-          </Grid>		  
-		  <Grid item xs={12} sm={6} md={4}>
-            <CardCounter
-              icon={<MobileFriendlyIcon fontSize="inherit" />}
-              title="InstÃ¢ncias Conectadas"
-              value={counters.totalWhatsappSessions}
-              loading={loading}
-            />
-          </Grid>
-          </>
-		  )}
-          
-		  {user.profile === "admin" && (
-		  <Grid item xs={12}>
-            {attendants.length ? (
-              <TableAttendantsStatus
-                attendants={attendants}
-                loading={loading}
-              />
-            ) : null}
-          </Grid>
+            <>
+              <Grid item xs={12} sm={6} md={4}>
+                <CardCounter
+                  icon={<StoreIcon fontSize='inherit' />}
+                  title='Empresas Cadastradas'
+                  value={counters.totalCompanies}
+                  loading={loading}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <CardCounter
+                  icon={<MobileFriendlyIcon fontSize='inherit' />}
+                  title='InstÃ¢ncias Conectadas'
+                  value={counters.totalWhatsappSessions}
+                  loading={loading}
+                />
+              </Grid>
+            </>
+          )}
+
+          {user.profile === 'admin' && (
+            <Grid item xs={12}>
+              {attendants.length ? (
+                <TableAttendantsStatus
+                  attendants={attendants}
+                  loading={loading}
+                />
+              ) : null}
+            </Grid>
           )}
         </Grid>
       </Container>
