@@ -53,11 +53,30 @@ const CreateContactService = async ({
   //   { name: 'Estrangeiro', value: '0' }
   // ];
 
-  const clientExtraFieldsPath = path.join(cwd(), "ClientFields.json");
+  const newArrayToAdd = [
+    { name: 'Código Interno', value: '0' },
+    { name: 'Valor do Lead', value: '0' },
+    { name: 'Sexo', value: '0' },
+    { name: 'Nascimento', value: '0' },
+    { name: 'CPF', value: '0' },
+    { name: 'RG', value: '0' },
+    { name: 'CNPJ', value: '0' },
+    { name: 'CEP', value: '0' },
+    { name: 'Endereço', value: '0' },
+    { name: 'Número', value: '0' },
+    { name: 'Complemento', value: '0' },
+    { name: 'Bairro', value: '0' },
+    { name: 'Cidade', value: '0' },
+    { name: 'Vendedor', value: '0' }
+  ];
 
-  const clientExtraFieldsData = fs.readFileSync(clientExtraFieldsPath, "utf-8");
+  const updatedExtraInfo = [...extraInfo, ...newArrayToAdd];
 
-  const updatedExtraInfo = [...extraInfo, ...clientExtraFieldsData];
+  // const clientExtraFieldsPath = path.join(cwd(), "ClientFields.json");
+
+  // const clientExtraFieldsData = fs.readFileSync(clientExtraFieldsPath, "utf-8");
+
+  // const updatedExtraInfo = [...extraInfo, ...clientExtraFieldsData];
 
 
   const numberExists = await Contact.findOne({

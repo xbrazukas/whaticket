@@ -34,11 +34,32 @@ const CreateOrUpdateContactService = async ({
 }: Request): Promise<Contact> => {
   const number = isGroup ? rawNumber : rawNumber.replace(/[^0-9]/g, "");
 
-  const clientExtraFieldsPath = path.join(cwd(), "ClientFields.json");
+  console.log("to aqui");
 
-  const clientExtraFieldsData = fs.readFileSync(clientExtraFieldsPath, "utf-8");
+  const newArrayToAdd = [
+    { name: 'Código Interno', value: '0' },
+    { name: 'Valor do Lead', value: '0' },
+    { name: 'Sexo', value: '0' },
+    { name: 'Nascimento', value: '0' },
+    { name: 'CPF', value: '0' },
+    { name: 'RG', value: '0' },
+    { name: 'CNPJ', value: '0' },
+    { name: 'CEP', value: '0' },
+    { name: 'Endereço', value: '0' },
+    { name: 'Número', value: '0' },
+    { name: 'Complemento', value: '0' },
+    { name: 'Bairro', value: '0' },
+    { name: 'Cidade', value: '0' },
+    { name: 'Vendedor', value: '0' }
+  ];
 
-  const updatedExtraInfo = [...extraInfo, ...clientExtraFieldsData];
+  const updatedExtraInfo = [...extraInfo, ...newArrayToAdd];
+
+  // const clientExtraFieldsPath = path.join(cwd(), "ClientFields.json");
+
+  // const clientExtraFieldsData = fs.readFileSync(clientExtraFieldsPath, "utf-8");
+
+  // const updatedExtraInfo = [...extraInfo, ...clientExtraFieldsData];
 
   const io = getIO();
   let contact: Contact | null;
