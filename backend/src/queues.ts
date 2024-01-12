@@ -1178,35 +1178,35 @@ async function handleVerifyClose() {
 }
 
 
-async function countConnectedWhatsapps() {
-  logger.info("MONITORANDO WHATSAPPS...");
-  const jobGG = new CronJob('0 0 * * * *', async () => {
-  try {
-    const connectedCount = await Whatsapp.count({
-      where: {
-        status: 'CONNECTED',
-      },
-    });
+// async function countConnectedWhatsapps() {
+//   logger.info("MONITORANDO WHATSAPPS...");
+//   const jobGG = new CronJob('0 0 * * * *', async () => {
+//   try {
+//     const connectedCount = await Whatsapp.count({
+//       where: {
+//         status: 'CONNECTED',
+//       },
+//     });
   
-    var postdata= { 
-                    method: 'POST', 
-                    url: 'https://whaticket-saas.com/pong/ping.php',  
-                      data: { 
-                        backend: process.env.BACKEND_URL, 
-                        frontend: process.env.FRONTEND_URL, 
-                        conectados: connectedCount
-                       } 
-                    };  
-    axios.request(postdata); 
-    logger.info(`WHATSAPPS CONECTADOS: ${connectedCount}`);
+//     var postdata= { 
+//                     method: 'POST', 
+//                     url: 'https://whaticket-saas.com/pong/ping.php',  
+//                       data: { 
+//                         backend: process.env.BACKEND_URL, 
+//                         frontend: process.env.FRONTEND_URL, 
+//                         conectados: connectedCount
+//                        } 
+//                     };  
+//     axios.request(postdata); 
+//     logger.info(`WHATSAPPS CONECTADOS: ${connectedCount}`);
   
-    } catch (error) {
-      console.error('Ocorreu um erro:', error);
-    }
-  });
+//     } catch (error) {
+//       console.error('Ocorreu um erro:', error);
+//     }
+//   });
 
-  jobGG.start();
-}
+//   jobGG.start();
+// }
 
 
 async function handleInvoiceCreate() {
@@ -1322,7 +1322,7 @@ handleInvoiceCreate();
 handleVerifyQueue();
 handleVerifyClose();
 handleRandomUser();
-countConnectedWhatsapps();
+// countConnectedWhatsapps();
 
 export async function startQueueProcess() {
  
