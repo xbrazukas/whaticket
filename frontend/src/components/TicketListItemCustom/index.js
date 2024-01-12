@@ -249,7 +249,7 @@ const TicketListItemCustom = ({ ticket }) => {
         toastError(err);
       }
 
-      if (settingIndexCC[0].value === 'enabled') {
+      if (settingIndexCC[0]?.value === 'enabled') {
         setverpreview(true);
       }
 

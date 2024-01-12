@@ -310,7 +310,7 @@ const TicketListItemCustom = ({ handleChangeTab, ticket }) => {
                 toastError(err);
             }
 
-            if (settingIndex[0].value === "enabled" && !ticket.isGroup) {
+            if (settingIndex[0]?.value === "enabled" && !ticket.isGroup) {
                 handleSendMessage(ticket.id);
             }
 

@@ -147,7 +147,7 @@ const TicketsManagerTabs = () => {
         toastError(err);
       }
 
-      if (settingIndex[0].value === 'enabled') {
+      if (settingIndex[0]?.value === 'enabled') {
         setClosed(true);
       } else {
         if (user.profile === 'admin' || user.profile === 'supervisor') {
@@ -171,7 +171,7 @@ const TicketsManagerTabs = () => {
         toastError(err);
       }
 
-      if (settingIndex[0].value === 'enabled') {
+      if (settingIndex[0]?.value === 'enabled') {
         setGroup(true);
       } else {
         if (user.profile === 'admin' || user.profile === 'supervisor') {

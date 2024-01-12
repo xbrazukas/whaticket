@@ -503,7 +503,7 @@ const MessageInputCustom = (props) => {
         	toastError(err);
         }
 
-        if (settingIndex[0].value === "enabled") {
+        if (settingIndex[0]?.value === "enabled") {
             
             setSignMessageBox(true);
         

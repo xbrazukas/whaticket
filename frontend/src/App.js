@@ -63,7 +63,7 @@ const App = () => {
   const fetchMainColor = async () => {
     try {
       const response = await api.get('/settings/mainColor');
-      const fetchedColor = response.data.value;
+      const fetchedColor = response.data?.value;
       //console.log(fetchedColor);
       setMainColor(fetchedColor);
     } catch (error) {
@@ -78,7 +78,7 @@ const App = () => {
   const fetchScrollbarColor = async () => {
     try {
       const response = await api.get('/settings/scrollbarColor');
-      const fetchedColor = response.data.value;
+      const fetchedColor = response.data?.value;
       //console.log(fetchedColor);
       setScrollbarColor(fetchedColor);
     } catch (error) {

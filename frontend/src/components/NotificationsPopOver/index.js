@@ -86,7 +86,7 @@ const NotificationsPopOver = ({ volume }) => {
     
         //console.log(settingIndex[0].value);
 
-        if (settingIndex[0].value === "enabled") {
+        if (settingIndex[0]?.value === "enabled") {
             
             setNotixx(true);
         
