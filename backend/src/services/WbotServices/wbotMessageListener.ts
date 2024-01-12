@@ -956,7 +956,6 @@ const verifyQueue = async (
 
   if (queues.length === 1) {
 
-    logger.info("Queue maior que 1");
 
     /* Tratamento para envio de mensagem quando a fila UNICA está fora do expediente */
     //console.log(choosenQueue.options.length);
@@ -1036,12 +1035,37 @@ const verifyQueue = async (
     //console.log(queues);
 
     const firstQueue = head(queues);
+    // ============ typebot And n8n ===================================
+    if (firstQueue?.typeChatbot === 'typebot') {
+      if (!firstQueue.publicId) return;
+      await UpdateTicketService({
+        ticketData: { queueId: firstQueue?.id, chatbot: true },
+        ticketId: ticket.id,
+        companyId: ticket.companyId,
+      });
+      await handleTypebot(ticket, msg,firstQueue)
+      return;
+    }else if(firstQueue?.typeChatbot === 'n8n'){
+      if (!firstQueue.n8n) return;
+      await UpdateTicketService({
+        ticketData: { queueId: firstQueue.id, chatbot: true },
+        ticketId: ticket.id,
+        companyId: ticket.companyId,
+      });
+      await n8nBot(ticket, msg, firstQueue.companyId, contact, wbot as WASocket);
+      return;
+    }
 
 
     if (firstQueue?.options) {
       chatbot = firstQueue.options.length > 0;
-
     }
+    await UpdateTicketService({
+      ticketData: { queueId: firstQueue?.id, chatbot },
+      ticketId: ticket.id,
+      companyId: ticket.companyId,
+    });
+
 
 
 
@@ -1188,6 +1212,27 @@ const verifyQueue = async (
   if (choosenQueue) {
 
     let chatbot = false;
+    // ============ typebot And n8n ===================================
+    if (choosenQueue?.typeChatbot === 'typebot') {
+      if (!choosenQueue.publicId) return;
+      await UpdateTicketService({
+        ticketData: { queueId: choosenQueue.id, chatbot: true },
+        ticketId: ticket.id,
+        companyId: ticket.companyId,
+      });
+      await handleTypebot(ticket, msg,choosenQueue)
+      return;
+    }else if(choosenQueue?.typeChatbot === 'n8n'){
+      if (!choosenQueue.n8n) return;
+      await UpdateTicketService({
+        ticketData: { queueId: choosenQueue.id, chatbot: true },
+        ticketId: ticket.id,
+        companyId: ticket.companyId,
+      });
+      await n8nBot(ticket, msg, companyId, contact, wbot as WASocket);
+      return;
+    }
+    // ============ End typebot And n8n  ===================================
     if (choosenQueue?.options) {
       chatbot = choosenQueue.options.length > 0;
     }
@@ -1196,7 +1241,6 @@ const verifyQueue = async (
       ticketId: ticket.id,
       companyId: ticket.companyId,
     });
-
 
     /* Tratamento para envio de mensagem quando a fila está fora do expediente */
 
@@ -2532,15 +2576,7 @@ const handleMessage = async (
 
     if (err.includes('SequelizeUnique')) {
 
-      //console.log("reiniciando");
-
-      //const { exec } = require('child_process');
-      //exec('pm2 restart wpwbeta-backend');
-
-
     }
-
-
 
   }
 };
@@ -2573,9 +2609,6 @@ const handleMsgAck = async (
         message: messageToUpdate,
       }
     );
-
-    //COMENTARIO
-    //console.log("linha 2469 - wbot");
 
   } catch (err) {
     Sentry.captureException(err);
