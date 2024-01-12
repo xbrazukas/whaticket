@@ -57,6 +57,8 @@ import Whatsapp from "../../models/Whatsapp";
 import Rating from "../../models/Rating";
 import RatingOption from "../../models/RatingOption";
 import UpdateMessageServiceCronPending from "../MessageServices/UpdateMessageServiceCronPending";
+import {n8nBot} from "./n8nBot"
+import handleTypebot from "./wbotTypebot";
 
 import ffmpeg from "fluent-ffmpeg";
 ffmpeg.setFfmpegPath('/usr/bin/ffmpeg');
@@ -337,7 +339,6 @@ function makeid(length) {
   return result;
 }
 
-
 const getBodyButton = (msg: proto.IWebMessageInfo): string => {
   if (msg.key.fromMe && msg.message.buttonsMessage?.contentText) {
     let bodyMessage = `*${msg?.message?.buttonsMessage?.contentText}*`;
@@ -359,6 +360,7 @@ const getBodyButton = (msg: proto.IWebMessageInfo): string => {
     return bodyMessage;
   }
 };
+
 const getBodyList = (msg: proto.IWebMessageInfo): string => {
   if (msg.key.fromMe && msg.message.listMessage?.description) {
     let bodyMessage = `*${msg.message.listMessage?.description}*`;
@@ -448,7 +450,6 @@ export const getBodyMessage = (msg: proto.IWebMessageInfo): string | null => {
   }
 };
 
-
 export const getQuotedMessage = (msg: proto.IWebMessageInfo): any => {
   const body =
     msg.message.imageMessage.contextInfo ||
@@ -469,6 +470,7 @@ export const getQuotedMessage = (msg: proto.IWebMessageInfo): any => {
 
   return extractMessageContent(body[Object.keys(body).values().next().value]);
 };
+
 export const getQuotedMessageId = (msg: proto.IWebMessageInfo) => {
   const body = extractMessageContent(msg.message)[
     Object.keys(msg?.message).values().next().value
@@ -605,7 +607,6 @@ if (!filename) {
   };
   return media;
 };
-
 
 const verifyContact = async (
   msgContact: IMe,
@@ -914,7 +915,6 @@ const isValidMsg = (msg: proto.IWebMessageInfo): boolean => {
     Sentry.captureException(error);
   }
 };
-
 
 const Push = (msg: proto.IWebMessageInfo) => {
   return msg.pushName;
@@ -1283,7 +1283,6 @@ const verifyQueue = async (
   }
 
 };
-
 
 const verifyRating = (ticketTraking: TicketTraking) => {
   if (
@@ -2328,44 +2327,9 @@ const handleMessage = async (
 
     const ticket = await FindOrCreateTicketService(contact, whatsapp.id!, unreadMessages, companyId, groupContact,);
 
-    //console.log(ticket);
-          /*
-
-    let ticket: Ticket;
-    let findticket = await Ticket.findOne({
-      where: {
-        status: {
-          [Op.or]: ["open", "pending"]
-        },
-        contactId: groupContact ? groupContact.id : contact.id
-      }
-    });
-
-    ticket = await FindOrCreateTicketService(contact, whatsapp.id!, unreadMessages, companyId, groupContact,);
-
-    console.log(findticket.id);
-
-    if (!findticket && msg.key.fromMe) {
-
-      logger.info("Nenhum ticket localizado...");
-
-      if(outsidemessageActive.value === "disabled") {
-        logger.info("MENSAGEM ENVIADA POR FORA DA APLICAÇÃO WEB WPW");
-        return;
-
-      }else{
-
-        logger.info("Abrindo ticket 1...");
-        ticket = await FindOrCreateTicketService(contact, whatsapp.id!, unreadMessages, companyId, groupContact,);
-      }
-
-    } else {
-      logger.info("Abrindo ticket 2...");
-      ticket = await FindOrCreateTicketService(contact, whatsapp.id!, unreadMessages, companyId, groupContact,);
+    if (ticket?.queue?.typeChatbot === 'typebot' && !msg.key.fromMe) {
+      await handleTypebot(ticket, msg, ticket.queue)
     }
-
-    */
-
 
     let findIgnore = await Whatsapp.findOne({
       where: {
@@ -2397,8 +2361,6 @@ const handleMessage = async (
         id: wbot.id
       }
     });
-
-
 
     if(findwebhook.webhook ){
 
@@ -2435,10 +2397,6 @@ const handleMessage = async (
 
         }
     }
-
-
-
-
 
     // voltar para o menu inicial
     if (bodyMessage === "SAIR") {
@@ -2504,7 +2462,6 @@ const handleMessage = async (
       companyId,
       whatsappId: whatsapp?.id,
     });
-
 
     if (hasMedia) {
 

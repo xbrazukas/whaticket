@@ -117,6 +117,13 @@ class Ticket extends Model<Ticket> {
   static setUUID(ticket: Ticket) {
     ticket.uuid = uuidv4();
   }
+  
+  @Column
+  sessiontypebot: string;
+
+  @Column
+  startChatTime: Date;
+
 }
 
 export default Ticket;

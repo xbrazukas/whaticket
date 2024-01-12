@@ -94,6 +94,29 @@ class Queue extends Model<Queue> {
     hooks: true
   })
   options: QueueOption[];
+
+  @Default("")
+  @Column
+  typeChatbot: string;
+  
+  @Column
+  workspaceTypebot: string;
+  
+  @Column
+  typebotId: string;
+  
+  @Column
+  publicId: string;
+
+  @Default(true)
+  @Column
+  resetChatbotMsg: boolean;
+  
+  @Column
+  n8n: string;
+
+  @Column
+  n8nId: string;
 }
 
 export default Queue;

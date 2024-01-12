@@ -32,6 +32,8 @@ import ratingRoutes from "./ratingRoutes";
 import exportarRoutes from "./exportarRoutes";
 import groupRoutes from "./groupRoutes";
 import oportunidadeRoutes from "./oportunidadeRoutes";
+import typebotRoutes from "./typebotRoutes";
+import n8nRoutes from "./n8nRoutes";
 
 const routes = Router();
 
@@ -68,4 +70,7 @@ routes.use(invoiceRoutes);
 routes.use(ratingRoutes);
 routes.use(exportarRoutes);
 routes.use(groupRoutes);
+routes.use("/typebot", typebotRoutes);
+routes.use("/n8n", n8nRoutes);
+
 export default routes;

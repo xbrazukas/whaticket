@@ -25,7 +25,7 @@ const ShowTicketServiceExt = async (
       {
         model: Queue,
         as: "queue",
-        attributes: ["id", "name", "color"]
+        attributes: ["id", "name", "color","typeChatbot","workspaceTypebot","typebotId","publicId","resetChatbotMsg"]
       },
       {
         model: Whatsapp,
