@@ -51,6 +51,14 @@ const useStyles = makeStyles((theme) => ({
   btnWrapper: {
     position: "relative",
   },
+  selectField: {
+    marginRight: theme.spacing(1),
+    flex: 1,
+    minWidth: "300px"
+  },
+  btnWrapper: {
+    position: "relative",
+  },
 
   buttonProgress: {
     color: green[500],
