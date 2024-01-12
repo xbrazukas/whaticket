@@ -160,6 +160,22 @@ export default function Options(props) {
   const [ratingurlType, setratingurlType] = useState('');
   const [loadingratingurlType, setLoadingratingurlType] = useState(false);
 
+  const [tokenTypebot, setTokenTypebot] = useState("");
+  const [loadingtokenTypebot, setLoadingTokenTypebot] = useState(false);
+
+  const [urlTypebot, setUrlTypebot] = useState("");
+  const [loadingUrlTypebot, setLoadingUrlTypebot] = useState(false);
+
+  const [urlBotTypebot, setUrlBotTypebot] = useState("");
+  const [loadingUrlBotTypebot, setLoadingUrlBotTypebot] = useState(false);
+
+  const [urlN8N, setUrlN8N] = useState("");
+  const [loadingUrlN8N, setLoadingUrlN8N] = useState(false);
+
+  const [apiKeyN8N, setApiKeyN8N] = useState("");
+  const [loadingApiKeyN8N, setLoadingApiKeyN8N] = useState(false);
+
+
   //const [tokenixcType, setTokenIxcType] = useState("");
   //const [loadingTokenIxcType, setLoadingTokenIxcType] = useState(false);
 
@@ -333,6 +349,27 @@ export default function Options(props) {
       const asaastokenType = settings.find((s) => s.key === 'asaastoken');
       if (asaastokenType) {
         setasaastokenType(asaastokenType.value);
+      }
+
+      const tokenTypebot = settings.find((s) => s.key === "tokenTypebot");
+      if (tokenTypebot) {
+        setTokenTypebot(tokenTypebot.value);
+      }
+      const urlTypebot = settings.find((s) => s.key === "urlTypebot");
+      if (urlTypebot) {
+        setUrlTypebot(urlTypebot.value);
+      }
+      const urlBotTypebot = settings.find((s) => s.key === "urlBotTypebot");
+      if (urlBotTypebot) {
+        setUrlBotTypebot(urlBotTypebot.value);
+      }
+      const urlN8N = settings.find((s) => s.key === "urlN8N");
+      if (urlN8N) {
+        setUrlN8N(urlN8N.value);
+      }
+      const apiKeyN8N = settings.find((s) => s.key === "apiKeyN8N");
+      if (apiKeyN8N) {
+        setApiKeyN8N(apiKeyN8N.value);
       }
 
       /*
@@ -677,6 +714,61 @@ export default function Options(props) {
     });
     toast.success('Operação atualizada com sucesso.');
     setLoadingsendgridapiType(false);
+  }
+
+  async function handleChangeTokenTypebot(value) {
+    setTokenTypebot(value);
+    setLoadingTokenTypebot(true);
+    await update({
+      key: "tokenTypebot",
+      value,
+    });
+    toast.success("Operação atualizada com sucesso.");
+    setLoadingTokenTypebot(false);
+  }
+
+  async function handleChangeUrlTypebot(value) {
+    setUrlTypebot(value);
+    setLoadingUrlTypebot(true);
+    await update({
+      key: "urlTypebot",
+      value,
+    });
+    toast.success("Operação atualizada com sucesso.");
+    setLoadingUrlTypebot(false);
+  }
+
+  async function handleChangeUrlBotTypebot(value) {
+    setUrlBotTypebot(value);
+    setLoadingUrlBotTypebot(true);
+    await update({
+      key: "urlBotTypebot",
+      value,
+    });
+    toast.success("Operação atualizada com sucesso.");
+    setLoadingUrlBotTypebot(false);
+  }
+
+  async function handleChangeUrlN8N(value) {
+    setUrlN8N(value);
+    setLoadingUrlN8N(true);
+    await update({
+      key: "urlN8N",
+      value,
+    });
+    toast.success("Operação atualizada com sucesso.");
+    setLoadingUrlN8N(false);
+  }
+  
+  async function handleChangeApiKeyN8N(value) {
+    setApiKeyN8N(value);
+    setLoadingApiKeyN8N(true);
+    await update({
+      key: "apiKeyN8N",
+      value,
+    });
+    toast.success("Operação atualizada com sucesso.");
+    setLoadingApiKeyN8N(false);
   }
 
   /*
@@ -1323,8 +1415,144 @@ export default function Options(props) {
             </FormHelperText>
           </FormControl>
         </Grid>
+        
       </Grid>
 
+      <Grid spacing={3} container>
+        <Tabs
+          indicatorColor="primary"
+          textColor="primary"
+          scrollButtons="on"
+          variant="scrollable"
+          className={classes.tab}
+          style={{
+            marginBottom: 20,
+            marginTop: 20
+          }}
+        >
+          <Tab
+
+            label="INTEGRAÇÕES" />
+
+        </Tabs>
+
+      </Grid>
+          
+      {/*-----------------TypeBot-----------------*/}
+      <Grid spacing={3} container style={{ marginBottom: 10 }}>
+        <Tabs
+          indicatorColor="primary"
+          textColor="primary"
+          scrollButtons="on"
+          variant="scrollable"
+          className={classes.tab}
+        >
+          <Tab label="TYPEBOT" />
+        </Tabs>
+        <Grid  xs={12} sm={12} md={4} item>
+          <FormControl className={classes.selectContainer}>
+            <TextField
+              id="urltypebot"
+              name="urltypebot"
+              margin="dense"
+              label="Url Typebot"
+              variant="outlined"
+              value={urlTypebot}
+              onChange={async (e) => {
+                handleChangeUrlTypebot(e.target.value);
+              }}
+            />
+            <FormHelperText>
+              {loadingUrlTypebot && "Atualizando..."}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+        <Grid  xs={12} sm={12} md={4} item>
+          <FormControl className={classes.selectContainer}>
+            <TextField
+              id="urlBotTypebot"
+              name="urlBotTypebot"
+              margin="dense"
+              label="Url Bot Typebot"
+              variant="outlined"
+              value={urlBotTypebot}
+              onChange={async (e) => {
+                handleChangeUrlBotTypebot(e.target.value);
+              }}
+            />
+            <FormHelperText>
+              {loadingUrlBotTypebot && "Atualizando..."}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+        <Grid  xs={12} sm={12} md={4} item>
+          <FormControl className={classes.selectContainer}>
+            <TextField
+              id="tokentypebot"
+              name="tokentypebot"
+              margin="dense"
+              label="Token Typebot"
+              variant="outlined"
+              value={tokenTypebot}
+              onChange={async (e) => {
+                handleChangeTokenTypebot(e.target.value);
+              }}
+            />
+            <FormHelperText>
+              {loadingtokenTypebot && "Atualizando..."}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+      </Grid>
+       {/*-----------------N8N-----------------*/}
+       <Grid spacing={3} container style={{ marginBottom: 10 }}>
+        <Tabs
+          indicatorColor="primary"
+          textColor="primary"
+          scrollButtons="on"
+          variant="scrollable"
+          className={classes.tab}
+        >
+          <Tab label="N8N" />
+        </Tabs>
+        <Grid  xs={12} sm={6} md={6} item>
+          <FormControl className={classes.selectContainer}>
+            <TextField
+              id="urlN8N"
+              name="urlN8N"
+              margin="dense"
+              label="Url N8N"
+              variant="outlined"
+              value={urlN8N}
+              onChange={async (e) => {
+                handleChangeUrlN8N(e.target.value);
+              }}
+            />
+            <FormHelperText>
+              {loadingUrlN8N && "Atualizando..."}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+        <Grid  xs={12} sm={6} md={6} item>
+          <FormControl className={classes.selectContainer}>
+            <TextField
+              id="apiKeyN8N"
+              name="apiKeyN8N"
+              margin="dense"
+              label="API KEY N8N"
+              variant="outlined"
+              value={apiKeyN8N}
+              onChange={async (e) => {
+                handleChangeApiKeyN8N(e.target.value);
+              }}
+            />
+            <FormHelperText>
+              {loadingApiKeyN8N && "Atualizando..."}
+            </FormHelperText>
+          </FormControl>
+        </Grid>
+      </Grid>
+      
       <OnlyForSuperUser
         user={currentUser}
         yes={() => (
@@ -1777,6 +2005,122 @@ export default function Options(props) {
                 </FormControl>
               </Grid>
             </Grid>
+            
+            {/*-----------------TypeBot-----------------*/}
+            <Grid spacing={3} container style={{ marginBottom: 10 }}>
+              <Tabs
+                indicatorColor="primary"
+                textColor="primary"
+                scrollButtons="on"
+                variant="scrollable"
+                className={classes.tab}
+              >
+                <Tab label="TYPEBOT" />
+              </Tabs>
+              <Grid  xs={12} sm={12} md={4} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id="urltypebot"
+                    name="urltypebot"
+                    margin="dense"
+                    label="Url Typebot"
+                    variant="outlined"
+                    value={urlTypebot}
+                    onChange={async (e) => {
+                      handleChangeUrlTypebot(e.target.value);
+                    }}
+                  />
+                  <FormHelperText>
+                    {loadingUrlTypebot && "Atualizando..."}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+              <Grid  xs={12} sm={12} md={4} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id="urlBotTypebot"
+                    name="urlBotTypebot"
+                    margin="dense"
+                    label="Url Bot Typebot"
+                    variant="outlined"
+                    value={urlBotTypebot}
+                    onChange={async (e) => {
+                      handleChangeUrlBotTypebot(e.target.value);
+                    }}
+                  />
+                  <FormHelperText>
+                    {loadingUrlBotTypebot && "Atualizando..."}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+              <Grid  xs={12} sm={12} md={4} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id="tokentypebot"
+                    name="tokentypebot"
+                    margin="dense"
+                    label="Token Typebot"
+                    variant="outlined"
+                    value={tokenTypebot}
+                    onChange={async (e) => {
+                      handleChangeTokenTypebot(e.target.value);
+                    }}
+                  />
+                  <FormHelperText>
+                    {loadingtokenTypebot && "Atualizando..."}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
+            {/*-----------------N8N-----------------*/}
+            <Grid spacing={3} container style={{ marginBottom: 10 }}>
+              <Tabs
+                indicatorColor="primary"
+                textColor="primary"
+                scrollButtons="on"
+                variant="scrollable"
+                className={classes.tab}
+              >
+                <Tab label="N8N" />
+              </Tabs>
+              <Grid  xs={12} sm={6} md={6} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id="urlN8N"
+                    name="urlN8N"
+                    margin="dense"
+                    label="Url N8N"
+                    variant="outlined"
+                    value={urlN8N}
+                    onChange={async (e) => {
+                      handleChangeUrlN8N(e.target.value);
+                    }}
+                  />
+                  <FormHelperText>
+                    {loadingUrlN8N && "Atualizando..."}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+              <Grid  xs={12} sm={6} md={6} item>
+                <FormControl className={classes.selectContainer}>
+                  <TextField
+                    id="apiKeyN8N"
+                    name="apiKeyN8N"
+                    margin="dense"
+                    label="API KEY N8N"
+                    variant="outlined"
+                    value={apiKeyN8N}
+                    onChange={async (e) => {
+                      handleChangeApiKeyN8N(e.target.value);
+                    }}
+                  />
+                  <FormHelperText>
+                    {loadingApiKeyN8N && "Atualizando..."}
+                  </FormHelperText>
+                </FormControl>
+              </Grid>
+            </Grid>
+
           </>
         )}
       />
