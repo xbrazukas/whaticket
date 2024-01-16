@@ -437,14 +437,14 @@ const Connections = () => {
 															<Edit color="secondary" />
 														</IconButton>
 
-{/* <IconButton
+														<IconButton
 															size="small"
 															onClick={e => {
 																handleOpenConfirmationModal("delete", whatsApp.id);
 															}}
 														>
 															<DeleteOutline color="secondary" />
-														</IconButton> */}
+														</IconButton>
 													</TableCell>
 												)}
 											/>
