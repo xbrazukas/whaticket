@@ -232,7 +232,7 @@ const ListTicketsServiceKanban = async ({
       }
     };
   }
-
+console.log(whereCondition);
   const limit = 400000;
   const offset = limit * (+pageNumber - 1);
 
