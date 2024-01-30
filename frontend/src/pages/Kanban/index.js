@@ -116,7 +116,7 @@ const Kanban = () => {
       setT(t + 1);
       const { data } = await api.get('/tickets/kanban', {
         params: {
-          showAll: false,
+          showAll: (profile === 'admin' || profile === 'supervisor') ? true : false,
           searchParam: searchParams,
           users: JSON.stringify(selectedUsers),
           queueIds: JSON.stringify(jsonString),
