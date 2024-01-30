@@ -158,6 +158,7 @@ const ListTicketsServiceKanban = async ({
 
   if (updatedAt) {
     whereCondition = {
+      ...whereCondition,
       updatedAt: {
         [Op.between]: [
           +startOfDay(parseISO(updatedAt)),
