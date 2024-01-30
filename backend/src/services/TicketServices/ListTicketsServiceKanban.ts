@@ -128,7 +128,7 @@ const ListTicketsServiceKanban = async ({
 
     whereCondition = {
       ...whereCondition,
-      [Op.or]: [
+      [Op.and]: [
         {
           "$contact.name$": where(
             fn("LOWER", col("contact.name")),
