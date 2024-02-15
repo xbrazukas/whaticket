@@ -16,6 +16,10 @@ import FindAllCompaniesService from "../services/CompanyService/FindAllCompanies
 import User from "../models/User";
 import ShowPlanCompanyService from "../services/CompanyService/ShowPlanCompanyService";
 import ListCompaniesPlanService from "../services/CompanyService/ListCompaniesPlanService";
+import fs from "fs";
+import path from "path";
+
+const publicFolder = path.resolve(__dirname, "..", "..", "public");
 
 interface TokenPayload {
   id: string;
@@ -212,7 +216,18 @@ export const remove = async (
   }
   const { id } = req.params;
 
+  if (fs.existsSync(`${publicFolder}/company${id}/`)) {
+
+    const removefolder = await fs.rmdirSync(`${publicFolder}/company${id}/`, {
+      recursive: true,
+    });
+
+  }
+
   const company = await DeleteCompanyService(id);
+
+
+  //fs.remove(`${publicFolder}/company${id}/`);
 
   return res.status(200).json(company);
 };
