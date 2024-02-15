@@ -25,6 +25,7 @@
     "@sendgrid/mail": "^7.7.0",
     "@sentry/node": "^6.18.1",
     "@types/bull": "^4.10.0",
+    "@types/fs-extra": "^11.0.4",
     "bcryptjs": "^2.4.3",
     "bull": "^4.10.4",
     "cookie-parser": "^1.4.6",
