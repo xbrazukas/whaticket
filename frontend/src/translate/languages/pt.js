@@ -195,6 +195,7 @@ const messages = {
           prioridade: 'Ordenação do BOT',
           ativarRoteador: 'Rodízio de Atendentes',
           tempoRoteador: 'Tempo para Rodízio',
+          resetChatbot: 'Pemitir reiniciar atendimento',
         },
         buttons: {
           okAdd: 'Adicionar',

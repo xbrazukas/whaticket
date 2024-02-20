@@ -162,6 +162,7 @@ const messages = {
           name: 'Name',
           color: 'Color',
           greetingMessage: 'Greeting Message',
+          resetChatbot: 'Pemitir reiniciar atendimento'
         },
         buttons: {
           okAdd: 'Add',
