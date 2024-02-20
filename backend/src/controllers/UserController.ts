@@ -98,11 +98,11 @@ export const update = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  
+
   const { id: requestUserId, companyId } = req.user;
   const { userId } = req.params;
   const userData = req.body;
- 
+
   //console.log(req.body);
   //console.log(req.user);
   //console.log(userId);
@@ -120,7 +120,7 @@ export const update = async (
     requestUserId: +requestUserId
   });
 
-  
+
 
   const io = getIO();
   io.emit(`company-${companyId}-user`, {
@@ -183,20 +183,20 @@ const gerarToken = () => {
 export const sendEmail = async (req: Request, res: Response): Promise<Response> => {
   const { email } = req.body;
   const token = gerarToken();
-  
+
   let responseReq = null;
   let sendgridapi = null;
   let emailsender = null;
 
   try {
-    
+
     const buscacompanyId = 1;
-  
+
     const getapi = await Setting.findOne({
       where: { companyId: buscacompanyId, key: "sendgridapi" },
     });
     sendgridapi = getapi?.value;
-  
+
     const getmail = await Setting.findOne({
       where: { companyId: buscacompanyId, key: "emailsender" },
     });
@@ -206,8 +206,10 @@ export const sendEmail = async (req: Request, res: Response): Promise<Response> 
     console.error("Error retrieving settings:", error);
   }
 
-  if (!sendgridapi || !emailsender) {
-  	return res.status(500).json({ message: "Missing sendgridapi or emailsender settings" });
+  if (!sendgridapi) {
+    if(!emailsender){
+      return res.status(500).json({ message: "Missing sendgridapi or emailsender settings" });
+    }
   }
 
   const sgMail = require('@sendgrid/mail');
@@ -215,7 +217,7 @@ export const sendEmail = async (req: Request, res: Response): Promise<Response> 
 
   const mensagem = {
     to: `${email}`,
-    from: `${emailsender}`,
+    from: `${process.env.MAIL_FROM} <${emailsender}>`,
     bcc: `${emailsender}`,
     subject: 'Alteração de Senha',
     text: `Token para redefinição de senha: ${token}`,
@@ -225,12 +227,28 @@ export const sendEmail = async (req: Request, res: Response): Promise<Response> 
   </div>`,
   }
 
-  sgMail.send(mensagem)
-  .then((response: any) => {
-    console.log("Envio Email: ", response);
-    responseReq = response
-  })
-  .catch((err: any) => console.log(err));
+  if(sendgridapi){
+
+    sgMail.send(mensagem)
+    .then((response: any) => {
+      console.log("Envio Email: ", response);
+      responseReq = response
+    })
+    .catch((err: any) => console.log(err));
+  }else if(emailsender){
+
+    SendMail(mensagem)
+    .then((response: any) => {
+      console.log("Envio Email: ", response);
+      responseReq = response
+    })
+    .catch((err: any) => console.log(err));
+
+  }else{
+    return res.status(500).json({ message: "Missing sendgridapi or emailsender settings" });
+  }
+
+
 
   return res.status(200).json({
     responseReq: responseReq,
