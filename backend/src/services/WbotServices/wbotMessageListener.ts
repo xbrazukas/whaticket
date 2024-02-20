@@ -2394,7 +2394,7 @@ const handleMessage = async (
       }
   }
 
-    // INTEGRAÇÃO EXTERNA RAFAEL - WEBHOOK DE MENSAGENS RECEBIDAS - TRATAMENTO
+    // INTEGRAÇÃO EXTERNA - WEBHOOK DE MENSAGENS RECEBIDAS - TRATAMENTO
     const filaescolhida = ticket.queue?.name
     const filaescolhidaid = ticket.queue?.id
     const disparaporonde = wbot.id;

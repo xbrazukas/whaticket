@@ -423,9 +423,9 @@ export const getBodyMessage = (msg: proto.IWebMessageInfo): string | null => {
     };
 
     //console.log(msg);
-  
+
     const objKey = Object.keys(types).find(key => key === type);
-  
+
     if (!objKey) {
       logger.warn(`#### Nao achou o type 152: ${type}
       ${JSON.stringify(msg)}`);
@@ -594,7 +594,7 @@ const verifyContact = async (
   wbot: Session,
   companyId: number
 ): Promise<Contact> => {
-  
+
   let profilePicUrl: string;
   try {
     profilePicUrl = await wbot.profilePictureUrl(msgContact.id);
@@ -612,7 +612,7 @@ const verifyContact = async (
   };
 
 
-  const contact = CreateOrUpdateContactService(contactData); 
+  const contact = CreateOrUpdateContactService(contactData);
 
   return contact;
 };
@@ -659,7 +659,7 @@ const verifyMediaMessage = async (
       fs.mkdirSync(folder);
       fs.chmodSync(folder, 0o777)
     }
-  
+
     await writeFileAsync(
       join(__dirname, "..", "..", "..", folder, media.filename),
       media.data,
@@ -734,7 +734,7 @@ export const verifyMessage = async (
   ticket: Ticket,
   contact: Contact
 ) => {
-  
+
   const io = getIO();
   const quotedMsg = await verifyQuotedMessage(msg);
   const body = getBodyMessage(msg);
@@ -753,7 +753,7 @@ export const verifyMessage = async (
     participant: msg.key.participant,
     dataJson: JSON.stringify(msg)
   };
-  
+
   await ticket.update({
     lastMessage: body
   });
@@ -776,7 +776,7 @@ export const verifyMessage = async (
       ticket,
       ticketId: ticket.id
     });
-  
+
     /*
 
     io.to(ticket.status)
@@ -786,7 +786,7 @@ export const verifyMessage = async (
         ticket,
         ticketId: ticket.id
       });
-      
+
     */
 
     //COMENTARIO
@@ -825,10 +825,10 @@ const isValidMsg = (msg: proto.IWebMessageInfo): boolean => {
       msgType === "protocolMessage" ||
       msgType === "listResponseMessage" ||
       msgType === "listMessage" ||
-      msgType === "viewOnceMessageV2" || 
+      msgType === "viewOnceMessageV2" ||
       msgType === "contactsArrayMessage" ||
       msgType === "viewOnceMessage";
-  
+
     //logger.warn(`#### Nao achou o type em isValidMsg: ${msgType}
     //${JSON.stringify(msg?.message)}`);
 
@@ -864,12 +864,12 @@ const verifyQueue = async (
   if (queues.length === 1 ) {
     const firstQueue = head(queues);
     let chatbot = false;
-    
+
     if (firstQueue?.options) {
       chatbot = firstQueue.options.length > 0;
-      
+
     }
-    
+
     await UpdateTicketService({
       ticketData: { queueId: firstQueue?.id, chatbot },
       ticketId: ticket.id,
@@ -888,7 +888,7 @@ const verifyQueue = async (
 
       await verifyMessage(sendMsg, ticket, ticket.contact);
     }
-    
+
     return;
   }
 
@@ -1015,31 +1015,31 @@ const verifyQueue = async (
           }
           );
           await verifyMessage(sentMessage, ticket, contact);
-        
-        
+
+
           const outsidemessageActive = await Setting.findOne({
         where: {
           key: "outsidemessage",
           companyId
         }
         });
-        
+
           logger.info(outsidemessageActive.value);
-        
+
           if(outsidemessageActive.value === "disabled") {
-           
+
             logger.info("MENSAGEM ENVIADA FORA DO HORÁRIO - SEM ABRIR TICKET");
-           
+
               await UpdateTicketService({
                 ticketData: { queueId: null, chatbot },
                 ticketId: ticket.id,
                 companyId: ticket.companyId,
               });
-        
+
               return;
-           
+
            }
-        
+
         }
       }
 
@@ -1214,7 +1214,7 @@ const handleRating = async (
 };
 
 /*
- * 
+ *
 const handleRating = async (
   msg: WAMessage,
   ticket: Ticket,
@@ -1321,9 +1321,9 @@ const handleChartbot = async (
   });
 
   const botText = async () => {
-     
+
     console.log("BOT TEXTO");
-  
+
     if (!isNil(queue) && !isNil(ticket.queueOptionId) && messageBody == "#") {
       // falar com atendente
       await ticket.update({ queueOptionId: null, chatbot: false });
@@ -1333,7 +1333,7 @@ const handleChartbot = async (
           text: "\u200eAguarde, você será atendido em instantes."
         }
       );
-  
+
       verifyMessage(sentMessage, ticket, ticket.contact);
       return;
     } else if (!isNil(queue) && !isNil(ticket.queueOptionId) && messageBody == "0") {
@@ -1368,7 +1368,7 @@ const handleChartbot = async (
         await ticket.update({ queueOptionId: option?.id });
       }
     }
-  
+
     await ticket.reload();
 
     if (!isNil(queue) && isNil(ticket.queueOptionId)) {
@@ -1381,11 +1381,11 @@ const handleChartbot = async (
           ["createdAt", "ASC"]
         ]
       });
-  
+
       if (queue.greetingMessage) {
         body = `${queue.greetingMessage}\n\n`;
       }
-  
+
       queueOptions.forEach((option, i) => {
         if (queueOptions.length - 1 > i) {
           options += `*[ ${option.option} ]* - ${option.title}\n`;
@@ -1393,23 +1393,23 @@ const handleChartbot = async (
           options += `*[ ${option.option} ]* - ${option.title}`;
         }
       });
-  
+
       if (options !== "") {
         body += options;
       }
-  
+
       body += "\n\n*[ # ]* - *Menu Inicial*";
-  
+
       const textMessage = {
         text: formatBody(`\u200e${body}`, ticket.contact),
       };
       const sendMsg = await wbot.sendMessage(`${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,textMessage
       );
-  
+
       await verifyMessage(sendMsg, ticket, ticket.contact);
 
       if (queue.isChatbot) {
-        
+
         await ticket.update({
           queueId: null
         })
@@ -1431,10 +1431,10 @@ const handleChartbot = async (
         const textMessage = {
           text: formatBody(`${currentOption.message}`, ticket.contact),
         };
-  
+
         console.log(currentOption.queueType + "     ENTROU AQUIIIIIIIIIIIIIIII    "+ currentOption.parentId +"     11111111111111  " + currentOption.queueOptionsId)
-  
-  
+
+
         const lastMessageFromMe = await Message.findOne({
           where: {
             ticketId: ticket.id,
@@ -1443,7 +1443,7 @@ const handleChartbot = async (
           },
           order: [["createdAt", "DESC"]]
         });
-  
+
         if (lastMessageFromMe) {
           if (currentOption.queueType === "queue" ) {
             // console.log("queueId:" + currentOption.queueOptionsId)
@@ -1453,7 +1453,7 @@ const handleChartbot = async (
                chatbot: false
              })
            };
-     
+
            if (currentOption.queueType === "attendent") {
              await ticket.update({
                userId: currentOption.queueUsersId,
@@ -1462,10 +1462,10 @@ const handleChartbot = async (
                chatbot: false
              })
            };
-     
+
           return;
         }
-  
+
         if (currentOption.queueType === "queue" ) {
           // console.log("queueId:" + currentOption.queueOptionsId)
            await ticket.update({
@@ -1474,7 +1474,7 @@ const handleChartbot = async (
              chatbot: false
            })
          };
-   
+
          if (currentOption.queueType === "attendent") {
            await ticket.update({
             userId: currentOption.queueUsersId,
@@ -1483,15 +1483,15 @@ const handleChartbot = async (
             chatbot: false
            })
          };
-   
+
         const sendMsg = await wbot.sendMessage(
           `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
           textMessage
         );
-  
+
         await verifyMessage(sendMsg, ticket, ticket.contact);
-  
-       
+
+
         return
       }
       if (queueOptions.length > 1) {
@@ -1499,22 +1499,22 @@ const handleChartbot = async (
           initialMessage = `${currentOption?.message}\n\n`;
           body += initialMessage;
         }
-  
+
         if (queueOptions.length == 0) {
           aditionalOptions = `*#* - *Falar com o atendente*\n`;
         }
-  
+
         queueOptions.forEach(option => {
           options += `*[ ${option.option} ]* - ${option.title}\n`;
         });
-  
+
         if (options !== "") {
           body += options;
         }
-  
+
         aditionalOptions += "*[ 0 ]* - *Voltar*\n";
         aditionalOptions += "*[ # ]* - *Menu inicial*";
-  
+
         body += aditionalOptions;
       } else {
         const firstOption = head(queueOptions);
@@ -1529,18 +1529,18 @@ const handleChartbot = async (
           body += `*[ # ]* - *Menu inicial*`;
         }
       }
-  
+
       const textMessage = {
         text: formatBody(`\u200e${body}`, ticket.contact),
       };
-      
+
       const sendMsg = await wbot.sendMessage(
         `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
         textMessage
       );
-      
+
       await verifyMessage(sendMsg, ticket, ticket.contact);
-    }   
+    }
 
   };
 
@@ -1554,7 +1554,7 @@ const handleChartbot = async (
           text: "\u200eAguarde, você será atendido em instantes."
         }
       );
-  
+
       verifyMessage(sentMessage, ticket, ticket.contact);
       return;
     } else if (!isNil(queue) && !isNil(ticket.queueOptionId) && messageBody == "0") {
@@ -1589,7 +1589,7 @@ const handleChartbot = async (
         await ticket.update({ queueOptionId: option?.id });
       }
     }
-  
+
     await ticket.reload();
 
     if (!isNil(queue) && isNil(ticket.queueOptionId)) {
@@ -1603,23 +1603,23 @@ const handleChartbot = async (
           ["createdAt", "ASC"]
         ]
       });
-  
+
       if (queue.greetingMessage) {
         body = `${queue.greetingMessage}\n\n`;
       }
-  
+
       queueOptions.forEach((option, i) => {
         sectionsRows.push({
           title: option.title,
           rowId: `${option.option}`
         });
       });
-  
+
       sectionsRows.push({
         title: "Voltar Menu Inicial",
         rowId: `#`
       });
-  
+
       const sections = [
         {
           rows: sectionsRows
@@ -1655,31 +1655,31 @@ const handleChartbot = async (
       let sectionsRows = [];
       let body = "";
       let initialMessage = "";
-  
+
       if (queueOptions.length > 1) {
         if (!isNil(currentOption?.message) && currentOption?.message !== "") {
           initialMessage = `${currentOption?.message}`;
           body += initialMessage;
         }
-  
+
         if (queueOptions.length == 0) {
           sectionsRows.push({
             title: "Voltar Menu Inicial",
             rowId: `#`
           });
         }
-  
+
         queueOptions.forEach(option => {
           sectionsRows.push({
             title: option.title,
             rowId: `${option.option}`
           });
         });
-  
+
         /* if (options !== "") {
           body += options;
         } */
-  
+
         sectionsRows.push({
           title: "Voltar",
           rowId: `0`
@@ -1689,7 +1689,7 @@ const handleChartbot = async (
           rowId: `#`
         });
 
-  
+
         //body += aditionalOptions;
       } else {
         const firstOption = head(queueOptions);
@@ -1739,7 +1739,7 @@ const handleChartbot = async (
           queueId: null
       })
     }
-    }   
+    }
   };
 
   const botButton = async () => {
@@ -1752,7 +1752,7 @@ const handleChartbot = async (
           text: "\u200eAguarde, você será atendido em instantes."
         }
       );
-  
+
       verifyMessage(sentMessage, ticket, ticket.contact);
       return;
     } else if (!isNil(queue) && !isNil(ticket.queueOptionId) && messageBody == "0") {
@@ -1787,7 +1787,7 @@ const handleChartbot = async (
         await ticket.update({ queueOptionId: option?.id });
       }
     }
-  
+
     await ticket.reload();
 
     if (!isNil(queue) && isNil(ticket.queueOptionId)) {
@@ -1801,11 +1801,11 @@ const handleChartbot = async (
           ["createdAt", "ASC"]
         ]
       });
-  
+
       if (queue.greetingMessage) {
         body = `${queue.greetingMessage}\n\n`;
       }
-  
+
       queueOptions.forEach((option, i) => {
         buttons.push({
           buttonId: `${option.option}`,
@@ -1813,7 +1813,7 @@ const handleChartbot = async (
           type: 4
         });
       });
-  
+
       buttons.push({
         buttonId: `#`,
         buttonText: { displayText: "Voltar Menu Inicial" },
@@ -1845,13 +1845,13 @@ const handleChartbot = async (
       let sectionsRows = [];
       let body = "";
       let initialMessage = "";
-  
+
       if (queueOptions.length > 1) {
         if (!isNil(currentOption?.message) && currentOption?.message !== "") {
           initialMessage = `${currentOption?.message}`;
           body += initialMessage;
         }
-  
+
         if (queueOptions.length == 0) {
           buttons.push({
             buttonId: `#`,
@@ -1859,7 +1859,7 @@ const handleChartbot = async (
             type: 4
           });
         }
-  
+
         queueOptions.forEach(option => {
           buttons.push({
             buttonId: `${option.option}`,
@@ -1867,11 +1867,11 @@ const handleChartbot = async (
             type: 4
           });
         });
-  
+
         /* if (options !== "") {
           body += options;
         } */
-  
+
         buttons.push({
           buttonId: `0`,
           buttonText: { displayText: "Voltar" },
@@ -1883,7 +1883,7 @@ const handleChartbot = async (
           type: 4
         });
 
-  
+
         //body += aditionalOptions;
       } else {
         const firstOption = head(queueOptions);
@@ -1932,7 +1932,7 @@ const handleChartbot = async (
       );
 
       await verifyMessage(sendMsg, ticket, ticket.contact);
-    }   
+    }
   };
 
 
@@ -1955,7 +1955,7 @@ const handleChartbot = async (
   if (!isNil(queue) && isNil(ticket.queueOptionId)) {
     let body = "";
     let options = "";
-    
+
     const queueOptions = await QueueOption.findAll({
       where: { queueId: ticket.queueId, parentId: null },
       order: [
@@ -2038,7 +2038,7 @@ const handleChartbot = async (
              chatbot: false
            })
          };
-   
+
          if (currentOption.queueType === "attendent") {
            await ticket.update({
              userId: currentOption.queueUsersId,
@@ -2047,7 +2047,7 @@ const handleChartbot = async (
              chatbot: false
            })
          };
-   
+
         return;
       }
 
@@ -2059,7 +2059,7 @@ const handleChartbot = async (
            chatbot: false
          })
        };
- 
+
        if (currentOption.queueType === "attendent") {
          await ticket.update({
            userId: currentOption.queueUsersId,
@@ -2068,7 +2068,7 @@ const handleChartbot = async (
            chatbot: false
          })
        };
- 
+
       const sendMsg = await wbot.sendMessage(
         `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
         textMessage
@@ -2076,7 +2076,7 @@ const handleChartbot = async (
 
       await verifyMessage(sendMsg, ticket, ticket.contact);
 
-     
+
       return
     }
 
@@ -2181,7 +2181,7 @@ const handleMessage = async (
       msg.message.stickerMessage ||
       msg.message?.extendedTextMessage?.contextInfo?.quotedMessage?.imageMessage ||
       msg.message?.viewOnceMessageV2?.message?.imageMessage
-  
+
     if (msg.key.fromMe) {
       if (/\u200e/.test(bodyMessage)) return;
 
@@ -2223,135 +2223,135 @@ const handleMessage = async (
     const ticket = await FindOrCreateTicketService(contact, whatsapp.id!, unreadMessages, companyId, groupContact,);
 
     //console.log(ticket);
-          /*  
-      
-    let ticket: Ticket; 
-    let findticket = await Ticket.findOne({ 
-      where: {  
-        status: { 
-          [Op.or]: ["open", "pending"]  
-        },  
-        contactId: groupContact ? groupContact.id : contact.id          
-      } 
-    }); 
-    
-    ticket = await FindOrCreateTicketService(contact, whatsapp.id!, unreadMessages, companyId, groupContact,);  
-    
-    console.log(findticket.id); 
-    
-    if (!findticket && msg.key.fromMe) {  
-      
-      logger.info("Nenhum ticket localizado...");   
-      
-      if(outsidemessageActive.value === "disabled") { 
-        logger.info("MENSAGEM ENVIADA POR FORA DA APLICAÇÃO WEB WPW");  
-        return; 
-        
-      }else{  
-        
-        logger.info("Abrindo ticket 1...");   
-        ticket = await FindOrCreateTicketService(contact, whatsapp.id!, unreadMessages, companyId, groupContact,);  
-      } 
-      
-    } else {  
-      logger.info("Abrindo ticket 2...");   
-      ticket = await FindOrCreateTicketService(contact, whatsapp.id!, unreadMessages, companyId, groupContact,);  
-    } 
-      
-    */  
-    
-    
-    let findIgnore = await Whatsapp.findOne({ 
-      where: {  
-        id: wbot.id 
-      } 
-    }); 
-    if (findIgnore.ignoreNumbers) { 
-    logger.info("Lista de Números a Ignorar Encontrada"); 
-      logger.info(findIgnore.ignoreNumbers);  
-      const ignoreNumbers = findIgnore.ignoreNumbers.toString();  
-      const ignoreArray = ignoreNumbers.split(","); 
-      if (ignoreArray.includes(ticket.contact.number)) {  
-        logger.info("Número Encontrado - SAINDO..."); 
-        logger.info(ticket.contact.number); 
-          
-            return; 
-          
-      } 
-  } 
-    
-    // INTEGRAÇÃO EXTERNA RAFAEL - WEBHOOK DE MENSAGENS RECEBIDAS - TRATAMENTO  
-    const filaescolhida = ticket.queue?.name  
-    const filaescolhidaid = ticket.queue?.id  
-    const disparaporonde = wbot.id; 
-    
-    //let whatsapp: Whatsapp; 
-    let findwebhook = await Whatsapp.findOne({  
-      where: {  
-        id: wbot.id 
-      } 
-    }); 
-    
-      
-      
-    if(findwebhook.webhook ){ 
-      
-      logger.info("WEBHOOK ENCONTRADO");  
-      logger.info(findwebhook.webhook); 
-  
-      const webhookurl = findwebhook.webhook; 
-      if(webhookurl){ 
-          
-          if (bodyMessage !== "SAIR") { 
-          
-            var postwebhook = { 
-                          method: 'POST', 
-                          url: webhookurl,  
-                          data: { 
-                            filaescolhida: filaescolhida, 
-                            filaescolhidaid: filaescolhidaid, 
-                            mensagem: getBodyMessage(msg),  
-                            sender: ticket.contact.number,  
-                            chamadoId: ticket.id, 
-                            acao: 'start',  
-                            name: msgContact?.name, 
-                            companyId: companyId, 
-                            defaultWhatsapp_x: wbot.id  
-                          } 
-                        };  
-            axios.request(postwebhook); 
-            logger.info("WEBHOOK POST EXEC"); 
-              
-            } 
-          
-        } 
+          /*
+
+    let ticket: Ticket;
+    let findticket = await Ticket.findOne({
+      where: {
+        status: {
+          [Op.or]: ["open", "pending"]
+        },
+        contactId: groupContact ? groupContact.id : contact.id
+      }
+    });
+
+    ticket = await FindOrCreateTicketService(contact, whatsapp.id!, unreadMessages, companyId, groupContact,);
+
+    console.log(findticket.id);
+
+    if (!findticket && msg.key.fromMe) {
+
+      logger.info("Nenhum ticket localizado...");
+
+      if(outsidemessageActive.value === "disabled") {
+        logger.info("MENSAGEM ENVIADA POR FORA DA APLICAÇÃO WEB WPW");
+        return;
+
+      }else{
+
+        logger.info("Abrindo ticket 1...");
+        ticket = await FindOrCreateTicketService(contact, whatsapp.id!, unreadMessages, companyId, groupContact,);
+      }
+
+    } else {
+      logger.info("Abrindo ticket 2...");
+      ticket = await FindOrCreateTicketService(contact, whatsapp.id!, unreadMessages, companyId, groupContact,);
+    }
+
+    */
+
+
+    let findIgnore = await Whatsapp.findOne({
+      where: {
+        id: wbot.id
+      }
+    });
+    if (findIgnore.ignoreNumbers) {
+    logger.info("Lista de Números a Ignorar Encontrada");
+      logger.info(findIgnore.ignoreNumbers);
+      const ignoreNumbers = findIgnore.ignoreNumbers.toString();
+      const ignoreArray = ignoreNumbers.split(",");
+      if (ignoreArray.includes(ticket.contact.number)) {
+        logger.info("Número Encontrado - SAINDO...");
+        logger.info(ticket.contact.number);
+
+            return;
+
+      }
+  }
+
+    // INTEGRAÇÃO EXTERNA - WEBHOOK DE MENSAGENS RECEBIDAS - TRATAMENTO
+    const filaescolhida = ticket.queue?.name
+    const filaescolhidaid = ticket.queue?.id
+    const disparaporonde = wbot.id;
+
+    //let whatsapp: Whatsapp;
+    let findwebhook = await Whatsapp.findOne({
+      where: {
+        id: wbot.id
+      }
+    });
+
+
+
+    if(findwebhook.webhook ){
+
+      logger.info("WEBHOOK ENCONTRADO");
+      logger.info(findwebhook.webhook);
+
+      const webhookurl = findwebhook.webhook;
+      if(webhookurl){
+
+          if (bodyMessage !== "SAIR") {
+
+            var postwebhook = {
+                          method: 'POST',
+                          url: webhookurl,
+                          data: {
+                            filaescolhida: filaescolhida,
+                            filaescolhidaid: filaescolhidaid,
+                            mensagem: getBodyMessage(msg),
+                            sender: ticket.contact.number,
+                            chamadoId: ticket.id,
+                            acao: 'start',
+                            name: msgContact?.name,
+                            companyId: companyId,
+                            defaultWhatsapp_x: wbot.id
+                          }
+                        };
+            axios.request(postwebhook);
+            logger.info("WEBHOOK POST EXEC");
+
+            }
+
+        }
     }
 
 
-    
+
 
 
     // voltar para o menu inicial
     if (bodyMessage === "SAIR") {
-        
+
       const sentMessage = await wbot.sendMessage(
         `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
         {
           text: "*Você encerrou este atendimento usando o comando SAIR*.\n\n\nSe você finalizou o atendimento *ANTES* de receber um retorno do operador, ele *NÃO* irá visualizar sua solicitação!\n\nVocê deve aguardar o retorno do operador e que ele encerre seu atendimento quando necessário.\n\nUse a opção *SAIR* somente em casos de emergência ou se ficou preso em algum setor.\n\n\nPara iniciar um novo atendimento basta enviar uma nova mensagem!"
         }
       );
-    
+
       verifyMessage(sentMessage, ticket, ticket.contact);
-    
+
       if(findwebhook.webhook){
-    
+
       logger.info("WEBHOOK ENCONTRADO");
       logger.info(findwebhook.webhook);
- 
+
       const webhookurl = findwebhook.webhook;
 
       if(webhookurl){
-        
+
           var postwebhook = {
                           method: 'POST',
                           url: webhookurl,
@@ -2371,20 +2371,20 @@ const handleMessage = async (
           axios.request(postwebhook);
 
           logger.info("WEBHOOK POST EXEC ENCERRAMENTO #");
-        
+
          }
 
       }
-    
-    
+
+
       await UpdateTicketService({
         ticketData: { queueId: null, status: "closed" },
         ticketId: ticket.id,
         companyId: ticket.companyId,
       });
-    
-    
-    await ticket.reload();    
+
+
+    await ticket.reload();
       return;
     }
 
@@ -2418,7 +2418,7 @@ const handleMessage = async (
       await verifyQueue(wbot, msg, ticket, ticket.contact);
     }
     const dontReadTheFirstQuestion = ticket.queue === null;
-  
+
     // Verificação se aceita audio do contato
     if (
       getTypeMessage(msg) === "audioMessage" &&

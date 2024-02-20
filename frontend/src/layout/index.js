@@ -47,16 +47,6 @@ import api from "../services/api";
 
 const drawerWidth = 300;
 
-/*
-
-
-CÓDIGO CUSTOMIZADO POR RAFAEL RIBEIRO
-PROÍBIDA A VENDA TOTAL OU PARCIAL DESTE CÓDIGO
-CONTATO: HELP@WHATICKET-SAAS.COM
-TELEFONE: +55 51 9323-1592
-
-
-*/
 
 const useStyles = makeStyles((theme) => ({
   root: {

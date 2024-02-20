@@ -14,16 +14,6 @@ import { UsersFilter } from '../../components/UsersFilter';
 import { KanbanSearch } from '../../components/KanbanSearch/KanbanSearch';
 import moment from 'moment';
 
-/*
-
-
-CÓDIGO DESENVOLVIDO POR RAFAEL RIBEIRO
-PROÍBIDA A VENDA TOTAL OU PARCIAL DESTE CÓDIGO
-CONTATO: HELP@WHATICKET-SAAS.COM
-TELEFONE: +55 51 9323-1592
-
-
-*/
 
 const useStyles = makeStyles((theme) => ({
   root: {
