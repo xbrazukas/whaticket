@@ -151,7 +151,7 @@ const SignUp = () => {
         setRefValue(params.ref);
     };
 
-    const initialState = { name: "", email: "", password: "", phone: "", pais: "BR", namecomplete: "", planId: "disabled", };
+    const initialState = { name: "", email: "", password: "", phone: "", pais: "BR", indicator: "", namecomplete: "", planId: "disabled", };
 
     const [userB] = useState(initialState);
     const dueDate = moment().add(trial, "day").format();
@@ -202,7 +202,7 @@ const SignUp = () => {
                     validationSchema={UserSchema}
                     onSubmit={(values, actions) => {
                     
-                        values.indicator = refValue;
+                        //values.indicator = refValue;
                     
                         setTimeout(() => {
                             handleSignUp(values);
@@ -355,8 +355,6 @@ const SignUp = () => {
                                         fullWidth
                                         id="indicator"
                                         label="Código de Indicação"
-                                        value={refValue}
-                                        onChange={handleRefChange}
                                     />
                                 </Grid>
 
