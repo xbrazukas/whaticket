@@ -239,7 +239,7 @@ const SignUp = () => {
 					validationSchema={UserSchema}
 					onSubmit={(values, actions) => {
                     
-                    	// values.indicator = refValue;
+                    	values.indicator = refValue;
                     
 						setTimeout(() => {
 							handleSignUp(values);
@@ -392,6 +392,8 @@ const SignUp = () => {
 										fullWidth
 										id="indicator"
 										label="Código de Indicação"
+										value={refValue}
+										onChange={handleRefChange}
 									/>
 								</Grid>
                                 
