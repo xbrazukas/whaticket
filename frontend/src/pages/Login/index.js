@@ -211,7 +211,7 @@ const Login = () => {
 			
 			
 			<Box mt={5} style={{ color: "white" }}>{ <Copyright /> }
-			<Link
+			<Link style={{ color: "white" }}
 				href={linksuporte}
 				variant="body2"
 			>
