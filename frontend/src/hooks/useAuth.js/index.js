@@ -141,15 +141,15 @@ const useAuth = () => {
         setUser(data.user);
         setIsAuth(true);
         
-        if(data.user.profile === "admin"){
-        	toast.warn(`Sua assinatura VENCEU ${vencimento} e suas conexões podem ser desligadas a qualquer momento!`);
-        	history.push("/financeiro");
-        }else{
-            toast.success(i18n.t("auth.toasts.success"));
-        	history.push("/tickets");
-        }
+        //if(data.user.profile === "admin"){
+        //	toast.warn(`Sua assinatura VENCEU ${vencimento} e suas conexões podem ser desligadas a qualquer momento!`);
+        //	history.push("/financeiro");
+        //}else{
+          //  toast.success(i18n.t("auth.toasts.success"));
+        	//history.push("/tickets");
+        //}
       
-        //toastError(`Opss! Sua assinatura venceu ${vencimento}. Entre em contato com o Suporte para mais informações! `);
+        toastError(`Opss! Sua assinatura venceu ${vencimento}. Entre em contato com o Suporte para mais informações! `);
         setLoading(false);
       }
 
