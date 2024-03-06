@@ -125,6 +125,7 @@ const Login = () => {
 	};
 
     const logo = `${process.env.REACT_APP_BACKEND_URL}/public/logotipos/login.png`;
+	const linksuporte = `${process.env.REACT_APP_LINK_SUPORTE}`;
     const randomValue = Math.random(); // Generate a random number
   
     const logoWithRandom = `${logo}?r=${randomValue}`;
@@ -209,7 +210,14 @@ const Login = () => {
 			</div>
 			
 			
-			<Box mt={8} style={{ color: "white" }}>{ <Copyright /> }</Box>
+			<Box mt={8} style={{ color: "white" }}>{ <Copyright /> }
+			<Link
+				href={linksuporte}
+			>
+				Suporte
+			</Link>
+			</Box>
+			
 		</Container>
 		</div>
 	);
