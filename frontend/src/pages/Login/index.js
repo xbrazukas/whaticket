@@ -210,9 +210,10 @@ const Login = () => {
 			</div>
 			
 			
-			<Box mt={8} style={{ color: "white" }}>{ <Copyright /> }
+			<Box mt={5} style={{ color: "white" }}>{ <Copyright /> }
 			<Link
 				href={linksuporte}
+				variant="body2"
 			>
 				Suporte
 			</Link>
