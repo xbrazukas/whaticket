@@ -107,7 +107,7 @@ const Quickemessages = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [searchParam, setSearchParam] = useState("");
   const [quickemessages, dispatch] = useReducer(reducer, []);
-  const { user } = useContext(AuthContext);
+  const { user,socket } = useContext(AuthContext);
   const { profile } = user;
 
   useEffect(() => {
@@ -125,19 +125,27 @@ const Quickemessages = () => {
   }, [searchParam, pageNumber]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
-
-    socket.on(`company-quickemessage`, (data) => {
-      if (data.action === "update" || data.action === "create") {
-        dispatch({ type: "UPDATE_QUICKMESSAGES", payload: data.record });
-      }
-      if (data.action === "delete") {
-        dispatch({ type: "DELETE_QUICKMESSAGE", payload: +data.id });
-      }
-    });
+    // const user.companyId = localStorage.getItem("user.companyId");
+    // const socket = socketConnection({ user.companyId });
+    if(user?.id){
+      socket.on(`company-quickemessage`, (data) => {
+        if (data.action === "update" || data.action === "create") {
+          dispatch({ type: "UPDATE_QUICKMESSAGES", payload: data.record });
+        }
+        if (data.action === "delete") {
+          dispatch({ type: "DELETE_QUICKMESSAGE", payload: +data.id });
+        }
+      });
+    }
     return () => {
-      socket.disconnect();
+      socket.off(`company-quickemessage`, (data) => {
+        if (data.action === "update" || data.action === "create") {
+          dispatch({ type: "UPDATE_QUICKMESSAGES", payload: data.record });
+        }
+        if (data.action === "delete") {
+          dispatch({ type: "DELETE_QUICKMESSAGE", payload: +data.id });
+        }
+      });
     };
   }, []);
 

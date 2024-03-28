@@ -163,6 +163,7 @@ const TicketsListCustom = (props) => {
   const {
     dateRange,
     status,
+    chatbot,
     searchParam,
     tags,
     users,
@@ -173,19 +174,20 @@ const TicketsListCustom = (props) => {
   } = props;
   const classes = useStyles();
   const [pageNumber, setPageNumber] = useState(1);
-  const [ticketsList, dispatch] = useReducer(reducer, []);
-  const { user } = useContext(AuthContext);
+  let [ticketsList, dispatch] = useReducer(reducer, []);
+  const { user, socket } = useContext(AuthContext);
   const { profile, queues } = user;
 
   useEffect(() => {
     dispatch({ type: 'RESET' });
     setPageNumber(1);
-  }, [status, searchParam, dispatch, showAll, tags, users, selectedQueueIds]);
+  }, [status,chatbot, searchParam, dispatch, showAll, tags, users, selectedQueueIds]);
 
   const { tickets, hasMore, loading } = useTickets({
     pageNumber,
     searchParam,
     status,
+    chatbot,
     showAll,
     tags: JSON.stringify(tags),
     users: JSON.stringify(users),
@@ -211,11 +213,12 @@ const TicketsListCustom = (props) => {
     } else {
       dispatch({ type: 'LOAD_TICKETS', payload: tickets });
     }
-  }, [tickets, status, searchParam, queues, profile]);
+  }, [tickets, status, chatbot ,searchParam, queues, profile]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem('companyId');
-    const socket = socketConnection({ companyId });
+    const companyId = user.companyId
+
+    let ticketId;
 
     const shouldUpdateTicket = (ticket) =>
       (!ticket.userId || ticket.userId === user?.id || showAll) &&
@@ -224,104 +227,135 @@ const TicketsListCustom = (props) => {
     const notBelongsToUserQueues = (ticket) =>
       ticket.queueId && selectedQueueIds.indexOf(ticket.queueId) === -1;
 
-    socket.on('connect', () => {
+
+    const onCompanyContact = (data) => {
+      if (data.action === "update") {
+        dispatch({
+          type: "UPDATE_TICKET_CONTACT",
+          payload: data.contact,
+        });
+      }
+    };
+
+
+    if (companyId) {
+
       if (status) {
         socket.emit('joinTickets', status);
       } else {
         socket.emit('joinNotification');
-      }
-    });
+      };
+  
 
-    socket.on(`company-${companyId}-ticket`, (data) => {
-      //console.log(data);
+      socket.on(`company-${companyId}-ticket`, (data) => {
+        //console.log(data);
 
-      if (data.action === 'updateUnread') {
-        dispatch({
-          type: 'RESET_UNREAD',
-          payload: data.ticketId,
-        });
-      }
-
-      if (data.action === 'update') {
-        if (profile === 'user') {
-          const queueIds = queues.map((q) => q.id);
-
-          const isQueueIdPresent = queueIds.includes(data.ticket.queueId);
-
-          if (!isQueueIdPresent) {
-            //dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
-            //dispatch({ type: "RESET", payload: data.ticket.id });
-            //const filteredTickets = tickets.filter(
-            //  (t) => queueIds.indexOf(t.queueId) > -1
-            //);
-            //dispatch({ type: "LOAD_TICKETS", payload: filteredTickets });
-            //return;
-          }
-
-          if (data.ticket.queue === null) {
-            //console.log("Entrei");
-            //dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
-            //dispatch({ type: "RESET", payload: data.ticket.id });
-            //const filteredTickets = tickets.filter(
-            //  (t) => queueIds.indexOf(t.queueId) > -1
-            //);
-            //dispatch({ type: "LOAD_TICKETS", payload: filteredTickets });
-            //return;
-          }
+        if (data.action === 'updateUnread') {
+          dispatch({
+            type: 'RESET_UNREAD',
+            payload: data.ticketId,
+          });
         }
+
+        if (data.action === 'update' && notBelongsToUserQueues(data.ticket)) {
+          dispatch({ type: 'DELETE_TICKET', payload: data.ticket.id });
+        }
+
+        if (data.action === 'update' && shouldUpdateTicket(data.ticket)) {
+          dispatch({
+            type: 'UPDATE_TICKET',
+            payload: data.ticket,
+          });
+        }
+
+        if (data.action === 'delete') {
+          dispatch({ type: 'DELETE_TICKET', payload: data.ticketId });
+        }
+      });
+
+      socket.on(`company-${companyId}-appMessage`, (data) => {
+        const queueIds = queues.map((q) => q.id);
+
+        if (
+          profile === 'user' &&
+          (queueIds.indexOf(data.ticket.queue?.id) === -1 ||
+            data.ticket.queue === null)
+        ) {
+          //dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+          //dispatch({ type: "RESET", payload: data.ticket.id });
+
+          return;
+        }
+
+        if (data.action === 'create' && shouldUpdateTicket(data.ticket)) {
+          dispatch({
+            type: 'UPDATE_TICKET_UNREAD_MESSAGES',
+            payload: data.ticket,
+          });
+        }
+      });
+
+      socket.on(`company-${companyId}-contact`, onCompanyContact);
       }
-
-      if (data.action === 'update' && notBelongsToUserQueues(data.ticket)) {
-        dispatch({ type: 'DELETE_TICKET', payload: data.ticket.id });
-      }
-
-      if (data.action === 'update' && shouldUpdateTicket(data.ticket)) {
-        dispatch({
-          type: 'UPDATE_TICKET',
-          payload: data.ticket,
-        });
-      }
-
-      if (data.action === 'delete') {
-        dispatch({ type: 'DELETE_TICKET', payload: data.ticketId });
-      }
-    });
-
-    socket.on(`company-${companyId}-appMessage`, (data) => {
-      const queueIds = queues.map((q) => q.id);
-
-      if (
-        profile === 'user' &&
-        (queueIds.indexOf(data.ticket.queue?.id) === -1 ||
-          data.ticket.queue === null)
-      ) {
-        //dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
-        //dispatch({ type: "RESET", payload: data.ticket.id });
-
-        return;
-      }
-
-      if (data.action === 'create' && shouldUpdateTicket(data.ticket)) {
-        dispatch({
-          type: 'UPDATE_TICKET_UNREAD_MESSAGES',
-          payload: data.ticket,
-        });
-      }
-    });
-
-    socket.on(`company-${companyId}-contact`, (data) => {
-      if (data.action === 'update') {
-        dispatch({
-          type: 'UPDATE_TICKET_CONTACT',
-          payload: data.contact,
-        });
-      }
-    });
 
     return () => {
-      socket.disconnect();
+      if (user?.id) {
+
+        socket.off('joinTickets', status);
+
+        // socket.off("joinChatBoxLeave", ticketId)
+
+        socket.off(`company-${companyId}-ticket`, (data) => {
+          //console.log(data);
+
+          if (data.action === 'updateUnread') {
+            dispatch({
+              type: 'RESET_UNREAD',
+              payload: data.ticketId,
+            });
+          }
+
+          if (data.action === 'update' && notBelongsToUserQueues(data.ticket)) {
+            dispatch({ type: 'DELETE_TICKET', payload: data.ticket.id });
+          }
+
+          if (data.action === 'update' && shouldUpdateTicket(data.ticket)) {
+            dispatch({
+              type: 'UPDATE_TICKET',
+              payload: data.ticket,
+            });
+          }
+
+          if (data.action === 'delete') {
+            dispatch({ type: 'DELETE_TICKET', payload: data.ticketId });
+          }
+        });
+        socket.off(`company-${companyId}-contact`, onCompanyContact);
+
+        socket.off(`company-${companyId}-appMessage`, (data) => {
+          const queueIds = queues.map((q) => q.id);
+
+          if (
+            profile === 'user' &&
+            (queueIds.indexOf(data.ticket.queue?.id) === -1 ||
+              data.ticket.queue === null)
+          ) {
+            //dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+            //dispatch({ type: "RESET", payload: data.ticket.id });
+
+            return;
+          }
+
+          if (data.action === 'create' && shouldUpdateTicket(data.ticket)) {
+            dispatch({
+              type: 'UPDATE_TICKET_UNREAD_MESSAGES',
+              payload: data.ticket,
+            });
+          }
+        });
+      }
     };
-  }, [status, showAll, user, selectedQueueIds, tags, users, profile, queues]);
+  }, [status, showAll, user, selectedQueueIds, tags, users, profile, queues, socket]);
 
   useEffect(() => {
     const count = ticketsList.filter((ticket) => !ticket.isGroup).length;
@@ -343,6 +377,28 @@ const TicketsListCustom = (props) => {
       loadMore();
     }
   };
+
+  // if(chatbot){
+  //    ticketsList.filter(ticket => ticket.chatbot === chatbot)
+  //    if(ticket)
+  // }
+
+  if (status) {
+    ticketsList = ticketsList.filter(ticket => ticket.status === status)
+
+  }
+
+  if (selectedQueueIds.length > 0) {
+    ticketsList = !!status ? ticketsList.filter(ticket => user.profile === 'user' ?
+      selectedQueueIds.includes(ticket.queueId) :
+      selectedQueueIds.includes(ticket.queueId) || ticket.queueId === null) :
+      ticketsList;
+  }
+
+
+  // if(status === 'open' ){
+  //   ticketsList = ticketsList.filter(ticket=> ticket)
+  // }
 
   return (
     <Paper className={classes.ticketsListWrapper} style={style}>

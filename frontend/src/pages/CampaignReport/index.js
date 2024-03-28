@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useHistory } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
@@ -24,6 +24,7 @@ import { useDate } from "../../hooks/useDate";
 import usePlans from "../../hooks/usePlans";
 
 import { socketConnection } from "../../services/socket";
+import { AuthContext } from "../../context/Auth/AuthContext";
 
 const useStyles = makeStyles((theme) => ({
   mainPaper: {
@@ -52,6 +53,7 @@ const CampaignReport = () => {
   const [confirmed, setConfirmed] = useState(0);
   const [percent, setPercent] = useState(0);
   const [loading, setLoading] = useState(false);
+  const {user, socket} = useContext(AuthContext)
   const mounted = useRef(true);
 
   const { datetimeToClient } = useDate();
@@ -113,11 +115,27 @@ const CampaignReport = () => {
   }, [delivered, validContacts]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    // const companyId = localStorage.getItem("companyId");
+    // const socket = socketConnection({ companyId });
 
-    socket.on(`company-${companyId}-campaign`, (data) => {
-      console.log(data);
+    if(user?.id){
+      socket.on(`company-${user.companyId}-campaign`, (data) => {
+        if (data.record.id === +campaignId) {
+          setCampaign(data.record);
+  
+          if (data.record.status === "FINALIZADA") {
+            setTimeout(() => {
+              findCampaign();
+            }, 5000);
+          }
+        }
+      });
+    }
+
+
+    return () => {
+      if(user?.id){
+      socket.off(`company-${user.companyId}-campaign`, (data) => {
       if (data.record.id === +campaignId) {
         setCampaign(data.record);
 
@@ -127,10 +145,8 @@ const CampaignReport = () => {
           }, 5000);
         }
       }
-    });
-
-    return () => {
-      socket.disconnect();
+      });
+    }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [campaignId]);

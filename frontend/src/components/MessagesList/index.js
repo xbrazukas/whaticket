@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useRef } from "react";
+import React, { useState, useEffect, useReducer, useRef, useContext } from "react";
 
 import { isSameDay, parseISO, format } from "date-fns";
 import clsx from "clsx";
@@ -21,8 +21,6 @@ import {
   GetApp,
 } from "@material-ui/icons";
 
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import MyDocument from '../MyDocument'; 
 
 import MarkdownWrapper from "../MarkdownWrapper";
 import ModalImageCors from "../ModalImageCors";
@@ -33,6 +31,7 @@ import VCardPreview from "../VCardPreview";
 import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import { socketConnection } from "../../services/socket";
+import { AuthContext } from "../../context/Auth/AuthContext";
 
 const useStyles = makeStyles((theme) => ({
   messagesListWrapper: {
@@ -321,16 +320,16 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   const [selectedMessage, setSelectedMessage] = useState({});
   const [anchorEl, setAnchorEl] = useState(null);
   const messageOptionsMenuOpen = Boolean(anchorEl);
-  const currentTicketId = useRef(ticketId);
+  let currentTicketId = useRef(ticketId);
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
- 
+  const { user, socket } = useContext(AuthContext)
+
   //console.log(navigator.userAgent);
-  
+
 
   useEffect(() => {
     dispatch({ type: "RESET" });
     setPageNumber(1);
-
     currentTicketId.current = ticketId;
   }, [ticketId]);
 
@@ -343,8 +342,6 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
           const { data } = await api.get("/messages/" + ticketId, {
             params: { pageNumber },
           });
-        
-          //console.log(data);
 
           if (currentTicketId.current === ticketId) {
             dispatch({ type: "LOAD_MESSAGES", payload: data.messages });
@@ -368,26 +365,50 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   }, [pageNumber, ticketId]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    if (!ticket &&
+      !ticket.id &&
+      ticket.id !== currentTicketId.current &&
+      ticketId !== currentTicketId.current &&
+      ticketId === undefined
+    ) {
+      return;
+    }
 
-    socket.on("connect", () => socket.emit("joinChatBox", `${ticket.id}`));
+    if (user?.companyId) {
 
-    socket.on(`company-${companyId}-appMessage`, (data) => {
-      if (data.action === "create") {
-        dispatch({ type: "ADD_MESSAGE", payload: data.message });
-        scrollToBottom();
+      const companyId = user.companyId;
+
+      //    const socket = socketManager.GetSocket();
+      const connectEvent = () => {
+        socket.emit("joinChatBox", `${ticket.id}`);
       }
 
-      if (data.action === "update") {
-        dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
-      }
-    });
+      const onAppMessage = (data) => {
+        if (data.action === "create" && data.ticket.id === ticket.id) {
+          dispatch({ type: "ADD_MESSAGE", payload: data.message });
+          scrollToBottom();
+        }
 
-    return () => {
-      socket.disconnect();
-    };
-  }, [ticketId, ticket]);
+        if (data.action === "update" && data?.message?.ticketId === ticket.id) {
+          dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
+        }
+      }
+
+      if (socket.connected) {
+        connectEvent();
+      }
+
+      socket.on(`company-${companyId}-appMessage`, onAppMessage);
+
+
+      return () => {
+        socket.off("connect", connectEvent);
+
+        socket.emit("joinChatBoxLeave", `${ticket.id}`)
+        socket.off(`company-${companyId}-appMessage`, onAppMessage);
+      };
+    }
+  }, [ticket, socket]);
 
   const loadMore = () => {
     setPageNumber((prevPageNumber) => prevPageNumber + 1);
@@ -426,9 +447,9 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   };
 
   const checkMessageMedia = (message) => {
-  
+
     //console.log(message.mediaType);
-  
+
     if (message.mediaType === "locationMessage" && message.body.split('|').length >= 2) {
       let locationParts = message.body.split('|')
       let imageLocation = locationParts[0]
@@ -441,8 +462,8 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
 
       return <LocationPreview image={imageLocation} link={linkLocation} description={descriptionLocation} />
     }
-      
-      else
+
+    else
       if (message.mediaType === "contactMessage") {
         let array = message.body.split("\n");
         let obj = [];
@@ -461,110 +482,110 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
         }
         //console.log(array);
         //console.log(contact);
-      	//console.log(obj[0].number);
+        //console.log(obj[0].number);
         return <VCardPreview contact={contact} numbers={obj[0].number} />
       }
-    /* else if (message.mediaType === "vcard") {
-      let array = message.body.split("\n");
-      let obj = [];
-      let contact = "";
-      for (let index = 0; index < array.length; index++) {
-        const v = array[index];
-        let values = v.split(":");
-        for (let ind = 0; ind < values.length; ind++) {
-          if (values[ind].indexOf("+") !== -1) {
-            obj.push({ number: values[ind] });
-          }
-          if (values[ind].indexOf("FN") !== -1) {
-            contact = values[ind + 1];
+      /* else if (message.mediaType === "vcard") {
+        let array = message.body.split("\n");
+        let obj = [];
+        let contact = "";
+        for (let index = 0; index < array.length; index++) {
+          const v = array[index];
+          let values = v.split(":");
+          for (let ind = 0; ind < values.length; ind++) {
+            if (values[ind].indexOf("+") !== -1) {
+              obj.push({ number: values[ind] });
+            }
+            if (values[ind].indexOf("FN") !== -1) {
+              contact = values[ind + 1];
+            }
           }
         }
-      }
-      return <VcardPreview contact={contact} numbers={obj[0].number} />
-    } */
-    /*else if (message.mediaType === "multi_vcard") {
-      console.log("multi_vcard")
-      console.log(message)
-    	
-      if(message.body !== null && message.body !== "") {
-        let newBody = JSON.parse(message.body)
+        return <VcardPreview contact={contact} numbers={obj[0].number} />
+      } */
+      /*else if (message.mediaType === "multi_vcard") {
+        console.log("multi_vcard")
+        console.log(message)
+      	
+        if(message.body !== null && message.body !== "") {
+          let newBody = JSON.parse(message.body)
+          return (
+            <>
+              {
+              newBody.map(v => (
+                <VcardPreview contact={v.name} numbers={v.number} />
+              ))
+              }
+            </>
+          )
+        } else return (<></>)
+      }*/
+      else if (message.mediaType === "image") {
+        return <ModalImageCors imageUrl={message.mediaUrl} />;
+      } else if (message.mediaType === "audio") {
+
+        //console.log(isIOS);
+
+        if (isIOS) {
+          message.mediaUrl = message.mediaUrl.replace("ogg", "mp3");
+
+          return (
+            <audio controls>
+              <source src={message.mediaUrl} type="audio/mp3"></source>
+            </audio>
+          );
+        } else {
+
+          return (
+            <audio controls>
+              <source src={message.mediaUrl} type="audio/ogg"></source>
+            </audio>
+          );
+        }
+      } else if (message.mediaType === "video") {
+        return (
+          <video
+            className={classes.messageMedia}
+            src={message.mediaUrl}
+            controls
+          />
+        );
+      } else {
         return (
           <>
-            {
-            newBody.map(v => (
-              <VcardPreview contact={v.name} numbers={v.number} />
-            ))
-            }
+            <div className={classes.downloadMedia}>
+              <Button
+                startIcon={<GetApp />}
+                color="primary"
+                variant="outlined"
+                target="_blank"
+                href={message.mediaUrl}
+              >
+                Download
+              </Button>
+            </div>
+            <Divider />
           </>
-        )
-      } else return (<></>)
-    }*/
-    else if (message.mediaType === "image") {
-      return <ModalImageCors imageUrl={message.mediaUrl} />;
-    } else if (message.mediaType === "audio") {
-    
-    	//console.log(isIOS);
-    
-        if(isIOS) {
-        	message.mediaUrl = message.mediaUrl.replace("ogg", "mp3");
-        
-            return (
-        		<audio controls>
-          			<source src={message.mediaUrl} type="audio/mp3"></source>
-       			</audio>
-      		);
-        }else{
-    
-      	return (
-        	<audio controls>
-          	<source src={message.mediaUrl} type="audio/ogg"></source>
-        	</audio>
-      	);
-  	  }
-    } else if (message.mediaType === "video") {
-      return (
-        <video
-          className={classes.messageMedia}
-          src={message.mediaUrl}
-          controls
-        />
-      );
-    } else {
-      return (
-        <>
-          <div className={classes.downloadMedia}>
-            <Button
-              startIcon={<GetApp />}
-              color="primary"
-              variant="outlined"
-              target="_blank"
-              href={message.mediaUrl}
-            >
-              Download
-            </Button>
-          </div>
-          <Divider />
-        </>
-      );
-    }
+        );
+      }
   };
 
-/*
-  const renderMessageAck = (message) => {
-    if (message.ack === 1) {
-      return <AccessTime fontSize="small" className={classes.ackIcons} />;
-    }
-    if (message.ack === 2) {
-      return <Done fontSize="small" className={classes.ackIcons} />;
-    }
-    if (message.ack === 3) {
-      return <DoneAll fontSize="small" className={classes.ackIcons} />;
-    }
-    if (message.ack === 4 || message.ack === 5) {
-      return <DoneAll fontSize="small" className={classes.ackDoneAllIcon} />;
-    }
-  };
-*/
+  /*
+    const renderMessageAck = (message) => {
+      if (message.ack === 1) {
+        return <AccessTime fontSize="small" className={classes.ackIcons} />;
+      }
+      if (message.ack === 2) {
+        return <Done fontSize="small" className={classes.ackIcons} />;
+      }
+      if (message.ack === 3) {
+        return <DoneAll fontSize="small" className={classes.ackIcons} />;
+      }
+      if (message.ack === 4 || message.ack === 5) {
+        return <DoneAll fontSize="small" className={classes.ackDoneAllIcon} />;
+      }
+    };
+  */
   const renderMessageAck = (message) => {
     if (message.ack === 0) {
       return <AccessTime fontSize="small" className={classes.ackIcons} />;
@@ -725,8 +746,8 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   const renderMessages = () => {
     if (messagesList.length > 0) {
       const viewMessagesList = messagesList.map((message, index) => {
-      
-      	if (message.mediaType === "call_log") {
+
+        if (message.mediaType === "call_log") {
           return (
             <React.Fragment key={message.id}>
               {renderDailyTimestamps(message, index)}
@@ -757,7 +778,7 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
             </React.Fragment>
           );
         }
-		
+
         if (!message.fromMe) {
           return (
             <React.Fragment key={message.id}>
@@ -785,7 +806,7 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
                 {message.isDeleted && (
                   <div>
                     <span className={"message-deleted"}
-                    >Essa mensagem foi apagada pelo contato  
+                    >Essa mensagem foi apagada pelo contato
                       <Block
                         color="error"
                         fontSize="small"
@@ -801,8 +822,8 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
                 <div className={classes.textContentItem}>
                   {message.quotedMsg && renderQuotedMessage(message)}
                   <MarkdownWrapper>
-  					{message.mediaType === "locationMessage" || message.mediaType === "contactMessage" ? null : message.body}
-				  </MarkdownWrapper>
+                    {message.mediaType === "locationMessage" || message.mediaType === "contactMessage" ? null : message.body}
+                  </MarkdownWrapper>
                   <span className={classes.timestamp}>
                     {format(parseISO(message.createdAt), "HH:mm")}
                   </span>
@@ -862,7 +883,7 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
 
   return (
     <div className={classes.messagesListWrapper}>
-    {/* <PDFDownloadLink document={<MyDocument messagesList={messagesList} />} fileName="chatcon.pdf">
+      {/* <PDFDownloadLink document={<MyDocument messagesList={messagesList} />} fileName="chatcon.pdf">
       {({ blob, url, loading, error }) => (
         <Button variant="contained" color="primary">
           {loading ? 'Loading...' : 'EXPORTAR CONVERSAS'}

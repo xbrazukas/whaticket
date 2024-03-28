@@ -1,68 +1,71 @@
-import React, {
-  useState,
-  useEffect,
-  useReducer,
-  useCallback,
-  useContext,
-} from "react";
+import React, { useState, useEffect, useReducer, useCallback, useContext } from "react";
 import { toast } from "react-toastify";
 import { useHistory } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
-
 import Button from "@material-ui/core/Button";
-import Table from "@material-ui/core/Table";
-import TableBody from "@material-ui/core/TableBody";
-import TableCell from "@material-ui/core/TableCell";
-import TableHead from "@material-ui/core/TableHead";
-import TableRow from "@material-ui/core/TableRow";
-import IconButton from "@material-ui/core/IconButton";
-import SearchIcon from "@material-ui/icons/Search";
 import TextField from "@material-ui/core/TextField";
 import InputAdornment from "@material-ui/core/InputAdornment";
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-
-import DeleteOutlineIcon from "@material-ui/icons/DeleteOutline";
-import EditIcon from "@material-ui/icons/Edit";
-
 import MainContainer from "../../components/MainContainer";
 import MainHeader from "../../components/MainHeader";
-import MainHeaderButtonsWrapper from "../../components/MainHeaderButtonsWrapper";
 import Title from "../../components/Title";
-
 import api from "../../services/api";
 import { i18n } from "../../translate/i18n";
-import TableRowSkeleton from "../../components/TableRowSkeleton";
+import MainHeaderButtonsWrapper from "../../components/MainHeaderButtonsWrapper";
 import ScheduleModal from "../../components/ScheduleModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import toastError from "../../errors/toastError";
 import moment from "moment";
-import { capitalize } from "lodash";
 import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import usePlans from "../../hooks/usePlans";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import "moment/locale/pt-br";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import SearchIcon from "@material-ui/icons/Search";
+import DeleteOutlineIcon from "@material-ui/icons/DeleteOutline";
+import EditIcon from "@material-ui/icons/Edit";
 
-// A custom hook that builds on useLocation to parse
-// the query string for you.
-const getUrlParam = (param) => {
-  return new URLSearchParams(window.location.search).get(param);
+import "./Schedules.css"; // Importe o arquivo CSS
+
+// Defina a função getUrlParam antes de usá-la
+function getUrlParam(paramName) {
+  const searchParams = new URLSearchParams(window.location.search);
+  return searchParams.get(paramName);
+}
+
+const eventTitleStyle = {
+  fontSize: "14px", // Defina um tamanho de fonte menor
+  overflow: "hidden", // Oculte qualquer conteúdo excedente
+  whiteSpace: "nowrap", // Evite a quebra de linha do texto
+  textOverflow: "ellipsis", // Exiba "..." se o texto for muito longo
+};
+
+const localizer = momentLocalizer(moment);
+var defaultMessages = {
+  date: "Data",
+  time: "Hora",
+  event: "Evento",
+  allDay: "Dia Todo",
+  week: "Semana",
+  work_week: "Agendamentos",
+  day: "Dia",
+  month: "Mês",
+  previous: "Anterior",
+  next: "Próximo",
+  yesterday: "Ontem",
+  tomorrow: "Amanhã",
+  today: "Hoje",
+  agenda: "Agenda",
+  noEventsInRange: "Não há agendamentos no período.",
+  showMore: function showMore(total) {
+    return "+" + total + " mais";
+  }
 };
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_SCHEDULES") {
-    const schedules = action.payload;
-    const newSchedules = [];
-
-    schedules.forEach((schedule) => {
-      const scheduleIndex = state.findIndex((s) => s.id === schedule.id);
-      if (scheduleIndex !== -1) {
-        state[scheduleIndex] = schedule;
-      } else {
-        newSchedules.push(schedule);
-      }
-    });
-
-    return [...state, ...newSchedules];
+    return [...state, ...action.payload];
   }
 
   if (action.type === "UPDATE_SCHEDULES") {
@@ -79,17 +82,14 @@ const reducer = (state, action) => {
 
   if (action.type === "DELETE_SCHEDULE") {
     const scheduleId = action.payload;
-
-    const scheduleIndex = state.findIndex((s) => s.id === scheduleId);
-    if (scheduleIndex !== -1) {
-      state.splice(scheduleIndex, 1);
-    }
-    return [...state];
+    return state.filter((s) => s.id !== scheduleId);
   }
 
   if (action.type === "RESET") {
     return [];
   }
+
+  return state;
 };
 
 const useStyles = makeStyles((theme) => ({
@@ -104,12 +104,8 @@ const useStyles = makeStyles((theme) => ({
 const Schedules = () => {
   const classes = useStyles();
   const history = useHistory();
-  const { user } = useContext(AuthContext);
-  const { id, profile, name } = user;
 
-  console.log(name);
-
-  //console.log(user);
+  const { user, socket } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
@@ -122,28 +118,13 @@ const Schedules = () => {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [contactId, setContactId] = useState(+getUrlParam("contactId"));
 
-  const { getPlanCompany } = usePlans();
-
-  useEffect(() => {
-    async function fetchData() {
-      const companyId = localStorage.getItem("companyId");
-      const planConfigs = await getPlanCompany(undefined, companyId);
-      if (!planConfigs.plan.useSchedules) {
-        toast.error("Você não possui acesso a este recurso! Faça um upgrade em sua assinatura ou contate o suporte!");
-        setTimeout(() => {
-          history.push(`/`)
-        }, 1000);
-      }
-    }
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const fetchSchedules = useCallback(async () => {
     try {
       const { data } = await api.get("/schedules/", {
         params: { searchParam, pageNumber },
       });
+
       dispatch({ type: "LOAD_SCHEDULES", payload: data.schedules });
       setHasMore(data.hasMore);
       setLoading(false);
@@ -179,20 +160,32 @@ const Schedules = () => {
 
   useEffect(() => {
     handleOpenScheduleModalFromContactId();
-    const socket = socketConnection({ companyId: user.companyId });
-
-    socket.on("user", (data) => {
-      if (data.action === "update" || data.action === "create") {
-        dispatch({ type: "UPDATE_SCHEDULES", payload: data.schedules });
-      }
-
-      if (data.action === "delete") {
-        dispatch({ type: "DELETE_USER", payload: +data.scheduleId });
-      }
-    });
+  
+    if(user?.id){
+      socket.on(`company${user.companyId}-schedule`, (data) => {
+        if (data.action === "update" || data.action === "create") {
+          dispatch({ type: "UPDATE_SCHEDULES", payload: data.schedule });
+        }
+  
+        if (data.action === "delete") {
+          dispatch({ type: "DELETE_SCHEDULE", payload: +data.scheduleId });
+        }
+  
+      });
+    }
 
     return () => {
-      socket.disconnect();
+      if(user?.id){
+        socket.off(`company${user.companyId}-schedule`, (data) => {
+          if (data.action === "update" || data.action === "create") {
+            dispatch({ type: "UPDATE_SCHEDULES", payload: data.schedule });
+          }
+    
+          if (data.action === "delete") {
+            dispatch({ type: "DELETE_SCHEDULE", payload: +data.scheduleId });
+          }
+        });
+      }
     };
   }, [handleOpenScheduleModalFromContactId, user]);
 
@@ -262,7 +255,7 @@ const Schedules = () => {
           `${i18n.t("schedules.confirmationModal.deleteTitle")}`
         }
         open={confirmModalOpen}
-        onClose={setConfirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
         onConfirm={() => handleDeleteSchedule(deletingSchedule.id)}
       >
         {i18n.t("schedules.confirmationModal.deleteMessage")}
@@ -277,7 +270,7 @@ const Schedules = () => {
         cleanContact={cleanContact}
       />
       <MainHeader>
-        <Title>{i18n.t("schedules.title")}</Title>
+        <Title>{i18n.t("schedules.title")} ({schedules.length})</Title>
         <MainHeaderButtonsWrapper>
           <TextField
             placeholder={i18n.t("contacts.searchPlaceholder")}
@@ -301,97 +294,39 @@ const Schedules = () => {
           </Button>
         </MainHeaderButtonsWrapper>
       </MainHeader>
-      <Paper
-        className={classes.mainPaper}
-        variant="outlined"
-        onScroll={handleScroll}
-      >
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell align="center">
-                {i18n.t("schedules.table.contact")}
-              </TableCell>
-              <TableCell align="center">
-                {i18n.t("schedules.table.body")}
-              </TableCell>
-              <TableCell align="center">
-                {i18n.t("schedules.table.sendAt")}
-              </TableCell>
-              <TableCell align="center">
-                {i18n.t("schedules.table.sentfrom")}
-              </TableCell>
-              <TableCell align="center">
-              	{i18n.t("schedules.table.geral")}
-              </TableCell>
-              <TableCell align="center">
-                {i18n.t("schedules.table.status")}
-              </TableCell>
-              <TableCell align="center">
-                {i18n.t("schedules.table.actions")}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <>
-              {schedules.map((schedule) => (
-                <TableRow key={schedule.id}>
-                  <TableCell align="center">{schedule.contact.name}</TableCell>
-                  <TableCell align="center" title={schedule.body}>
-                    {truncate(schedule.body, 25)}
-                  </TableCell>
-                  <TableCell align="center">
-                    {moment(schedule.sendAt).format("DD/MM/YYYY HH:mm:ss")}
-                  </TableCell>
-                  <TableCell align="center">{schedule.user.name}</TableCell>
-                  <TableCell align="center">
-  										{schedule.geral === true ? (
-    									<CheckCircleIcon style={{ color: 'green' }} />
-  										) : (
-    									''
-  										)}
-				  					</TableCell>
-                  <TableCell align="center">
-                    {capitalize(schedule.status)}
-                  </TableCell>
-                  <TableCell align="center">
-                  <>
-                  {((user.profile === "admin" || user.profile === "supervisor") || (user.id === schedule.user.id)) && (
-                  
-                  
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEditSchedule(schedule)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    
-                  )}
-					
-                    
-                  {((user.profile === "admin" || user.profile === "supervisor") || (user.id === schedule.user.id)) && (
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        setConfirmModalOpen(true);
-                        setDeletingSchedule(schedule);
-                      }}
-                    >
-                    
-                  
-                      <DeleteOutlineIcon />
-                    </IconButton>
-                    
-                 )}
-                    
-                 </>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {loading && <TableRowSkeleton columns={4} />}
-            </>
-          </TableBody>
-        </Table>
+      <Paper className={classes.mainPaper} variant="outlined" onScroll={handleScroll}>
+        <Calendar
+          messages={defaultMessages}
+          formats={{
+          agendaDateFormat: "DD/MM ddd",
+          weekdayFormat: "dddd"
+      }}
+          localizer={localizer}
+          events={schedules.map((schedule) => ({
+            title: (
+              <div className="event-container">
+                <div style={eventTitleStyle}>{schedule.contact.name}</div>
+                <DeleteOutlineIcon
+                  onClick={() => handleDeleteSchedule(schedule.id)}
+                  title='apagar'
+                />
+                <EditIcon
+                  onClick={() => {
+                    handleEditSchedule(schedule);
+                    setScheduleModalOpen(true);
+                  }}
+                  className="edit-icon"
+                  title="Editar" // Adicione um título para mostrar "Editar" quando o mouse passar sobre o ícone
+                />
+              </div>
+            ),
+            start: new Date(schedule.sendAt),
+            end: new Date(schedule.sendAt),
+          }))}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: 500 }}
+        />
       </Paper>
     </MainContainer>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import { has, isArray } from "lodash";
+import { Redirect } from 'react-router'
 
 import { toast } from "react-toastify";
 
@@ -14,6 +15,7 @@ const useAuth = () => {
   const [isAuth, setIsAuth] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState({});
+  const [socket,setSocket] = useState({})
 
   api.interceptors.request.use(
     (config) => {
@@ -73,17 +75,25 @@ const useAuth = () => {
   }, []);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
-
-    socket.on(`company-${companyId}-user`, (data) => {
-      if (data.action === "update" && data.user.id === user.id) {
-        setUser(data.user);
+    // const companyId = localStorage.getItem("companyId");
+    // const socket = socketConnection({ companyId });
+    if (Object.keys(user).length && user.id > 0) {
+      // console.log("Entrou useWhatsapp com user", Object.keys(user).length, Object.keys(socket).length ,user, socket)
+      let io;
+      if (!Object.keys(socket).length){
+        io = socketConnection({ user });
+        setSocket(io)
+      } else {
+        io = socket
       }
-    });
-
+      io.on(`company-${user.companyId}-user`, (data) => {
+        if (data.action === "update" && data.user.id === user.id) {
+          setUser(data.user);
+        }
+      });
+    }
     return () => {
-      socket.disconnect();
+      // io.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -115,6 +125,7 @@ const useAuth = () => {
 
       var before = moment(moment().format()).isBefore(dueDate);
       var dias = moment.duration(diff).asDays();
+      var diasVenc = vencimento.valueOf() - hoje.valueOf()
 
       if (before === true) {
         localStorage.setItem("token", JSON.stringify(data.token));
@@ -125,34 +136,19 @@ const useAuth = () => {
         setUser(data.user);
         setIsAuth(true);
         toast.success(i18n.t("auth.toasts.success"));
-        if ((Math.round(dias) < 5) && (data.user.profile === "admin")) {
+        if (Math.round(dias) < 5) {
           toast.warn(`Sua assinatura vence em ${Math.round(dias)} ${Math.round(dias) === 1 ? 'dia' : 'dias'} `);
         }
         history.push("/tickets");
         setLoading(false);
-      
       } else {
-      
-        localStorage.setItem("token", JSON.stringify(data.token));
         localStorage.setItem("companyId", companyId);
-        localStorage.setItem("userId", id);
-        localStorage.setItem("companyDueDate", vencimento);
         api.defaults.headers.Authorization = `Bearer ${data.token}`;
-        setUser(data.user);
         setIsAuth(true);
-        
-        //if(data.user.profile === "admin"){
-        //	toast.warn(`Sua assinatura VENCEU ${vencimento} e suas conexões podem ser desligadas a qualquer momento!`);
-          
-        //	history.push("/financeiro");
-        //}else{
-        //    toast.success(i18n.t("auth.toasts.success"));
-        //	history.push("/tickets");
-        //}
-      
-        toastError(`Opss! Sua assinatura venceu ${vencimento}. Entre em contato com o Suporte para mais informações! `);
+        toastError(`Opss! Sua assinatura venceu ${vencimento}.
+Entre em contato com o Suporte para mais informações! `);
+        history.push("/financeiro-aberto");
         setLoading(false);
-        handleLogout();
       }
 
       //quebra linha 
@@ -198,6 +194,7 @@ const useAuth = () => {
     handleLogin,
     handleLogout,
     getCurrentUserInfo,
+    socket
   };
 };
 

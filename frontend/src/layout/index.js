@@ -155,7 +155,7 @@ const LoggedInLayout = ({ children }) => {
   const { handleLogout, loading } = useContext(AuthContext);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerVariant, setDrawerVariant] = useState("permanent");
-  const { user } = useContext(AuthContext);
+  const { user,socket } = useContext(AuthContext);
   const { profile } = user;
   const [volume, setVolume] = useState(localStorage.getItem("volume") || 1);
   const { dateToClient } = useDate();
@@ -178,29 +178,32 @@ const LoggedInLayout = ({ children }) => {
   }, [drawerOpen]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const userId = localStorage.getItem("userId");
 
-    const socket = socketConnection({ companyId });
+    const companyId = user?.companyId
+    let interval;
+    if(companyId){
+      socket.on(`company-${companyId}-auth`, (data) => {
+        if (data.user.id === +user?.id) {
+          toastError("Sua conta foi acessada em outro computador.");
+          setTimeout(() => {
+            localStorage.clear();
+            window.location.reload();
+          }, 1000);
+        }
+      });
+    }
 
-    socket.on(`company-${companyId}-auth`, (data) => {
-      if (data.user.id === +userId) {
-        toastError("Sua conta foi acessada em outro computador.");
-        setTimeout(() => {
-          localStorage.clear();
-          window.location.reload();
-        }, 1000);
-      }
-    });
-
-    socket.emit("userStatus");
-    const interval = setInterval(() => {
-      socket.emit("userStatus");
-    }, 1000 * 60 * 5);
 
     return () => {
-      socket.disconnect();
-      clearInterval(interval);
+      socket.off(`company-${companyId}-auth`, (data) => {
+        if (data.user.id === +user.id) {
+          toastError("Sua conta foi acessada em outro computador.");
+          setTimeout(() => {
+            localStorage.clear();
+            window.location.reload();
+          }, 1000);
+        }
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -96,7 +96,7 @@ const useStyles = makeStyles((theme) => ({
 const Tags = () => {
   const classes = useStyles();
 
-  const { user } = useContext(AuthContext);
+  const { user, socket } = useContext(AuthContext);
   const { id, profile, name } = user;
 
   const [loading, setLoading] = useState(false);
@@ -136,20 +136,21 @@ const Tags = () => {
   }, [searchParam, pageNumber, fetchTags]);
 
   useEffect(() => {
-    const socket = socketConnection({ companyId: user.companyId });
-
-    socket.on("user", (data) => {
-      if (data.action === "update" || data.action === "create") {
-        dispatch({ type: "UPDATE_TAGS", payload: data.tags });
-      }
-
-      if (data.action === "delete") {
-        dispatch({ type: "DELETE_USER", payload: +data.tagId });
-      }
-    });
+    // const socket = socketConnection({ companyId: user.companyId });
+    if(user?.id){
+      socket.on(`tags-${user.companyId}`, (data) => {
+        if (data.action === "update" || data.action === "create") {
+          dispatch({ type: "UPDATE_TAGS", payload: data.tags });
+        }
+  
+        if (data.action === "delete") {
+          dispatch({ type: "DELETE_TAGS", payload: +data.tagId });
+        }
+      });
+    }
 
     return () => {
-      socket.disconnect();
+      socket.off();
     };
   }, [user]);
 

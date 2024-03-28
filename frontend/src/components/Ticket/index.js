@@ -18,6 +18,7 @@ import toastError from '../../errors/toastError';
 import { AuthContext } from '../../context/Auth/AuthContext';
 import { TagsContainer } from '../TagsContainer';
 import { socketConnection } from '../../services/socket';
+import { isNil } from 'lodash';
 
 const drawerWidth = 320;
 
@@ -28,6 +29,7 @@ const useStyles = makeStyles((theme) => ({
     height: '100%',
     position: 'relative',
     overflow: 'hidden',
+
   },
 
   mainWrapper: {
@@ -62,7 +64,7 @@ const Ticket = () => {
   const history = useHistory();
   const classes = useStyles();
 
-  const { user } = useContext(AuthContext);
+  const { user, socket } = useContext(AuthContext);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -74,24 +76,28 @@ const Ticket = () => {
     const delayDebounceFn = setTimeout(() => {
       const fetchTicket = async () => {
         try {
-          const { data } = await api.get('/tickets/u/' + ticketId);
-          const { queueId } = data;
-          const { queues, profile } = user;
 
-          const queueAllowed = queues.find((q) => q.id === queueId);
-          if (
-            queueAllowed === undefined &&
-            profile !== 'admin' &&
-            profile !== 'supervisor'
-          ) {
-            toast.error('Atendimento em uso por outro setor!');
-            history.push('/tickets');
-            return;
+          if (!isNil(ticketId) && ticketId !== "undefined") {
+
+            const { data } = await api.get('/tickets/u/' + ticketId);
+            const { queueId } = data;
+            const { queues, profile } = user;
+
+            const queueAllowed = queues.find((q) => q.id === queueId);
+            if (
+              queueAllowed === undefined &&
+              profile !== 'admin' &&
+              profile !== 'supervisor'
+            ) {
+              toast.error('Atendimento em uso por outro setor!');
+              history.push('/tickets');
+              return;
+            }
+
+            setContact(data.contact);
+            setTicket(data);
+            setLoading(false);
           }
-
-          setContact(data.contact);
-          setTicket(data);
-          setLoading(false);
         } catch (err) {
           setLoading(false);
           toastError(err);
@@ -103,37 +109,71 @@ const Ticket = () => {
   }, [ticketId, user, history]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem('companyId');
-    const socket = socketConnection({ companyId });
+    // const companyId = localStorage.getItem('companyId');
+    // const socket = socketConnection({ companyId });
+    if (!ticket && !ticket?.id && ticket?.uuid !== ticketId && ticketId === undefined) {
+      return;
+    }
 
-    socket.on('connect', () => socket.emit('joinChatBox', `${ticket.id}`));
+    if (user?.id) {
+      socket.emit('joinChatBox', `${ticket?.id}`);
 
-    socket.on(`company-${companyId}-ticket`, (data) => {
-      if (data.action === 'update') {
-        setTicket(data.ticket);
-      }
+      socket.on(`company-${user?.companyId}-ticket`, (data) => {
+        if (data.action === 'update' && data.ticket?.id === ticket?.id) {
+          setTicket(data.ticket);
+        }
 
-      if (data.action === 'delete') {
-        toast.success('Ticket deleted sucessfully.');
-        history.push('/tickets');
-      }
-    });
+        if (data.action === 'delete' && data.ticket?.id === ticket?.id) {
+          history.push('/tickets');
+        }
+      });
 
-    socket.on(`company-${companyId}-contact`, (data) => {
-      if (data.action === 'update') {
-        setContact((prevState) => {
-          if (prevState.id === data.contact?.id) {
-            return { ...prevState, ...data.contact };
-          }
-          return prevState;
-        });
-      }
-    });
+      socket.on(`company-${user?.companyId}-contact`, (data) => {
+        if (data.action === 'update') {
+          setContact((prevState) => {
+            if (prevState.id === data.contact?.id) {
+              return { ...prevState, ...data.contact };
+            }
+            return prevState;
+          });
+        }
+      });
+    }
+
 
     return () => {
-      socket.disconnect();
+      if (user.id) {
+        socket.off("joinChatBoxLeave", ticket?.id)
+
+        console.log(ticket?.status)
+
+        socket.off("joinTicketsLeave", ticket?.status)
+
+        socket.off(`company-${user?.companyId}-contact`, (data) => {
+          if (data.action === 'update') {
+            setContact((prevState) => {
+              if (prevState.id === data.contact?.id) {
+                return { ...prevState, ...data.contact };
+              }
+              return prevState;
+            });
+          }
+        })
+
+        socket.off(`company-${user?.companyId}-ticket`, (data) => {
+          if (data.action === 'update' && data.ticket?.id === ticket?.id && ticketId === ticket?.id) {
+            console.log('162')
+            setTicket(data.ticket);
+          }
+
+          if (data.action === 'delete' && data.ticket?.id === ticket?.id && ticketId === ticket?.id) {
+            console.log('167')
+            history.push('/tickets');
+          }
+        });
+      }
     };
-  }, [ticketId, ticket, history]);
+  }, [ticketId, ticket, history, socket]);
 
   const handleDrawerOpen = () => {
     setDrawerOpen(true);

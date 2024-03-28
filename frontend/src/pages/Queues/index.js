@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useContext, useEffect, useReducer, useState } from "react";
 
 import {
   Button,
@@ -26,6 +26,7 @@ import QueueModal from "../../components/QueueModal";
 import { toast } from "react-toastify";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { socketConnection } from "../../services/socket";
+import { AuthContext } from "../../context/Auth/AuthContext";
 
 const useStyles = makeStyles((theme) => ({
   mainPaper: {
@@ -89,7 +90,7 @@ const Queues = () => {
 
   const [queues, dispatch] = useReducer(reducer, []);
   const [loading, setLoading] = useState(false);
-
+  const {user,socket} = useContext(AuthContext)
   const [queueModalOpen, setQueueModalOpen] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -110,21 +111,34 @@ const Queues = () => {
   }, []);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    // const user.companyId = localStorage.getItem("user.companyId");
+    // const socket = socketConnection({ user });
 
-    socket.on(`company-${companyId}-queue`, (data) => {
-      if (data.action === "update" || data.action === "create") {
-        dispatch({ type: "UPDATE_QUEUES", payload: data.queue });
-      }
-
-      if (data.action === "delete") {
-        dispatch({ type: "DELETE_QUEUE", payload: data.queueId });
-      }
-    });
+    if(user?.id){
+      socket.on(`company-${user.companyId}-queue`, (data) => {
+        if (data.action === "update" || data.action === "create") {
+          dispatch({ type: "UPDATE_QUEUES", payload: data.queue });
+        }
+  
+        if (data.action === "delete") {
+          dispatch({ type: "DELETE_QUEUE", payload: data.queueId });
+        }
+      });
+    }
+    
 
     return () => {
-      socket.disconnect();
+      if(user?.id){
+      socket.off(`company-${user.companyId}-queue`, (data) => {
+        if (data.action === "update" || data.action === "create") {
+          dispatch({ type: "UPDATE_QUEUES", payload: data.queue });
+        }
+  
+        if (data.action === "delete") {
+          dispatch({ type: "DELETE_QUEUE", payload: data.queueId });
+        }
+      });
+    }
     };
   }, []);
 

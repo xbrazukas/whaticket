@@ -1,8 +1,9 @@
-import { useState, useEffect, useReducer } from "react";
+import { useState, useEffect, useReducer, useContext } from "react";
 import toastError from "../../errors/toastError";
 
 import api from "../../services/api";
 import { socketConnection } from "../../services/socket";
+import { AuthContext } from "../../context/Auth/AuthContext";
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_WHATSAPPS") {
@@ -57,6 +58,8 @@ const useWhatsApps = () => {
   const [whatsApps, dispatch] = useReducer(reducer, []);
   const [loading, setLoading] = useState(true);
 
+  const {user, socket} = useContext(AuthContext)
+
   useEffect(() => {
     setLoading(true);
     const fetchSession = async () => {
@@ -73,31 +76,35 @@ const useWhatsApps = () => {
   }, []);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    // const companyId = localStorage.getItem("companyId");
+    // const socket = socketConnection({ companyId });
 
-    socket.on(`company-${companyId}-whatsapp`, (data) => {
-      if (data.action === "update") {
-        dispatch({ type: "UPDATE_WHATSAPPS", payload: data.whatsapp });
-      }
-    });
+    if(user.id){
 
-    socket.on(`company-${companyId}-whatsapp`, (data) => {
-      if (data.action === "delete") {
-        dispatch({ type: "DELETE_WHATSAPPS", payload: data.whatsappId });
-      }
-    });
+      socket.on(`company-${user.companyId}-whatsapp`, (data) => {
+        if (data.action === "update") {
+          dispatch({ type: "UPDATE_WHATSAPPS", payload: data.whatsapp });
+        }
+      });
+  
+      socket.on(`company-${user.companyId}-whatsapp`, (data) => {
+        if (data.action === "delete") {
+          dispatch({ type: "DELETE_WHATSAPPS", payload: data.whatsappId });
+        }
+      });
+  
+      socket.on(`company-${user.companyId}-whatsappSession`, (data) => {
+        if (data.action === "update") {
+          dispatch({ type: "UPDATE_SESSION", payload: data.session });
+        }
+      });
+    }
 
-    socket.on(`company-${companyId}-whatsappSession`, (data) => {
-      if (data.action === "update") {
-        dispatch({ type: "UPDATE_SESSION", payload: data.session });
-      }
-    });
 
     return () => {
-      socket.disconnect();
+      // socket.disconnect();
     };
-  }, []);
+  }, [socket]);
 
   return { whatsApps, loading };
 };

@@ -155,12 +155,12 @@ const Companies = () => {
     }, [searchParam, pageNumber]);
 
     useEffect(() => {
-        const companyId = localStorage.getItem("companyId");
-        const socket = socketConnection({ companyId });
+        // const companyId = localStorage.getItem("companyId");
+        // const socket = socketConnection({ companyId });
         // const socket = socketConnection();
 
         return () => {
-            socket.disconnect();
+            // socket.disconnect();
         };
     }, []);
 

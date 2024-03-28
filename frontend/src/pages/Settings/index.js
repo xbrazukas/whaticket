@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
@@ -11,6 +11,7 @@ import api from "../../services/api";
 import { i18n } from "../../translate/i18n.js";
 import toastError from "../../errors/toastError";
 import { socketConnection } from "../../services/socket";
+import { AuthContext } from "../../context/Auth/AuthContext.js";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -37,6 +38,7 @@ const Settings = () => {
   const classes = useStyles();
 
   const [settings, setSettings] = useState([]);
+  const {user, socket} = useContext(AuthContext)
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -51,22 +53,32 @@ const Settings = () => {
   }, []);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
-
-    socket.on(`company-${companyId}-settings`, (data) => {
-      if (data.action === "update") {
-        setSettings((prevState) => {
-          const aux = [...prevState];
-          const settingIndex = aux.findIndex((s) => s.key === data.setting.key);
-          aux[settingIndex].value = data.setting.value;
-          return aux;
-        });
-      }
-    });
+    // const user.companyId = localStorage.getItem("user.companyId");
+    // const socket = socketConnection({ user.companyId });
+    if(user?.id){
+      socket.on(`company-${user?.companyId}-settings`, (data) => {
+        if (data.action === "update") {
+          setSettings((prevState) => {
+            const aux = [...prevState];
+            const settingIndex = aux.findIndex((s) => s.key === data.setting.key);
+            aux[settingIndex].value = data.setting.value;
+            return aux;
+          });
+        }
+      });
+    }
 
     return () => {
-      socket.disconnect();
+      socket.off(`company-${user.companyId}-settings`, (data) => {
+        if (data.action === "update") {
+          setSettings((prevState) => {
+            const aux = [...prevState];
+            const settingIndex = aux.findIndex((s) => s.key === data.setting.key);
+            aux[settingIndex].value = data.setting.value;
+            return aux;
+          });
+        }
+      });
     };
   }, []);
 

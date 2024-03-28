@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useEffect, useReducer, useContext } from "react";
 import { toast } from "react-toastify";
 
 import { useHistory } from "react-router-dom";
@@ -40,6 +40,7 @@ import { isArray } from "lodash";
 import { useDate } from "../../hooks/useDate";
 import { socketConnection } from "../../services/socket";
 import usePlans from "../../hooks/usePlans";
+import { AuthContext } from "../../context/Auth/AuthContext";
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_CAMPAIGNS") {
@@ -110,6 +111,7 @@ const Campaigns = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [searchParam, setSearchParam] = useState("");
   const [campaigns, dispatch] = useReducer(reducer, []);
+  const {user, socket} = useContext(AuthContext)
 
   const { datetimeToClient } = useDate();
   const { getPlanCompany } = usePlans();
@@ -144,19 +146,29 @@ const Campaigns = () => {
   }, [searchParam, pageNumber]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
-
-    socket.on(`company-${companyId}-campaign`, (data) => {
-      if (data.action === "update" || data.action === "create") {
-        dispatch({ type: "UPDATE_CAMPAIGNS", payload: data.record });
-      }
-      if (data.action === "delete") {
-        dispatch({ type: "DELETE_CAMPAIGN", payload: +data.id });
-      }
-    });
+    // const companyId = localStorage.getItem("companyId");
+    // const socket = socketConnection({ companyId });
+    if(user?.id){
+      socket.on(`company-${user.companyId}-campaign`, (data) => {
+        if (data.action === "update" || data.action === "create") {
+          dispatch({ type: "UPDATE_CAMPAIGNS", payload: data.record });
+        }
+        if (data.action === "delete") {
+          dispatch({ type: "DELETE_CAMPAIGN", payload: +data.id });
+        }
+      });
+    }
     return () => {
-      socket.disconnect();
+      if(user?.id){
+      socket.off(`company-${user.companyId}-campaign`, (data) => {
+        if (data.action === "update" || data.action === "create") {
+          dispatch({ type: "UPDATE_CAMPAIGNS", payload: data.record });
+        }
+        if (data.action === "delete") {
+          dispatch({ type: "DELETE_CAMPAIGN", payload: +data.id });
+        }
+      });
+    }
     };
   }, []);
 
