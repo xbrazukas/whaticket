@@ -93,6 +93,8 @@ export const sendScheduledMessages = new Queue(
   connection
 );
 
+export const schedulesRecorrenci = new Queue("schedulesRecorrenci", connection)
+
 export const campaignQueue = new Queue("CampaignQueue", connection);
 
 const sendScheduledMessagesWbot = new Queue(
@@ -155,6 +157,91 @@ async function handleSendMessageWbot(job) {
     Sentry.captureException(e);
     logger.error("MessageQueueWbot -> SendMessage: error", e.message);
     throw e;
+  }
+}
+
+async function handleVerifySchedulesRecorrenci(job) {
+  try {
+    const { count, rows: schedules } = await Schedule.findAndCountAll({
+      where: {
+        status: "ENVIADA",
+        repeatEvery: {
+          [Op.not]: null,
+        },
+        selectDaysRecorrenci: {
+          [Op.not]: '',
+        },
+      },
+      include: [{ model: Contact, as: "contact" }]
+    });
+    if (count > 0 ) {
+      schedules.map(async schedule => {
+        if(schedule?.repeatCount === schedule?.repeatEvery){
+          
+          await schedule.update({
+            repeatEvery: null,
+            selectDaysRecorrenci: null
+          });
+
+        }else{
+          await schedule.update({
+            sentAt: null
+          });
+        }
+        
+        if(schedule?.repeatCount === schedule?.repeatEvery){
+          await schedule.update({
+            repeatEvery: null,
+            selectDaysRecorrenci: null
+          });
+        }else{
+          const newDateRecorrenci = await VerifyRecorrenciDate(schedule);
+        }
+
+      });
+    }
+  } catch (e: any) {
+    Sentry.captureException(e);
+    logger.error("SendScheduledMessage -> Verify: error", e.message);
+    throw e;
+  }
+}
+
+async function VerifyRecorrenciDate(schedule) {
+  const { sendAt,selectDaysRecorrenci } = schedule;
+  const originalDate = moment(sendAt);
+  
+  let dateFound = false;
+  const diasSelecionados = selectDaysRecorrenci.split(', '); // Dias selecionados
+
+  let i = 1;
+  while (!dateFound) {
+    let nextDate = moment(originalDate).add(i, "days");
+    nextDate = nextDate.set({
+      hour: originalDate.hours(),
+      minute: originalDate.minutes(),
+      second: originalDate.seconds(),
+    });
+  
+    // Verifica se o dia da semana da próxima data está na lista de dias selecionados
+    if (diasSelecionados.includes(nextDate.format('dddd'))) {
+      // A data está dentro do período
+      // Faça algo aqui se necessário
+      let update = schedule?.repeatCount;
+      update = update + 1;
+    
+      await schedule.update({
+        status:'PENDENTE',
+        sendAt: nextDate.format("YYYY-MM-DD HH:mm:ssZ"),
+        repeatCount: update,
+      });
+
+      logger.info(`Recorrencia agendada para: ${schedule.contact.name}`);
+      
+      // Define a variável de controle para indicar que uma data foi encontrada
+      dateFound = true;
+    }
+    i++;
   }
 }
 
@@ -525,7 +612,7 @@ async function verifyAndFinalizeCampaign(campaign) {
   }
 
   const io = getIO();
-  io.emit(`company-${campaign.companyId}-campaign`, {
+  io.of(campaign.companyId.toString()).emit(`company-${campaign.companyId}-campaign`, {
     action: "update",
     record: campaign
   });
@@ -761,7 +848,7 @@ async function handleDispatchCampaign(job) {
     await verifyAndFinalizeCampaign(campaign);
 
     const io = getIO();
-    io.emit(`company-${campaign.companyId}-campaign`, {
+    io.of(campaign.companyId.toString()).emit(`company-${campaign.companyId}-campaign`, {
       action: "update",
       record: campaign
     });
@@ -1328,6 +1415,8 @@ export async function startQueueProcess() {
  
   messageQueue.process("SendMessage", handleSendMessage);
 
+  schedulesRecorrenci.process("VerifyRecorrenci", handleVerifySchedulesRecorrenci);
+
   sendScheduledMessagesWbot.process("SendMessageWbot", handleSendMessageWbot);
 
   scheduleMonitor.process("Verify", handleVerifySchedules);
@@ -1359,6 +1448,15 @@ export async function startQueueProcess() {
     {},
     {
       repeat: { cron: "*/2 * * * * *" },
+      removeOnComplete: true
+    }
+  );
+
+  schedulesRecorrenci.add(
+    "VerifyRecorrenci",
+    {},
+    {
+      repeat: { cron: "*/5 * * * * *" },
       removeOnComplete: true
     }
   );
