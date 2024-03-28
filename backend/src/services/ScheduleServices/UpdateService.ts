@@ -16,6 +16,10 @@ interface ScheduleData {
   geral?: boolean
   queueId?: number;
   whatsappId?: number;
+  repeatEvery?:string;
+  repeatDailyInput?:string;
+  repeatCount?:string;
+  selectDaysRecorrenci?: string;
 }
 
 interface Request {
@@ -48,7 +52,10 @@ const UpdateUserService = async ({
     userId,
     geral,
     queueId,
-    whatsappId
+    whatsappId,
+    repeatEvery,
+    selectDaysRecorrenci,
+    repeatCount,
   } = scheduleData;
 
   try {
@@ -66,7 +73,10 @@ const UpdateUserService = async ({
     userId,
     geral,
     queueId,
-    whatsappId
+    whatsappId,
+    repeatEvery,
+    selectDaysRecorrenci,
+    repeatCount,
   });
 
   await schedule.reload();

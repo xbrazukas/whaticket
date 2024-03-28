@@ -39,7 +39,10 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     userId,
     geral,
     queueId,
-    whatsappId
+    whatsappId,
+    repeatEvery,
+    selectDaysRecorrenci,
+    repeatCount,
   } = req.body;
   const { companyId } = req.user;
 
@@ -54,11 +57,14 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     userId,
     geral,
     queueId,
-    whatsappId
+    whatsappId,
+    repeatEvery,
+    selectDaysRecorrenci,
+    repeatCount,
   });
 
   const io = getIO();
-  io.emit("schedule", {
+  io.of(companyId.toString()).emit("schedule", {
     action: "create",
     schedule
   });
@@ -90,7 +96,7 @@ export const update = async (
   const schedule = await UpdateService({ scheduleData, id: scheduleId, companyId });
 
   const io = getIO();
-  io.emit("schedule", {
+  io.of(companyId.toString()).emit("schedule", {
     action: "update",
     schedule
   });
@@ -108,7 +114,7 @@ export const remove = async (
   await DeleteService(scheduleId, companyId);
 
   const io = getIO();
-  io.emit("schedule", {
+  io.of(companyId.toString()).emit("schedule", {
     action: "delete",
     scheduleId
   });

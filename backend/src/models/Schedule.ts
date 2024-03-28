@@ -78,6 +78,15 @@ class Schedule extends Model<Schedule> {
   @BelongsTo(() => Company)
   company: Company;
 
+  @Column
+  repeatEvery: string;
+
+  @Column
+  repeatCount: string;
+
+  @Column
+  selectDaysRecorrenci: string
+
 }
 
 export default Schedule;
