@@ -88,7 +88,7 @@ const Login = () => {
  
     try {
     	const response = await api.get("/settings/backgroundPages");
-      	const backdropBackground = response.data.value;
+      	const backdropBackground = response?.data?.value;
       	
       	setbackdropColor(backdropBackground);
     	} catch (error) {
@@ -106,8 +106,8 @@ const Login = () => {
  
     try {
     	const responsev = await api.get("/settings/viewregister");
-      	const viewregisterX = responsev.data.value;
-      	console.log(viewregisterX);
+      	const viewregisterX = responsev?.data?.value;
+      	// console.log(viewregisterX);
       	setviewregister(viewregisterX);
     	} catch (error) {
     		console.error('Error retrieving viewregister', error);
