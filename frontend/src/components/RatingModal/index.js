@@ -115,7 +115,7 @@ const RatingModal = ({ open, onClose, ratingId, reload }) => {
                 setRating(prevState => {
                     return { ...prevState, ...data };
                 
-                console.log(data);
+                // console.log(data);
                 
                 });
             })()
