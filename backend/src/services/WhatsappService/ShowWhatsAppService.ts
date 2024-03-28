@@ -14,7 +14,7 @@ const ShowWhatsAppService = async (
       {
         model: Queue,
         as: "queues",
-        attributes: ["id", "name", "color", "greetingMessage"],
+        attributes: ["id", "name", "color", "greetingMessage","typeChatbot","workspaceTypebot","typebotId","publicId","resetChatbotMsg"],
         include: [{ model: QueueOption, as: "options" }]
       }
     ],
