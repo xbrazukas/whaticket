@@ -50,7 +50,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   });
 
   const io = getIO();
-  io.emit(`company-${companyId}-queue`, {
+  io.of(companyId.toString()).emit(`company-${companyId}-queue`, {
     action: "update",
     queue
   });
@@ -77,7 +77,7 @@ export const update = async (
   const queue = await UpdateQueueService(queueId, req.body, companyId);
 
   const io = getIO();
-  io.emit(`company-${companyId}-queue`, {
+  io.of(companyId.toString()).emit(`company-${companyId}-queue`, {
     action: "update",
     queue
   });
@@ -95,7 +95,7 @@ export const remove = async (
   await DeleteQueueService(queueId, companyId);
 
   const io = getIO();
-  io.emit(`company-${companyId}-queue`, {
+  io.of(companyId.toString()).emit(`company-${companyId}-queue`, {
     action: "delete",
     queueId: +queueId
   });

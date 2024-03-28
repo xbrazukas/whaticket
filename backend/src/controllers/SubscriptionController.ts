@@ -427,7 +427,7 @@ export const webhook = async (
     	  	Sentry.captureException(e);
   		  }
 
-          io.emit(`company-${companyId}-payment`, {
+          io.of(companyId.toString()).emit(`company-${companyId}-payment`, {
             action: detahe.status,
             company: companyUpdate
           });
@@ -499,7 +499,7 @@ export const stripewebhook = async (
     	  	Sentry.captureException(e);
   		  }
 
-          io.emit(`company-${companyId}-payment`, {
+          io.of(companyId.toString()).emit(`company-${companyId}-payment`, {
             action: 'CONCLUIDA',
             company: companyUpdate
           });
@@ -608,7 +608,7 @@ export const mercadopagowebhook = async (
     	  	Sentry.captureException(e);
   		  }
 
-          io.emit(`company-${companyId}-payment`, {
+          io.of(companyId.toString()).emit(`company-${companyId}-payment`, {
             action: 'CONCLUIDA',
             company: companyUpdate
           });

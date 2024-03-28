@@ -20,15 +20,12 @@ const UpdateMessageServiceCronPending = async ({
 
 
 
-io.to("pending")
-      .to("notification")
-      .to(ticketId.toString())
-      .emit(`company-${ticket.companyId}-ticket`, {
+  io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
         action: "update",
         ticket
       });
 
-io.to("open").emit(`company-${ticket.companyId}-ticket`, {
+      io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
         action: "delete",
         ticketId: ticket.id
       });

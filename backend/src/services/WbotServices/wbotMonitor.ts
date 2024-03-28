@@ -61,7 +61,7 @@ const wbotMonitor = async (
 
           const ticket = await Ticket.findOne({
             where: {
-              contactId: contact.id,
+              contactId: contact?.id,
               whatsappId: wbot.id,
               //status: { [Op.or]: ["close"] },
               companyId

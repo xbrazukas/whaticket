@@ -48,7 +48,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   });
 
   const io = getIO();
-  io.emit("rating", {
+  io.of(companyId.toString()).emit("rating", {
     action: "create",
     rating
   });
@@ -107,7 +107,7 @@ export const update = async (
   const rating = await UpdateService({ ratingData, id: ratingId, companyId });
 
   const io = getIO();
-  io.emit("rating", {
+  io.of(companyId.toString()).emit("rating", {
     action: "update",
     rating
   });
@@ -125,7 +125,7 @@ export const remove = async (
   await DeleteService(ratingId, companyId);
 
   const io = getIO();
-  io.emit("rating", {
+  io.of(companyId.toString()).emit("rating", {
     action: "delete",
     ratingId
   });

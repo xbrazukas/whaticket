@@ -129,7 +129,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
         contactListId: contactListId,
       });
       const io = getIO();
-      io.emit(`company-${companyId}-campaign`, {
+      io.of(companyId.toString()).emit(`company-${companyId}-campaign`, {
         action: "create",
         record
       });
@@ -201,7 +201,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
         contactListId: contactListId,
       });
       const io = getIO();
-      io.emit(`company-${companyId}-campaign`, {
+      io.of(companyId.toString()).emit(`company-${companyId}-campaign`, {
         action: "create",
         record
       });
@@ -222,7 +222,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     });
 
     const io = getIO();
-    io.emit(`company-${companyId}-campaign`, {
+    io.of(companyId.toString()).emit(`company-${companyId}-campaign`, {
       action: "create",
       record
     });
@@ -266,7 +266,7 @@ export const update = async (
   });
 
   const io = getIO();
-  io.emit(`company-${companyId}-campaign`, {
+  io.of(companyId.toString()).emit(`company-${companyId}-campaign`, {
     action: "update",
     record
   });
@@ -306,10 +306,10 @@ export const remove = async (
   await DeleteService(id);
 
   const io = getIO();
-  io.emit(`company-${companyId}-campaign`, {
+  io.of(companyId.toString()).emit(`company-${companyId}-campaign`, {
     action: "delete",
     id
-  });
+  })
 
   return res.status(200).json({ message: "Campaign deleted" });
 };

@@ -205,8 +205,7 @@ const UpdateTicketService = async ({
           		status: "closed"
         	  });
 
-              io.to("open")
-                .to(ticketId.toString())
+            io.of(companyId.toString())
                 .emit(`company-${ticket.companyId}-ticket`, {
                   action: "delete",
                   ticketId: ticket.id
@@ -253,9 +252,7 @@ const UpdateTicketService = async ({
           		status: "closed"
         	  });
 
-              io.to("open")
-                .to(ticketId.toString())
-                .emit(`company-${ticket.companyId}-ticket`, {
+            io.of(companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
                   action: "delete",
                   ticketId: ticket.id
                 });
@@ -439,16 +436,13 @@ const UpdateTicketService = async ({
     await ticketTraking.save();
 
     if (ticket.status !== oldStatus || ticket.user?.id !== oldUserId) {
-      io.to(oldStatus).emit(`company-${companyId}-ticket`, {
+      io.of(companyId.toString()).emit(`company-${companyId}-ticket`, {
         action: "delete",
         ticketId: ticket.id
       });
     }
 
-    io.to(ticket.status)
-      .to("notification")
-      .to(ticketId.toString())
-      .emit(`company-${companyId}-ticket`, {
+    io.of(companyId.toString()).emit(`company-${companyId}-ticket`, {
         action: "update",
         ticket
       });
