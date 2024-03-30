@@ -12,6 +12,8 @@ interface Request {
   geral?: boolean;
   queueId?: number;
   whatsappId?: number;
+  mediaPath: string | null | undefined;
+  mediaName: string | null | undefined;
   repeatEvery?:string;
   selectDaysRecorrenci?: string;
   repeatCount?:string;
@@ -26,6 +28,8 @@ const CreateService = async ({
   geral,
   queueId,
   whatsappId,
+  mediaPath,
+  mediaName,
   repeatEvery,
   selectDaysRecorrenci,
   repeatCount,
@@ -52,6 +56,8 @@ const CreateService = async ({
       geral,
   	  queueId,
       whatsappId,
+      mediaPath,
+      mediaName,
       repeatEvery,
       selectDaysRecorrenci,
       repeatCount,

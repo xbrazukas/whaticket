@@ -22,7 +22,7 @@ import CampaignSetting from "./models/CampaignSetting";
 import CampaignShipping from "./models/CampaignShipping";
 import GetWhatsappWbot from "./helpers/GetWhatsappWbot";
 import sequelize from "./database";
-import { getMessageOptions } from "./services/WbotServices/SendWhatsAppMedia";
+import SendWhatsAppMedia, { getMessageOptions } from "./services/WbotServices/SendWhatsAppMedia";
 import { getWbot } from "./libs/wbot";
 import path from "path";
 import User from "./models/User";
@@ -35,7 +35,9 @@ import UpdateTicketService from "./services/TicketServices/UpdateTicketService";
 import SendWhatsAppMessage from "./services/WbotServices/SendWhatsAppMessage";
 import ShowTicketService from "./services/TicketServices/ShowTicketService";
 import UpdateMessageServiceCronPending from "./services/MessageServices/UpdateMessageServiceCronPending";
-
+const fs = require('fs');
+const mime = require('mime-types');
+const chardet = require('chardet');
 import ShowContactService from "./services/ContactServices/ShowContactService";
 
 import ShowWhatsAppService from "./services/WhatsappService/ShowWhatsAppService";
@@ -246,9 +248,6 @@ async function VerifyRecorrenciDate(schedule) {
 }
 
 async function handleVerifySchedules(job) {
-
-  //console.log("to aqui");
-
   try {
     const { count, rows: schedules } = await Schedule.findAndCountAll({
       where: {
@@ -261,62 +260,16 @@ async function handleVerifySchedules(job) {
       },
       include: [{ model: Contact, as: "contact" }]
     });
-  
-    //console.log("to aqui 2");
-    //console.log(count);
-  
-  
     if (count > 0) {
       schedules.map(async schedule => {
         await schedule.update({
           status: "AGENDADA"
         });
-      
-        if(schedule.geral){
-        
-        	const companyId = schedule.companyId;
-        	const contact = await ShowContactService(schedule.contactId, companyId);
-        	//const whatsapp = await GetDefaultWhatsApp(schedule.companyId);
-        
-        	//console.log(schedule);
-        
-        	const createTicketText = await FindOrCreateTicketService(
-      			contact,
-      			schedule.whatsappId,
-      			1,
-      	    	companyId
-    	  	);
-        
-        	const ticket = await ShowTicketService(createTicketText.id, companyId);
-      
-      		await UpdateTicketService({
-                ticketData: { status: "pending", queueId: schedule.queueId },
-                ticketId: createTicketText.id,
-                companyId: companyId,
-                
-        	});
-        
-      
-	  		await SendWhatsAppMessage({ body: schedule.body, ticket });
-        
-        	await schedule?.update({
-      			sentAt: moment().format("YYYY-MM-DD HH:mm"),
-      			status: "ENVIADA"
-    		});
-        
-        
-        
-        }else{
-      
-      
-        	sendScheduledMessages.add(
-          		"SendMessage",
-          		{ schedule },
-          		{ delay: 40000 }
-        	);
-        
-        }
-        
+        sendScheduledMessages.add(
+          "SendMessage",
+          { schedule },
+          { delay: 40000 }
+        );
         logger.info(`Disparo agendado para: ${schedule.contact.name}`);
       });
     }
@@ -346,12 +299,82 @@ async function handleSendScheduledMessage(job) {
   	const whatsapp = await Whatsapp.findByPk(schedule.whatsappId);
     //console.log(whatsapp);  
     //console.log(schedule);
+
+    if(schedule?.geral === true){
+
   
-    await SendMessage(whatsapp, {
-      number: schedule.contact.number,
-      body: schedule.body,
-      companyId: schedule.companyId
-    });
+      console.log('355',schedule?.geral)
+
+      const ticket = await FindOrCreateTicketService(schedule.contact, schedule.whatsappId,0, schedule.companyId,schedule.contact, true);
+
+      if(schedule?.mediaPath){
+
+        console.log('360',schedule?.mediaPath)
+        const url = `public/company${schedule.companyId}/${schedule.mediaPath}`
+
+        const nomeDoArquivo = path.basename(url);
+        const tipoMIME = mime.lookup(url);
+        const buffer = fs.readFileSync(url);
+        const encoding = chardet.detect(buffer);
+        const estatisticasDoArquivo = fs.statSync(url);
+
+        const media = {
+          fieldname: 'file',
+          originalname: schedule.mediaName,
+          encoding: encoding,
+          mimetype: tipoMIME,
+          destination: url, 
+          filename: nomeDoArquivo,
+          path: url,
+          size: estatisticasDoArquivo.size,
+          stream: fs.createReadStream(url),
+          buffer: buffer,  
+        };
+
+        const Request = {
+          media: media,
+          ticket: ticket,
+          body: schedule.body,
+        }
+
+        await SendWhatsAppMedia(Request);
+
+      }
+      if(!schedule.mediaPath){
+        const Request2 =  {
+          body: schedule.body,
+          ticket: ticket,
+          quotedMsg: null
+        }
+        
+        await SendWhatsAppMessage(Request2)
+      }
+
+    }else{
+
+      console.log('404')
+
+      if(schedule?.mediaPath){
+        const url = `public/company${schedule.companyId}/${schedule.mediaPath}`
+        await SendMessage(whatsapp, {
+          number: schedule.contact.number,
+          body: schedule.body,
+          mediaPath: url
+        }); 
+      }
+
+      await SendMessage(whatsapp, {
+        number: schedule.contact.number,
+        body: schedule.body,
+        companyId: schedule.companyId
+      });
+    }
+  
+    // await SendMessage(whatsapp, {
+    //   number: schedule.contact.number,
+    //   body: schedule.body,
+    //   companyId: schedule.companyId
+    // });
 
     await scheduleRecord?.update({
       sentAt: moment().format("YYYY-MM-DD HH:mm"),

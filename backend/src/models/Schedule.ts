@@ -79,6 +79,12 @@ class Schedule extends Model<Schedule> {
   company: Company;
 
   @Column
+  mediaPath: string;
+  
+  @Column
+  mediaName: string;
+
+  @Column
   repeatEvery: string;
 
   @Column

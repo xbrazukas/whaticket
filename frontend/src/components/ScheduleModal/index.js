@@ -26,7 +26,10 @@ import {
 	MenuItem,
 	Select,
 	ListItemText,
+	IconButton,
 } from "@material-ui/core";
+import DeleteOutlineIcon from "@material-ui/icons/DeleteOutline";
+import AttachFileIcon from "@material-ui/icons/AttachFile";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import moment from "moment"
 import { AuthContext } from "../../context/Auth/AuthContext";
@@ -66,11 +69,11 @@ const useStyles = makeStyles(theme => ({
 		borderRadius: theme.spacing(1),
 		maxWidth: '600px', // Ajuste conforme necessário
 		margin: '0 auto', // Centraliza na tela
-	  },
-	  selectContainer: {
+	},
+	selectContainer: {
 		width: "100%",
 		textAlign: "left",
-	  },
+	},
 }));
 
 const ScheduleSchema = Yup.object().shape({
@@ -95,8 +98,8 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 		geral: "",
 		queueId: "",
 		whatsappId: "",
-		repeatEvery:"",
-		selectDaysRecorrenci:""
+		repeatEvery: "",
+		selectDaysRecorrenci: ""
 	};
 
 	const initialContact = {
@@ -110,6 +113,8 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 	const [selectedQueue, setSelectedQueue] = useState("");
 	const [connections, setConnections] = useState([]);
 	const [selectedConnection, setSelectedConnection] = useState("");
+	const [attachment, setAttachment] = useState(null);
+	const [campaignEditable, setCampaignEditable] = useState(true);
 	const [loading, setLoading] = useState(false);
 	const [repeatEvery, setRepeatEvery] = useState("");
 	const dias = [
@@ -200,6 +205,10 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 	const handleClose = () => {
 		onClose();
 		setSchedule(initialState);
+		setCurrentContact(initialContact)
+		setContacts([initialContact]);
+		setAttachment(null);
+		setSelectedConnection("");
 	};
 
 	const handleSaveSchedule = async values => {
@@ -219,14 +228,19 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 			return;
 		}
 
-		const scheduleData = { ...values, userId: user.id, whatsappId: connId, queueId, selectDaysRecorrenci:selectDaysRecorrenci.join(', ') };
-
-
+		const scheduleData = { ...values, userId: user.id, whatsappId: connId, queueId, selectDaysRecorrenci: selectDaysRecorrenci.join(', ') };
+		console.log('attachment:',attachment)
+		
+		
 		try {
+			const formData = new FormData();
+			formData.append("file", attachment);
+			formData.append("scheduleData", JSON.stringify(scheduleData));
+			
 			if (scheduleId) {
-				await api.put(`/schedules/${scheduleId}`, scheduleData);
+				await api.put(`/schedules/${scheduleId}`, formData);
 			} else {
-				await api.post("/schedules", scheduleData);
+				await api.post("/schedules", formData);
 			}
 			toast.success(i18n.t("scheduleModal.success"));
 			if (typeof reload == 'function') {
@@ -244,6 +258,15 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 		setCurrentContact(initialContact);
 		setSchedule(initialState);
 		handleClose();
+	};
+
+	const handleFileChange = (event) => {
+		const file = event.target.files[0];
+		setAttachment(file);
+	};
+
+	const handleRemoveAttachment = () => {
+		setAttachment(null);
 	};
 
 	return (
@@ -466,6 +489,27 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 										fullWidth
 									/>
 								</div>
+								{(schedule.mediaPath || attachment) && (
+									<Grid container spacing={1} alignItems="center">
+										<Grid item>
+											<Button startIcon={<AttachFileIcon />}>
+												{attachment != null
+													? attachment.name
+													: schedule.mediaName}
+											</Button>
+										</Grid>
+										{campaignEditable && (
+											<Grid item>
+												<IconButton
+													onClick={handleRemoveAttachment}
+													color="secondary"
+												>
+													<DeleteOutlineIcon />
+												</IconButton>
+											</Grid>
+										)}
+									</Grid>
+								)}
 							</DialogContent>
 							<DialogActions>
 								<Button
@@ -476,6 +520,25 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 								>
 									{i18n.t("scheduleModal.buttons.cancel")}
 								</Button>
+								<div className={classes.multFieldLine}>
+									<input
+										accept="*"
+										style={{ display: "none" }}
+										id="mediaPath"
+										type="file"
+										onChange={handleFileChange}
+									/>
+									<label htmlFor="mediaPath">
+										<Button
+											variant="contained"
+											color="default"
+											component="span"
+										>
+											Anexar Mídia
+										</Button>
+									</label>
+								</div>
+
 								{(schedule.sentAt === null || schedule.sentAt === "") && (
 									<Button
 										type="submit"
