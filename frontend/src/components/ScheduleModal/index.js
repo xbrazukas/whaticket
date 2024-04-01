@@ -193,8 +193,10 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 					setSchedule(prevState => {
 						return { ...prevState, ...data, sendAt: moment(data.sendAt).format('YYYY-MM-DDTHH:mm') };
 					});
+
 					setCurrentContact(data.contact);
 					setSelecionados(data?.selectDaysRecorrenci)
+					setSelectedConnection(data?.whatsappId)
 				})()
 			} catch (err) {
 				toastError(err);
@@ -228,15 +230,29 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 			return;
 		}
 
-		const scheduleData = { ...values, userId: user.id, whatsappId: connId, queueId, selectDaysRecorrenci: selectDaysRecorrenci.join(', ') };
-		console.log('attachment:',attachment)
-		
-		
+		let selectDaysRecorrenciValue = selectDaysRecorrenci;
+		if (Array.isArray(selectDaysRecorrenci) && selectDaysRecorrenci.length > 0) {
+			// Se selectDaysRecorrenci for um array com conteúdo, use-o diretamente
+			selectDaysRecorrenciValue = selectDaysRecorrenci;
+		} else if (typeof selectDaysRecorrenci === 'string' && selectDaysRecorrenci.includes(',')) {
+			// Se selectDaysRecorrenci for uma string contendo vírgula, transforme-a em array
+			selectDaysRecorrenciValue = selectDaysRecorrenci.split(',');
+		}
+
+		const scheduleData = {
+			...values,
+			userId: user.id,
+			whatsappId: connId,
+			queueId,
+			selectDaysRecorrenci: Array.isArray(selectDaysRecorrenciValue) ? selectDaysRecorrenciValue.join(', ') : selectDaysRecorrenciValue
+		};
+
+
 		try {
 			const formData = new FormData();
 			formData.append("file", attachment);
 			formData.append("scheduleData", JSON.stringify(scheduleData));
-			
+
 			if (scheduleId) {
 				await api.put(`/schedules/${scheduleId}`, formData);
 			} else {
