@@ -94,7 +94,7 @@ const useStyles = makeStyles((theme) => ({
 const Ratings = () => {
     const classes = useStyles();
 
-    const { user } = useContext(AuthContext);
+    const { user, socket} = useContext(AuthContext);
 
     const [loading, setLoading] = useState(false);
     const [pageNumber, setPageNumber] = useState(1);
@@ -137,20 +137,29 @@ const Ratings = () => {
     }, [searchParam, pageNumber, fetchRatings]);
 
     useEffect(() => {
-        const socket = socketConnection({ companyId: user.companyId });
+        if(user?.id){            
+            socket.on("user", (data) => {
+                if (data.action === "update" || data.action === "create") {
+                    dispatch({ type: "UPDATE_RATINGS", payload: data.ratings });
+                }
+    
+                if (data.action === "delete") {
+                    dispatch({ type: "DELETE_USER", payload: +data.ratingId });
+                }
+            });
+        }
 
-        socket.on("user", (data) => {
-            if (data.action === "update" || data.action === "create") {
-                dispatch({ type: "UPDATE_RATINGS", payload: data.ratings });
-            }
-
-            if (data.action === "delete") {
-                dispatch({ type: "DELETE_USER", payload: +data.ratingId });
-            }
-        });
 
         return () => {
-            socket.disconnect();
+            socket.off("user", (data) => {
+                if (data.action === "update" || data.action === "create") {
+                    dispatch({ type: "UPDATE_RATINGS", payload: data.ratings });
+                }
+    
+                if (data.action === "delete") {
+                    dispatch({ type: "DELETE_USER", payload: +data.ratingId });
+                }
+            })
         };
     }, [user]);
 

@@ -203,7 +203,7 @@ const QueueModal = ({ open, onClose, queueId, companyId }) => {
             id: item.id, // Substitua 'id' pelo nome real da propriedade
             name: item.name
           }));
-          console.log(extractedData)
+          // console.log(extractedData)
           setWorkFlowN8N(extractedData);
         }
       } catch (err) {

@@ -135,7 +135,7 @@ const Contacts = () => {
     const classes = useStyles();
     const history = useHistory();
 
-    const { user } = useContext(AuthContext);
+    const { user, socket } = useContext(AuthContext);
 
     const [loading, setLoading] = useState(false);
     const [pageNumber, setPageNumber] = useState(1);
@@ -247,21 +247,32 @@ const Contacts = () => {
     }, [searchParam, pageNumber]);
 
     useEffect(() => {
-        const companyId = localStorage.getItem("companyId");
-        const socket = socketConnection({ companyId });
-
-        socket.on(`company-${companyId}-contact`, (data) => {
-            if (data.action === "update" || data.action === "create") {
-                dispatch({ type: "UPDATE_CONTACTS", payload: data.contact });
-            }
-
-            if (data.action === "delete") {
-                dispatch({ type: "DELETE_CONTACT", payload: +data.contactId });
-            }
-        });
+        // const companyId = localStorage.getItem("companyId");
+        // const socket = socketConnection({ companyId });
+        if(user?.id){
+            socket.on(`company-${user.companyId}-contact`, (data) => {
+                    if (data.action === "update" || data.action === "create") {
+                        dispatch({ type: "UPDATE_CONTACTS", payload: data.contact });
+                    }
+        
+                    if (data.action === "delete") {
+                        dispatch({ type: "DELETE_CONTACT", payload: +data.contactId });
+                    }
+            });
+        }
 
         return () => {
-            socket.disconnect();
+            if(user?.id){
+            socket.off(`company-${user.companyId}-contact`, (data) => {
+                if (data.action === "update" || data.action === "create") {
+                    dispatch({ type: "UPDATE_CONTACTS", payload: data.contact });
+                }
+    
+                if (data.action === "delete") {
+                    dispatch({ type: "DELETE_CONTACT", payload: +data.contactId });
+                }
+              });
+            }
         };
     }, []);
 

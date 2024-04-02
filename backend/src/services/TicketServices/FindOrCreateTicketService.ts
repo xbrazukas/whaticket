@@ -19,7 +19,8 @@ const FindOrCreateTicketService = async (
   whatsappId: number,
   unreadMessages: number,
   companyId: number,
-  groupContact?: Contact
+  groupContact?: Contact,
+  openTicketSchedule?: boolean,
 ): Promise<Ticket> => {
   let ticket = await Ticket.findOne({
     where: {
@@ -35,6 +36,10 @@ const FindOrCreateTicketService = async (
   });
 
   //console.log(ticket);
+
+  if(ticket && openTicketSchedule){
+    await ticket.update({ status:"open", unreadMessages });
+  }
 
   if (ticket) {
     await ticket.update({ unreadMessages, whatsappId });

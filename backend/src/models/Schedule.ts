@@ -78,6 +78,21 @@ class Schedule extends Model<Schedule> {
   @BelongsTo(() => Company)
   company: Company;
 
+  @Column
+  mediaPath: string;
+  
+  @Column
+  mediaName: string;
+
+  @Column
+  repeatEvery: string;
+
+  @Column
+  repeatCount: string;
+
+  @Column
+  selectDaysRecorrenci: string
+
 }
 
 export default Schedule;

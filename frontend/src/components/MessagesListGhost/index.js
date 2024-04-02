@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useRef } from "react";
+import React, { useState, useEffect, useReducer, useRef, useContext } from "react";
 
 import { isSameDay, parseISO, format } from "date-fns";
 import clsx from "clsx";
@@ -30,6 +30,7 @@ import VCardPreview from "../VCardPreview";
 import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import { socketConnection } from "../../services/socket";
+import { AuthContext } from "../../context/Auth/AuthContext";
 
 const useStyles = makeStyles((theme) => ({
   messagesListWrapper: {
@@ -319,6 +320,7 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const messageOptionsMenuOpen = Boolean(anchorEl);
   const currentTicketId = useRef(ticketId);
+  const {user, socket} = useContext(AuthContext)
 
   useEffect(() => {
     dispatch({ type: "RESET" });
@@ -361,24 +363,30 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   }, [pageNumber, ticketId]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    const companyId = user.companyId
+    // const socket = socketConnection({ companyId });
+    if(user?.id){
+      socket.emit("joinChatBox", `${ticket.id}`);
+  
+      socket.on(`company-${companyId}-appMessage`, (data) => {
 
-    socket.on("connect", () => socket.emit("joinChatBox", `${ticket.id}`));
+        if(ticketId === data.ticket.id){
+          if (data.action === "create" && ticketId === data.ticket.id) {
+            dispatch({ type: "ADD_MESSAGE", payload: data.message });
+            scrollToBottom();
+          }
+    
+          if (data.action === "update" && ticketId === data.ticket.id) {
+            dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
+          }
+        }
+      });
 
-    socket.on(`company-${companyId}-appMessage`, (data) => {
-      if (data.action === "create") {
-        dispatch({ type: "ADD_MESSAGE", payload: data.message });
-        scrollToBottom();
-      }
+    }
 
-      if (data.action === "update") {
-        dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
-      }
-    });
 
     return () => {
-      socket.disconnect();
+      socket.emit("joinChatBoxLeave",`${ticket.id}`)
     };
   }, [ticketId, ticket]);
 

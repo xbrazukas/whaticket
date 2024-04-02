@@ -98,7 +98,7 @@ const reducer = (state, action) => {
 export default function ChatPopover() {
   const classes = useStyles();
 
-  const { user } = useContext(AuthContext);
+  const { user,socket } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -136,26 +136,39 @@ export default function ChatPopover() {
   }, [searchParam, pageNumber]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
-
-    socket.on(`company-${companyId}-chat`, (data) => {
-      if (data.action === "new-message") {
-        dispatch({ type: "CHANGE_CHAT", payload: data });
-        if (data.newMessage.senderId !== user.id) {
-          console.log(data);
-          soundAlertRef.current();
+    // const companyId = localStorage.getItem("companyId");
+    // const socket = socketConnection({ companyId });
+    if(user?.id){      
+      socket.on(`company-${user.companyId}-chat`, (data) => {
+        if (data.action === "new-message") {
+          dispatch({ type: "CHANGE_CHAT", payload: data });
+          if (data.newMessage.senderId !== user.id) {
+            soundAlertRef.current();
+          }
         }
-      }
-      if (data.action === "update") {
-        dispatch({ type: "CHANGE_CHAT", payload: data });
-      }
-    });
+        if (data.action === "update") {
+          dispatch({ type: "CHANGE_CHAT", payload: data });
+        }
+      });
+    }
     return () => {
-      socket.disconnect();
+      if(user?.id){
+      socket.off(`company-${user.companyId}-chat`, (data) => {
+        if (data.action === "new-message") {
+          dispatch({ type: "CHANGE_CHAT", payload: data });
+          if (data.newMessage.senderId !== user.id) {
+            soundAlertRef.current();
+          }
+        }
+        if (data.action === "update") {
+          dispatch({ type: "CHANGE_CHAT", payload: data });
+        }
+      });
+    }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   useEffect(() => {
     let unreadsCount = 0;

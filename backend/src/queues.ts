@@ -22,7 +22,7 @@ import CampaignSetting from "./models/CampaignSetting";
 import CampaignShipping from "./models/CampaignShipping";
 import GetWhatsappWbot from "./helpers/GetWhatsappWbot";
 import sequelize from "./database";
-import { getMessageOptions } from "./services/WbotServices/SendWhatsAppMedia";
+import SendWhatsAppMedia, { getMessageOptions } from "./services/WbotServices/SendWhatsAppMedia";
 import { getWbot } from "./libs/wbot";
 import path from "path";
 import User from "./models/User";
@@ -35,7 +35,9 @@ import UpdateTicketService from "./services/TicketServices/UpdateTicketService";
 import SendWhatsAppMessage from "./services/WbotServices/SendWhatsAppMessage";
 import ShowTicketService from "./services/TicketServices/ShowTicketService";
 import UpdateMessageServiceCronPending from "./services/MessageServices/UpdateMessageServiceCronPending";
-
+const fs = require('fs');
+const mime = require('mime-types');
+const chardet = require('chardet');
 import ShowContactService from "./services/ContactServices/ShowContactService";
 
 import ShowWhatsAppService from "./services/WhatsappService/ShowWhatsAppService";
@@ -92,6 +94,8 @@ export const sendScheduledMessages = new Queue(
   "SendSacheduledMessages",
   connection
 );
+
+export const schedulesRecorrenci = new Queue("schedulesRecorrenci", connection)
 
 export const campaignQueue = new Queue("CampaignQueue", connection);
 
@@ -158,10 +162,92 @@ async function handleSendMessageWbot(job) {
   }
 }
 
+async function handleVerifySchedulesRecorrenci(job) {
+  try {
+    const { count, rows: schedules } = await Schedule.findAndCountAll({
+      where: {
+        status: "ENVIADA",
+        repeatEvery: {
+          [Op.not]: null,
+        },
+        selectDaysRecorrenci: {
+          [Op.not]: '',
+        },
+      },
+      include: [{ model: Contact, as: "contact" }]
+    });
+    if (count > 0 ) {
+      schedules.map(async schedule => {
+        if(schedule?.repeatCount === schedule?.repeatEvery){
+          
+          await schedule.update({
+            repeatEvery: null,
+            selectDaysRecorrenci: null
+          });
+
+        }else{
+          await schedule.update({
+            sentAt: null
+          });
+        }
+        
+        if(schedule?.repeatCount === schedule?.repeatEvery){
+          await schedule.update({
+            repeatEvery: null,
+            selectDaysRecorrenci: null
+          });
+        }else{
+          const newDateRecorrenci = await VerifyRecorrenciDate(schedule);
+        }
+
+      });
+    }
+  } catch (e: any) {
+    Sentry.captureException(e);
+    logger.error("SendScheduledMessage -> Verify: error", e.message);
+    throw e;
+  }
+}
+
+async function VerifyRecorrenciDate(schedule) {
+  const { sendAt,selectDaysRecorrenci } = schedule;
+  const originalDate = moment(sendAt);
+  
+  let dateFound = false;
+  const diasSelecionados = selectDaysRecorrenci.split(', '); // Dias selecionados
+
+  let i = 1;
+  while (!dateFound) {
+    let nextDate = moment(originalDate).add(i, "days");
+    nextDate = nextDate.set({
+      hour: originalDate.hours(),
+      minute: originalDate.minutes(),
+      second: originalDate.seconds(),
+    });
+  
+    // Verifica se o dia da semana da próxima data está na lista de dias selecionados
+    if (diasSelecionados.includes(nextDate.format('dddd'))) {
+      // A data está dentro do período
+      // Faça algo aqui se necessário
+      let update = schedule?.repeatCount;
+      update = update + 1;
+    
+      await schedule.update({
+        status:'PENDENTE',
+        sendAt: nextDate.format("YYYY-MM-DD HH:mm:ssZ"),
+        repeatCount: update,
+      });
+
+      logger.info(`Recorrencia agendada para: ${schedule.contact.name}`);
+      
+      // Define a variável de controle para indicar que uma data foi encontrada
+      dateFound = true;
+    }
+    i++;
+  }
+}
+
 async function handleVerifySchedules(job) {
-
-  //console.log("to aqui");
-
   try {
     const { count, rows: schedules } = await Schedule.findAndCountAll({
       where: {
@@ -174,62 +260,16 @@ async function handleVerifySchedules(job) {
       },
       include: [{ model: Contact, as: "contact" }]
     });
-  
-    //console.log("to aqui 2");
-    //console.log(count);
-  
-  
     if (count > 0) {
       schedules.map(async schedule => {
         await schedule.update({
           status: "AGENDADA"
         });
-      
-        if(schedule.geral){
-        
-        	const companyId = schedule.companyId;
-        	const contact = await ShowContactService(schedule.contactId, companyId);
-        	//const whatsapp = await GetDefaultWhatsApp(schedule.companyId);
-        
-        	//console.log(schedule);
-        
-        	const createTicketText = await FindOrCreateTicketService(
-      			contact,
-      			schedule.whatsappId,
-      			1,
-      	    	companyId
-    	  	);
-        
-        	const ticket = await ShowTicketService(createTicketText.id, companyId);
-      
-      		await UpdateTicketService({
-                ticketData: { status: "pending", queueId: schedule.queueId },
-                ticketId: createTicketText.id,
-                companyId: companyId,
-                
-        	});
-        
-      
-	  		await SendWhatsAppMessage({ body: schedule.body, ticket });
-        
-        	await schedule?.update({
-      			sentAt: moment().format("YYYY-MM-DD HH:mm"),
-      			status: "ENVIADA"
-    		});
-        
-        
-        
-        }else{
-      
-      
-        	sendScheduledMessages.add(
-          		"SendMessage",
-          		{ schedule },
-          		{ delay: 40000 }
-        	);
-        
-        }
-        
+        sendScheduledMessages.add(
+          "SendMessage",
+          { schedule },
+          { delay: 40000 }
+        );
         logger.info(`Disparo agendado para: ${schedule.contact.name}`);
       });
     }
@@ -259,12 +299,82 @@ async function handleSendScheduledMessage(job) {
   	const whatsapp = await Whatsapp.findByPk(schedule.whatsappId);
     //console.log(whatsapp);  
     //console.log(schedule);
+
+    if(schedule?.geral === true){
+
   
-    await SendMessage(whatsapp, {
-      number: schedule.contact.number,
-      body: schedule.body,
-      companyId: schedule.companyId
-    });
+      console.log('355',schedule?.geral)
+
+      const ticket = await FindOrCreateTicketService(schedule.contact, schedule.whatsappId,0, schedule.companyId,schedule.contact, true);
+
+      if(schedule?.mediaPath){
+
+        console.log('360',schedule?.mediaPath)
+        const url = `public/company${schedule.companyId}/${schedule.mediaPath}`
+
+        const nomeDoArquivo = path.basename(url);
+        const tipoMIME = mime.lookup(url);
+        const buffer = fs.readFileSync(url);
+        const encoding = chardet.detect(buffer);
+        const estatisticasDoArquivo = fs.statSync(url);
+
+        const media = {
+          fieldname: 'file',
+          originalname: schedule.mediaName,
+          encoding: encoding,
+          mimetype: tipoMIME,
+          destination: url, 
+          filename: nomeDoArquivo,
+          path: url,
+          size: estatisticasDoArquivo.size,
+          stream: fs.createReadStream(url),
+          buffer: buffer,  
+        };
+
+        const Request = {
+          media: media,
+          ticket: ticket,
+          body: schedule.body,
+        }
+
+        await SendWhatsAppMedia(Request);
+
+      }
+      if(!schedule.mediaPath){
+        const Request2 =  {
+          body: schedule.body,
+          ticket: ticket,
+          quotedMsg: null
+        }
+        
+        await SendWhatsAppMessage(Request2)
+      }
+
+    }else{
+
+      console.log('404')
+
+      if(schedule?.mediaPath){
+        const url = `public/company${schedule.companyId}/${schedule.mediaPath}`
+        await SendMessage(whatsapp, {
+          number: schedule.contact.number,
+          body: schedule.body,
+          mediaPath: url
+        }); 
+      }
+
+      await SendMessage(whatsapp, {
+        number: schedule.contact.number,
+        body: schedule.body,
+        companyId: schedule.companyId
+      });
+    }
+  
+    // await SendMessage(whatsapp, {
+    //   number: schedule.contact.number,
+    //   body: schedule.body,
+    //   companyId: schedule.companyId
+    // });
 
     await scheduleRecord?.update({
       sentAt: moment().format("YYYY-MM-DD HH:mm"),
@@ -525,7 +635,7 @@ async function verifyAndFinalizeCampaign(campaign) {
   }
 
   const io = getIO();
-  io.emit(`company-${campaign.companyId}-campaign`, {
+  io.of(campaign.companyId.toString()).emit(`company-${campaign.companyId}-campaign`, {
     action: "update",
     record: campaign
   });
@@ -761,7 +871,7 @@ async function handleDispatchCampaign(job) {
     await verifyAndFinalizeCampaign(campaign);
 
     const io = getIO();
-    io.emit(`company-${campaign.companyId}-campaign`, {
+    io.of(campaign.companyId.toString()).emit(`company-${campaign.companyId}-campaign`, {
       action: "update",
       record: campaign
     });
@@ -1328,6 +1438,8 @@ export async function startQueueProcess() {
  
   messageQueue.process("SendMessage", handleSendMessage);
 
+  schedulesRecorrenci.process("VerifyRecorrenci", handleVerifySchedulesRecorrenci);
+
   sendScheduledMessagesWbot.process("SendMessageWbot", handleSendMessageWbot);
 
   scheduleMonitor.process("Verify", handleVerifySchedules);
@@ -1359,6 +1471,15 @@ export async function startQueueProcess() {
     {},
     {
       repeat: { cron: "*/2 * * * * *" },
+      removeOnComplete: true
+    }
+  );
+
+  schedulesRecorrenci.add(
+    "VerifyRecorrenci",
+    {},
+    {
+      repeat: { cron: "*/5 * * * * *" },
       removeOnComplete: true
     }
   );

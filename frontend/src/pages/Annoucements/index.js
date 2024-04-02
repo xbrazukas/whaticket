@@ -148,7 +148,7 @@ const Announcements = () => {
       }
     });
     return () => {
-      socket.disconnect();
+      // socket.disconnect();
     };
   }, []);
 

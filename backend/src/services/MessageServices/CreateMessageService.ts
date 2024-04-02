@@ -59,9 +59,7 @@ const CreateMessageService = async ({
   }
 
   const io = getIO();
-  io.to(message.ticketId.toString())
-    .to(message.ticket.status)
-    .to("notification")
+   io.of(companyId.toString())
     .emit(`company-${companyId}-appMessage`, {
       action: "create",
       message,

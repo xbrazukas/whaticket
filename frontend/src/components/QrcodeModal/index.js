@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import QRCode from "qrcode.react";
 import toastError from "../../errors/toastError";
 
@@ -6,9 +6,11 @@ import { Dialog, DialogContent, Paper, Typography } from "@material-ui/core";
 import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
 import { socketConnection } from "../../services/socket";
+import { AuthContext } from "../../context/Auth/AuthContext";
 
 const QrcodeModal = ({ open, onClose, whatsAppId }) => {
   const [qrCode, setQrCode] = useState("");
+  const { user,socket } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -26,21 +28,34 @@ const QrcodeModal = ({ open, onClose, whatsAppId }) => {
 
   useEffect(() => {
     if (!whatsAppId) return;
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    // const companyId = localStorage.getItem("companyId");
+    // const socket = socketConnection({ companyId });
 
-    socket.on(`company-${companyId}-whatsappSession`, (data) => {
-      if (data.action === "update" && data.session.id === whatsAppId) {
-        setQrCode(data.session.qrcode);
-      }
+    if(user?.id){
+      socket.on(`company-${user.companyId}-whatsappSession`, (data) => {
+        if (data.action === "update" && data.session.id === whatsAppId) {
+          setQrCode(data.session.qrcode);
+        }
+  
+        if (data.action === "update" && data.session.qrcode === "") {
+          onClose();
+        }
+      });
+    }
 
-      if (data.action === "update" && data.session.qrcode === "") {
-        onClose();
-      }
-    });
 
     return () => {
-      socket.disconnect();
+      if(user.id){
+      socket.off(`company-${user.companyId}-whatsappSession`, (data) => {
+        if (data.action === "update" && data.session.id === whatsAppId) {
+          setQrCode(data.session.qrcode);
+        }
+  
+        if (data.action === "update" && data.session.qrcode === "") {
+          onClose();
+        }
+      });
+    }
     };
   }, [whatsAppId, onClose]);
 

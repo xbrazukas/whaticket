@@ -149,7 +149,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   });
 
   const io = getIO();
-  io.emit(`company-${companyId}-contact`, {
+  io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
     action: "create",
     contact
   });
@@ -202,7 +202,7 @@ export const update = async (
   });
 
   const io = getIO();
-  io.emit(`company-${companyId}-contact`, {
+  io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
     action: "update",
     contact
   });
@@ -222,7 +222,7 @@ export const remove = async (
   await DeleteContactService(contactId);
 
   const io = getIO();
-  io.emit(`company-${companyId}-contact`, {
+  io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
     action: "delete",
     contactId
   });
@@ -245,11 +245,12 @@ export const toggleAcceptAudio = async (
   res: Response
 ): Promise<Response> => {
   var { contactId } = req.params;
+  const { companyId } = req.user;
 
   const contact = await ToggleAcceptAudioContactService({ contactId });
 
   const io = getIO();
-  io.emit("contact", {
+  io.of(companyId.toString()).emit("contact", {
     action: "update",
     contact
   });
@@ -268,7 +269,7 @@ export const blockUnblock = async (
   const contact = await BlockUnblockContactService({ contactId, companyId, active });
 
   const io = getIO();
-  io.emit("contact", {
+  io.of(companyId.toString()).emit("contact", {
     action: "update",
     contact
   });
@@ -285,7 +286,7 @@ export const upload = async (req: Request, res: Response) => {
 
   const io = getIO();
 
-  io.emit(`company-${companyId}-contact`, {
+  io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
     action: "reload",
     records: response
   });

@@ -86,13 +86,13 @@ const ContactsExport = (props) => {
             setPlanilha(planilha)
         } else {
             // Filtra tickets por tags e setores
-            console.log("Abaixo estão o resultado de tickets da api, esses dados não contem nenhum tipo de tratamento:");
-            console.log("Tickets");
-            console.log(tickets);
-            console.log("tags");
-            console.log(selecteds);
-            console.log("Filas");
-            console.log(queueSelected);
+            // console.log("Abaixo estão o resultado de tickets da api, esses dados não contem nenhum tipo de tratamento:");
+            // console.log("Tickets");
+            // console.log(tickets);
+            // console.log("tags");
+            // console.log(selecteds);
+            // console.log("Filas");
+            // console.log(queueSelected);
             let tempTickets = []
             if(selecteds.length){
                 tempTickets = tickets.filter(ticket => filterTickets(ticket, selecteds, 'tags'))

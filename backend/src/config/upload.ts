@@ -48,8 +48,6 @@ export default {
     },
     filename(req, file, cb) {
       const fileName = new Date().getTime() + '_' + file.originalname.replace('/','-');
-    	
-      console.log(fileName);
     
       return cb(null, fileName);
     }

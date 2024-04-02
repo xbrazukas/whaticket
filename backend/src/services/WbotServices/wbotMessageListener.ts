@@ -399,9 +399,9 @@ export const getBodyMessage = (msg: proto.IWebMessageInfo): string | null => {
     let type = getTypeMessage(msg);
 
     const types = {
-      conversation: msg.message.conversation,
-      imageMessage: msg.message.imageMessage?.caption,
-      videoMessage: msg.message.videoMessage?.caption,
+      conversation: msg.message?.conversation,
+      imageMessage: msg.message?.imageMessage?.caption,
+      videoMessage: msg.message?.videoMessage?.caption,
       extendedTextMessage: msg.message.extendedTextMessage?.text,
       buttonsResponseMessage: msg.message.buttonsResponseMessage?.selectedButtonId,
       templateButtonReplyMessage: msg.message?.templateButtonReplyMessage?.selectedId,
@@ -775,15 +775,13 @@ const verifyMediaMessage = async (
       ],
     });
 
-    io.to("closed").emit(`company-${ticket.companyId}-ticket`, {
+    io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
       action: "delete",
       ticket,
       ticketId: ticket.id,
     });
 
-    io.to(ticket.status)
-      .to(ticket.id.toString())
-      .emit(`company-${ticket.companyId}-ticket`, {
+    io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
         action: "update",
         ticket,
         ticketId: ticket.id,
@@ -841,7 +839,7 @@ export const verifyMessage = async (
       ]
     });
 
-    io.to("closed").emit(`company-${ticket.companyId}-ticket`, {
+    io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
       action: "delete",
       ticket,
       ticketId: ticket.id
@@ -1406,15 +1404,13 @@ const handleRating = async (
           status: "closed"
         });
 
-        io.to("open").emit(`company-${ticket.companyId}-ticket`, {
+        io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
           action: "delete",
           ticket,
           ticketId: ticket.id
         });
 
-        io.to(ticket.status)
-          .to(ticket.id.toString())
-          .emit(`company-${ticket.companyId}-ticket`, {
+        io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
             action: "update",
             ticket,
             ticketId: ticket.id
@@ -1444,15 +1440,13 @@ const handleRating = async (
           status: "closed"
         });
 
-        io.to("open").emit(`company-${ticket.companyId}-ticket`, {
+        io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
           action: "delete",
           ticket,
           ticketId: ticket.id
         });
 
-        io.to(ticket.status)
-          .to(ticket.id.toString())
-          .emit(`company-${ticket.companyId}-ticket`, {
+        io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
             action: "update",
             ticket,
             ticketId: ticket.id
@@ -1862,13 +1856,13 @@ const handleChartbot = async (
                status: "open"
              })
 
-              io.to("pending").emit(`company-${ticket.companyId}-ticket`, {
+              io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
                 action: "delete",
                 ticket,
                 ticketId: ticket.id,
               });
 
-              io.to("open").emit(`company-${ticket.companyId}-ticket`, {
+              io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
                 action: "open",
                 ticket,
                 ticketId: ticket.id,
@@ -2602,7 +2596,7 @@ const handleMsgAck = async (
 
     if (!messageToUpdate) return;
     await messageToUpdate.update({ ack: chat });
-    io.to(messageToUpdate.ticketId.toString()).emit(
+    io.of(messageToUpdate.companyId.toString()).emit(
       `company-${messageToUpdate.companyId}-appMessage`,
       {
         action: "update",
@@ -2665,15 +2659,13 @@ const verifyCampaignMessageAndCloseTicket = async (
     const ticket = await Ticket.findByPk(messageRecord.ticketId);
     await ticket.update({ status: "closed" });
 
-    io.to("open").emit(`company-${ticket.companyId}-ticket`, {
+    io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
       action: "delete",
       ticket,
       ticketId: ticket.id,
     });
 
-    io.to(ticket.status)
-      .to(ticket.id.toString())
-      .emit(`company-${ticket.companyId}-ticket`, {
+    io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
         action: "update",
         ticket,
         ticketId: ticket.id,

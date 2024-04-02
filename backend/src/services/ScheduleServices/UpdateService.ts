@@ -16,18 +16,26 @@ interface ScheduleData {
   geral?: boolean
   queueId?: number;
   whatsappId?: number;
+  repeatEvery?:string;
+  repeatDailyInput?:string;
+  repeatCount?:string;
+  selectDaysRecorrenci?: string;
 }
 
 interface Request {
   scheduleData: ScheduleData;
   id: string | number;
   companyId: number;
+  mediaPath: string | null | undefined;
+  mediaName: string | null | undefined;
 }
 
 const UpdateUserService = async ({
   scheduleData,
   id,
-  companyId
+  companyId,
+  mediaPath,
+  mediaName,
 }: Request): Promise<Schedule | undefined> => {
   const schedule = await ShowService(id, companyId);
 
@@ -48,7 +56,10 @@ const UpdateUserService = async ({
     userId,
     geral,
     queueId,
-    whatsappId
+    whatsappId,
+    repeatEvery,
+    selectDaysRecorrenci,
+    repeatCount,
   } = scheduleData;
 
   try {
@@ -66,7 +77,12 @@ const UpdateUserService = async ({
     userId,
     geral,
     queueId,
-    whatsappId
+    whatsappId,
+    mediaPath,
+    mediaName,
+    repeatEvery,
+    selectDaysRecorrenci,
+    repeatCount,
   });
 
   await schedule.reload();

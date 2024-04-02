@@ -54,7 +54,6 @@ const NewTicketModal = ({ modalOpen, onClose, initialContact }) => {
 
         setConnections(data);
         setLoading(false);
-        console.log(data);
       } catch (err) {
         setLoading(false);
         toastError(err);
@@ -140,7 +139,6 @@ const NewTicketModal = ({ modalOpen, onClose, initialContact }) => {
         userId: user.id,
         status: 'open',
       });
-      console.log(ticket);
       onClose(ticket);
     } catch (err) {
       toastError(err);

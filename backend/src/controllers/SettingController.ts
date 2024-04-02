@@ -45,7 +45,7 @@ export const update = async (
   });
 
   const io = getIO();
-  io.emit(`company-${companyId}-settings`, {
+  io.of(companyId.toString()).emit(`company-${companyId}-settings`, {
     action: "update",
     setting
   });

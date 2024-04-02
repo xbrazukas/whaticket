@@ -18,14 +18,12 @@ const UpdateMessageService = async ({
   const io = getIO();
 
 
-io.to("pending").emit(`company-${ticket.companyId}-ticket`, {
+ io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
         action: "delete",
         ticketId: ticket.id
       });
 
-io.to("open")
-      .to("notification")
-      .to(ticketId.toString())
+      io.of(ticket.companyId.toString())
       .emit(`company-${ticket.companyId}-ticket`, {
         action: "update",
         ticket

@@ -20,13 +20,16 @@ import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import {
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Select,
-  ListItemText,
+	FormControl,
+	Grid,
+	InputLabel,
+	MenuItem,
+	Select,
+	ListItemText,
+	IconButton,
 } from "@material-ui/core";
+import DeleteOutlineIcon from "@material-ui/icons/DeleteOutline";
+import AttachFileIcon from "@material-ui/icons/AttachFile";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import moment from "moment"
 import { AuthContext } from "../../context/Auth/AuthContext";
@@ -60,6 +63,17 @@ const useStyles = makeStyles(theme => ({
 		margin: theme.spacing(1),
 		minWidth: 120,
 	},
+	recurrenceContainer: {
+		backgroundColor: '#f1f8e9', // Cor de fundo semelhante à do Google Agenda
+		padding: theme.spacing(2),
+		borderRadius: theme.spacing(1),
+		maxWidth: '600px', // Ajuste conforme necessário
+		margin: '0 auto', // Centraliza na tela
+	},
+	selectContainer: {
+		width: "100%",
+		textAlign: "left",
+	},
 }));
 
 const ScheduleSchema = Yup.object().shape({
@@ -74,16 +88,18 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 	const classes = useStyles();
 	const history = useHistory();
 	const { user } = useContext(AuthContext);
-	
+
 
 	const initialState = {
 		body: "",
 		contactId: "",
 		sendAt: moment().add(1, 'hour').format('YYYY-MM-DDTHH:mm'),
 		sentAt: "",
-        geral: "",
-        queueId: "",
-        whatsappId: ""
+		geral: "",
+		queueId: "",
+		whatsappId: "",
+		repeatEvery: "",
+		selectDaysRecorrenci: ""
 	};
 
 	const initialContact = {
@@ -97,7 +113,33 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 	const [selectedQueue, setSelectedQueue] = useState("");
 	const [connections, setConnections] = useState([]);
 	const [selectedConnection, setSelectedConnection] = useState("");
+	const [attachment, setAttachment] = useState(null);
+	const [campaignEditable, setCampaignEditable] = useState(true);
 	const [loading, setLoading] = useState(false);
+	const [repeatEvery, setRepeatEvery] = useState("");
+	const dias = [
+		{ pt: 'Domingo', en: 'Sunday' },
+		{ pt: 'Segunda', en: 'Monday' },
+		{ pt: 'Terça', en: 'Tuesday' },
+		{ pt: 'Quarta', en: 'Wednesday' },
+		{ pt: 'Quinta', en: 'Thursday' },
+		{ pt: 'Sexta', en: 'Friday' },
+		{ pt: 'Sábado', en: 'Saturday' }
+	];
+	const [selectDaysRecorrenci, setSelecionados] = useState([]);
+
+	const toggleDia = (index) => {
+		const dia = dias[index].en;
+		const novosSelecionados = [...selectDaysRecorrenci];
+		const diaIndex = novosSelecionados.findIndex(d => d === dia); // Corrigido aqui
+
+		if (diaIndex < 0) {
+			novosSelecionados.push(dia); // Adiciona o nome do dia em inglês
+		} else {
+			novosSelecionados.splice(diaIndex, 1);
+		}
+		setSelecionados(novosSelecionados);
+	}
 
 
 	useEffect(() => {
@@ -109,25 +151,25 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 		}
 	}, [contactId, contacts]);
 
-	    useEffect(() => {
-    
-    const fetchWhatsapps = async () => {
+	useEffect(() => {
+
+		const fetchWhatsapps = async () => {
 			try {
 				const { data } = await api.get("whatsapp", {});
-				
+
 				setConnections(data);
-				setLoading(false);	
+				setLoading(false);
 				//console.log(data);
-            
+
 			} catch (err) {
 				setLoading(false);
 				toastError(err);
 			}
 		};
 
-			fetchWhatsapps();
-    
-    }, []);
+		fetchWhatsapps();
+
+	}, []);
 
 	useEffect(() => {
 		const { companyId } = user;
@@ -135,9 +177,9 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 			try {
 				(async () => {
 					const { data: contactList } = await api.get('/contacts/list', { params: { companyId: companyId } });
-					let customList = contactList.map((c) => ({id: c.id, name: c.name}));
+					let customList = contactList.map((c) => ({ id: c.id, name: c.name }));
 					if (isArray(customList)) {
-						setContacts([{id: "", name: ""}, ...customList]);
+						setContacts([{ id: "", name: "" }, ...customList]);
 					}
 					if (contactId) {
 						setSchedule(prevState => {
@@ -151,7 +193,10 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 					setSchedule(prevState => {
 						return { ...prevState, ...data, sendAt: moment(data.sendAt).format('YYYY-MM-DDTHH:mm') };
 					});
+
 					setCurrentContact(data.contact);
+					setSelecionados(data?.selectDaysRecorrenci)
+					setSelectedConnection(data?.whatsappId)
 				})()
 			} catch (err) {
 				toastError(err);
@@ -162,33 +207,56 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 	const handleClose = () => {
 		onClose();
 		setSchedule(initialState);
+		setCurrentContact(initialContact)
+		setContacts([initialContact]);
+		setAttachment(null);
+		setSelectedConnection("");
 	};
 
 	const handleSaveSchedule = async values => {
-    
-    	const queueId = selectedQueue !== "" ? selectedQueue : null;
+
+		const queueId = selectedQueue !== "" ? selectedQueue : null;
 		const connId = selectedConnection !== "" ? selectedConnection : null;
-    
-        //console.log(queueId);
-    
+
+		//console.log(queueId);
+
 		if (selectedQueue === "" && (user.profile !== 'admin' || user.profile !== 'supervisor')) {
 			//toast.error("Selecione uma fila!");
 			//return;
 		}
-    
-    	if (selectedConnection === ""){
+
+		if (selectedConnection === "") {
 			toast.error("Selecione uma conexão!");
 			return;
 		}
-    
-    	const scheduleData = { ...values, userId: user.id, whatsappId: connId, queueId };
-    
-    
+
+		let selectDaysRecorrenciValue = selectDaysRecorrenci;
+		if (Array.isArray(selectDaysRecorrenci) && selectDaysRecorrenci.length > 0) {
+			// Se selectDaysRecorrenci for um array com conteúdo, use-o diretamente
+			selectDaysRecorrenciValue = selectDaysRecorrenci;
+		} else if (typeof selectDaysRecorrenci === 'string' && selectDaysRecorrenci.includes(',')) {
+			// Se selectDaysRecorrenci for uma string contendo vírgula, transforme-a em array
+			selectDaysRecorrenciValue = selectDaysRecorrenci.split(',');
+		}
+
+		const scheduleData = {
+			...values,
+			userId: user.id,
+			whatsappId: connId,
+			queueId,
+			selectDaysRecorrenci: Array.isArray(selectDaysRecorrenciValue) ? selectDaysRecorrenciValue.join(', ') : selectDaysRecorrenciValue
+		};
+
+
 		try {
+			const formData = new FormData();
+			formData.append("file", attachment);
+			formData.append("scheduleData", JSON.stringify(scheduleData));
+
 			if (scheduleId) {
-				await api.put(`/schedules/${scheduleId}`, scheduleData);
+				await api.put(`/schedules/${scheduleId}`, formData);
 			} else {
-				await api.post("/schedules", scheduleData);
+				await api.post("/schedules", formData);
 			}
 			toast.success(i18n.t("scheduleModal.success"));
 			if (typeof reload == 'function') {
@@ -206,6 +274,15 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 		setCurrentContact(initialContact);
 		setSchedule(initialState);
 		handleClose();
+	};
+
+	const handleFileChange = (event) => {
+		const file = event.target.files[0];
+		setAttachment(file);
+	};
+
+	const handleRemoveAttachment = () => {
+		setAttachment(null);
 	};
 
 	return (
@@ -231,7 +308,7 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 						}, 400);
 					}}
 				>
-					{({ touched, errors, isSubmitting, values }) => (
+					{({ touched, errors, isSubmitting, values, setFieldValue }) => (
 						<Form>
 							<DialogContent dividers>
 								<div className={classes.multFieldLine}>
@@ -257,28 +334,28 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 									</FormControl>
 								</div>
 								<br />
-                                
-                   <div className={classes.multFieldLine}>             				  
-                    <FormControl variant="outlined" margin="dense" fullWidth>
-                      <InputLabel id="geral-selection-label">
-                        {i18n.t("scheduleModal.form.geral")}
-                      </InputLabel>
-                      <Field
-                        as={Select}
-                        label={i18n.t("scheduleModal.form.geral")}
-                        placeholder={i18n.t("scheduleModal.form.geral")}
-                        labelId="geral-selection-label"
-                        id="geral"
-                        name="geral"
-                        error={touched.geral && Boolean(errors.geral)}
-                      >
-                        <MenuItem value={true}><ListItemText primary="Sim" /></MenuItem>
-                        <MenuItem value={false}><ListItemText primary="Não" /></MenuItem>
-                      </Field>
-                    </FormControl>
-                 	</div>
-					<br />
-                                
+
+								<div className={classes.multFieldLine}>
+									<FormControl variant="outlined" margin="dense" fullWidth>
+										<InputLabel id="geral-selection-label">
+											{i18n.t("scheduleModal.form.geral")}
+										</InputLabel>
+										<Field
+											as={Select}
+											label={i18n.t("scheduleModal.form.geral")}
+											placeholder={i18n.t("scheduleModal.form.geral")}
+											labelId="geral-selection-label"
+											id="geral"
+											name="geral"
+											error={touched.geral && Boolean(errors.geral)}
+										>
+											<MenuItem value={true}><ListItemText primary="Sim" /></MenuItem>
+											<MenuItem value={false}><ListItemText primary="Não" /></MenuItem>
+										</Field>
+									</FormControl>
+								</div>
+								<br />
+
 								<div className={classes.multFieldLine}>
 									<Field
 										as={TextField}
@@ -294,70 +371,125 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 									/>
 								</div>
 								<br />
-       <div className={classes.multFieldLine}>                         
-       <Select
-        fullWidth
-        displayEmpty
-        variant="outlined"
-        value={selectedConnection}
-        onChange={(e) => {
-          setSelectedConnection(e.target.value);
-        }}
-        renderValue={() => {
-          if (selectedConnection === "") {
-            return "Selecione uma conexão";
-          }
-          const connection = connections.find((conn) => conn.id === selectedConnection);
-          return connection?.name || "";
-        }}
-      >
-        {connections.map((connection) => (
-          <MenuItem key={connection.id} value={connection.id}>
-            <ListItemText primary={connection.name} />
-          </MenuItem>
-        ))}
-      </Select>
-       </div>
-								<br />       
-                                
-                             <div className={classes.multFieldLine}>   
-                                <Select
-								fullWidth
-								displayEmpty
-								variant="outlined"
-								value={selectedQueue}
-								onChange={(e) => {
-									setSelectedQueue(e.target.value)
-								}}
-								MenuProps={{
-									anchorOrigin: {
-										vertical: "bottom",
-										horizontal: "left",
-									},
-									transformOrigin: {
-										vertical: "top",
-										horizontal: "left",
-									},
-									getContentAnchorEl: null,
-								}}
-								renderValue={() => {
-									if (selectedQueue === "") {
-										return "Selecione uma fila"
-									}
-									const queue = user.queues.find(q => q.id === selectedQueue)
-									return queue.name
-								}}
-							>
-								{user.queues?.length > 0 &&
-									user.queues.map((queue, key) => (
-										<MenuItem dense key={key} value={queue.id}>
-											<ListItemText primary={queue.name} />
-										</MenuItem>
-									))}
-							</Select>
-                           </div>
-                           <br />
-                           
+								<div className={classes.multFieldLine}>
+									<Select
+										fullWidth
+										displayEmpty
+										variant="outlined"
+										value={selectedConnection}
+										onChange={(e) => {
+											setSelectedConnection(e.target.value);
+										}}
+										renderValue={() => {
+											if (selectedConnection === "") {
+												return "Selecione uma conexão";
+											}
+											const connection = connections.find((conn) => conn.id === selectedConnection);
+											return connection?.name || "";
+										}}
+									>
+										{connections.map((connection) => (
+											<MenuItem key={connection.id} value={connection.id}>
+												<ListItemText primary={connection.name} />
+											</MenuItem>
+										))}
+									</Select>
+								</div>
+								<br />
+
+								<div className={classes.multFieldLine}>
+									<Select
+										fullWidth
+										displayEmpty
+										variant="outlined"
+										value={selectedQueue}
+										onChange={(e) => {
+											setSelectedQueue(e.target.value)
+										}}
+										MenuProps={{
+											anchorOrigin: {
+												vertical: "bottom",
+												horizontal: "left",
+											},
+											transformOrigin: {
+												vertical: "top",
+												horizontal: "left",
+											},
+											getContentAnchorEl: null,
+										}}
+										renderValue={() => {
+											if (selectedQueue === "") {
+												return "Selecione uma fila"
+											}
+											const queue = user.queues.find(q => q.id === selectedQueue)
+											return queue.name
+										}}
+									>
+										{user.queues?.length > 0 &&
+											user.queues.map((queue, key) => (
+												<MenuItem dense key={key} value={queue.id}>
+													<ListItemText primary={queue.name} />
+												</MenuItem>
+											))}
+									</Select>
+								</div>
+								<br />
+								<div className={classes.multFieldLine}>
+									<FormControl className={classes.selectContainer}>
+										<InputLabel id="repeat-every">Enviar por...</InputLabel>
+										<Select
+											label={i18n.t("scheduleModal.form.geral")}
+											labelId="repeat-every"
+											variant="outlined"
+											id="repeat-every"
+											value={values.repeatEvery}
+											onChange={(e) => {
+												setRepeatEvery(e.target.value);
+												setFieldValue("repeatEvery", e.target.value);
+											}}
+										>
+											{[...Array(30)].map((_, index) => (
+												<MenuItem key={index + 1} value={index + 1}>
+													{index + 1} dia{index + 1 !== 1 && "s"}
+												</MenuItem>
+											))}
+											<MenuItem value="9999999">Todo dia</MenuItem>
+										</Select>
+									</FormControl>
+								</div>
+								<br />
+								{values.repeatEvery && (
+									<div style={{ display: 'inline-flex', justifyContent: 'space-between' }}>
+										{dias.map((dia, index) => (
+											<div
+												key={index}
+												onClick={() => toggleDia(index)}
+												name="selectDaysRecorrenci"
+												value={values.selectDaysRecorrenci}
+												style={{
+													height: '24px',
+													width: '24px',
+													borderRadius: '50%',
+													border: '1px solid black',
+													fontSize: '10px',
+													fontWeight: '500',
+													display: 'inline-flex',
+													alignItems: 'center',
+													justifyContent: 'center',
+													marginRight: '8px',
+													backgroundColor: selectDaysRecorrenci.includes(dia.en) ? 'blue' : 'transparent',
+													color: selectDaysRecorrenci.includes(dia.en) ? 'white' : 'black'
+												}}
+											>
+												{dia.pt[0]}
+											</div>
+										))}
+									</div>
+								)}
+								<br />
+								<br />
+								<br />
+
 								<div className={classes.multFieldLine}>
 									<Field
 										as={TextField}
@@ -365,7 +497,7 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 										type="datetime-local"
 										name="sendAt"
 										InputLabelProps={{
-										  shrink: true,
+											shrink: true,
 										}}
 										error={touched.sendAt && Boolean(errors.sendAt)}
 										helperText={touched.sendAt && errors.sendAt}
@@ -373,6 +505,27 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 										fullWidth
 									/>
 								</div>
+								{(schedule.mediaPath || attachment) && (
+									<Grid container spacing={1} alignItems="center">
+										<Grid item>
+											<Button startIcon={<AttachFileIcon />}>
+												{attachment != null
+													? attachment.name
+													: schedule.mediaName}
+											</Button>
+										</Grid>
+										{campaignEditable && (
+											<Grid item>
+												<IconButton
+													onClick={handleRemoveAttachment}
+													color="secondary"
+												>
+													<DeleteOutlineIcon />
+												</IconButton>
+											</Grid>
+										)}
+									</Grid>
+								)}
 							</DialogContent>
 							<DialogActions>
 								<Button
@@ -383,7 +536,26 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 								>
 									{i18n.t("scheduleModal.buttons.cancel")}
 								</Button>
-								{ (schedule.sentAt === null || schedule.sentAt === "") && (
+								<div className={classes.multFieldLine}>
+									<input
+										accept="*"
+										style={{ display: "none" }}
+										id="mediaPath"
+										type="file"
+										onChange={handleFileChange}
+									/>
+									<label htmlFor="mediaPath">
+										<Button
+											variant="contained"
+											color="default"
+											component="span"
+										>
+											Anexar Mídia
+										</Button>
+									</label>
+								</div>
+
+								{(schedule.sentAt === null || schedule.sentAt === "") && (
 									<Button
 										type="submit"
 										color="primary"

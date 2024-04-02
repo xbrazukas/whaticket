@@ -163,7 +163,7 @@ export function ChatModal({
 
 function Chat(props) {
   const classes = useStyles();
-  const { user } = useContext(AuthContext);
+  const { user, socket } = useContext(AuthContext);
   const history = useHistory();
 
   const [showDialog, setShowDialog] = useState(false);
@@ -218,42 +218,103 @@ function Chat(props) {
   }, [currentChat]);
 
   useEffect(() => {
-    const companyId = localStorage.getItem('companyId');
-    const socket = socketConnection({ companyId });
-
-    socket.on(`company-${companyId}-chat-user-${user.id}`, (data) => {
-      if (data.action === 'create') {
-        setChats((prev) => [data.record, ...prev]);
-      }
-      if (data.action === 'update') {
-        const changedChats = chats.map((chat) => {
-          if (chat.id === data.record.id) {
-            setCurrentChat(data.record);
-            return {
-              ...data.record,
-            };
+    // const companyId = localStorage.getItem("companyId");
+    // const socket = socketConnection({ companyId });
+    if(user?.id){
+      socket.on(`company-${user.companyId}-chat-user-${user.id}`, (data) => {
+        if (data.action === "create") {
+          setChats((prev) => [data.record, ...prev]);
+        }
+        if (data.action === "update") {
+          const changedChats = chats.map((chat) => {
+            if (chat.id === data.record.id) {
+              setCurrentChat(data.record);
+              return {
+                ...data.record,
+              };
+            }
+            return chat;
+          });
+          setChats(changedChats);
+        }
+      });
+  
+      socket.on(`company-${user.companyId}-chat`, (data) => {
+        if (data.action === "delete") {
+          const filteredChats = chats.filter((c) => c.id !== +data.id);
+          setChats(filteredChats);
+          setMessages([]);
+          setMessagesPage(1);
+          setMessagesPageInfo({ hasMore: false });
+          setCurrentChat({});
+          history.push("/chats");
+        }
+      });
+  
+      if (isObject(currentChat) && has(currentChat, "id")) {
+        socket.on(`company-${user.companyId}-chat-${currentChat.id}`, (data) => {
+          if (data.action === "new-message") {
+            setMessages((prev) => [...prev, data.newMessage]);
+            const changedChats = chats.map((chat) => {
+              if (chat.id === data.newMessage.chatId) {
+                return {
+                  ...data.chat,
+                };
+              }
+              return chat;
+            });
+            setChats(changedChats);
+            scrollToBottomRef.current();
           }
-          return chat;
+  
+          if (data.action === "update") {
+            const changedChats = chats.map((chat) => {
+              if (chat.id === data.chat.id) {
+                return {
+                  ...data.chat,
+                };
+              }
+              return chat;
+            });
+            setChats(changedChats);
+            scrollToBottomRef.current();
+          }
         });
-        setChats(changedChats);
       }
-    });
+    }
 
-    socket.on(`company-${companyId}-chat`, (data) => {
-      if (data.action === 'delete') {
-        const filteredChats = chats.filter((c) => c.id !== +data.id);
-        setChats(filteredChats);
-        setMessages([]);
-        setMessagesPage(1);
-        setMessagesPageInfo({ hasMore: false });
-        setCurrentChat({});
-        history.push('/chats');
-      }
-    });
-
-    if (isObject(currentChat) && has(currentChat, 'id')) {
-      socket.on(`company-${companyId}-chat-${currentChat.id}`, (data) => {
-        if (data.action === 'new-message') {
+    return () => {
+      if(user?.id){
+      socket.off(`company-${user.companyId}-chat-user-${user.id}`, (data) => {
+        if (data.action === "create") {
+          setChats((prev) => [data.record, ...prev]);
+        }
+        if (data.action === "update") {
+          const changedChats = chats.map((chat) => {
+            if (chat.id === data.record.id) {
+              setCurrentChat(data.record);
+              return {
+                ...data.record,
+              };
+            }
+            return chat;
+          });
+          setChats(changedChats);
+        }
+      });
+      socket.off(`company-${user.companyId}-chat`, (data) => {
+        if (data.action === "delete") {
+          const filteredChats = chats.filter((c) => c.id !== +data.id);
+          setChats(filteredChats);
+          setMessages([]);
+          setMessagesPage(1);
+          setMessagesPageInfo({ hasMore: false });
+          setCurrentChat({});
+          history.push("/chats");
+        }
+      });
+      socket.off(`company-${user.companyId}-chat-${currentChat.id}`, (data) => {
+        if (data.action === "new-message") {
           setMessages((prev) => [...prev, data.newMessage]);
           const changedChats = chats.map((chat) => {
             if (chat.id === data.newMessage.chatId) {
@@ -267,7 +328,7 @@ function Chat(props) {
           scrollToBottomRef.current();
         }
 
-        if (data.action === 'update') {
+        if (data.action === "update") {
           const changedChats = chats.map((chat) => {
             if (chat.id === data.chat.id) {
               return {
@@ -281,9 +342,6 @@ function Chat(props) {
         }
       });
     }
-
-    return () => {
-      socket.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentChat]);

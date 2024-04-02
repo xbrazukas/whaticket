@@ -36,6 +36,7 @@
     "qrcode.react": "^1.0.0",
     "query-string": "^7.0.0",
     "react": "^16.13.1",
+    "react-big-calendar": "^1.11.2",
     "react-bootstrap": "^2.7.0",
     "react-chartjs-2": "^5.2.0",
     "react-color": "^2.19.3",

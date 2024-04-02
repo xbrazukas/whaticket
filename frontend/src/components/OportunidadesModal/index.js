@@ -121,8 +121,8 @@ const RatingModal = ({ open, onClose, ratingId, reload }) => {
 
                 const { data } = await api.get(`/oportunidade/${ratingId}`);
                 setRating(prevState => {
-                console.log("lendo");
-                console.log(data);
+                // console.log("lendo");
+                // console.log(data);
                     return { ...prevState, ...data };
                 
                 

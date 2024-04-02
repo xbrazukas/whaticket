@@ -12,6 +12,11 @@ interface Request {
   geral?: boolean;
   queueId?: number;
   whatsappId?: number;
+  mediaPath: string | null | undefined;
+  mediaName: string | null | undefined;
+  repeatEvery?:string;
+  selectDaysRecorrenci?: string;
+  repeatCount?:string;
 }
 
 const CreateService = async ({
@@ -22,7 +27,12 @@ const CreateService = async ({
   userId,
   geral,
   queueId,
-  whatsappId
+  whatsappId,
+  mediaPath,
+  mediaName,
+  repeatEvery,
+  selectDaysRecorrenci,
+  repeatCount,
 }: Request): Promise<Schedule> => {
   const schema = Yup.object().shape({
     body: Yup.string().required().min(5),
@@ -45,7 +55,12 @@ const CreateService = async ({
       status: 'PENDENTE',
       geral,
   	  queueId,
-      whatsappId
+      whatsappId,
+      mediaPath,
+      mediaName,
+      repeatEvery,
+      selectDaysRecorrenci,
+      repeatCount,
     }
   );
 

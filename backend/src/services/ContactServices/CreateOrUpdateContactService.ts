@@ -81,7 +81,7 @@ const CreateOrUpdateContactService = async ({
       contact.update({ name });
     }
 
-    io.emit(`company-${companyId}-contact`, {
+    io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
       action: "update",
       contact
     });
@@ -107,7 +107,7 @@ const CreateOrUpdateContactService = async ({
     }
     );
 
-    io.emit(`company-${companyId}-contact`, {
+    io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
       action: "create",
       contact
     });
