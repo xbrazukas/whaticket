@@ -402,10 +402,13 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
 
 
       return () => {
-        socket.off("connect", connectEvent);
-
-        socket.emit("joinChatBoxLeave", `${ticket.id}`)
-        socket.off(`company-${companyId}-appMessage`, onAppMessage);
+        if(user.id){
+          socket.off("connect", connectEvent);
+          if(ticket?.id){
+            socket.emit("joinChatBoxLeave", `${ticket.id}`)
+          }
+          socket.off(`company-${companyId}-appMessage`, onAppMessage);
+        }
       };
     }
   }, [ticket, socket]);
