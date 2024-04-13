@@ -120,11 +120,16 @@ const Ticket = () => {
 
       socket.on(`company-${user?.companyId}-ticket`, (data) => {
         if (data.action === 'update' && data.ticket?.id === ticket?.id) {
-          setTicket(data.ticket);
+          if(ticket?.id == data.ticket.id){
+            setTicket(data.ticket);
+          }
         }
 
-        if (data.action === 'delete' && data.ticket?.id === ticket?.id) {
-          history.push('/tickets');
+        if (data.action === 'delete') {
+          if(data.ticketId == ticket?.id){
+            history.push('/tickets');
+          }
+        
         }
       });
 
@@ -145,8 +150,6 @@ const Ticket = () => {
       if (user.id) {
         socket.off("joinChatBoxLeave", ticket?.id)
 
-        console.log(ticket?.status)
-
         socket.off("joinTicketsLeave", ticket?.status)
 
         socket.off(`company-${user?.companyId}-contact`, (data) => {
@@ -161,14 +164,16 @@ const Ticket = () => {
         })
 
         socket.off(`company-${user?.companyId}-ticket`, (data) => {
-          if (data.action === 'update' && data.ticket?.id === ticket?.id && ticketId === ticket?.id) {
-            console.log('162')
-            setTicket(data.ticket);
+          if (data.action === 'update') {
+            if(ticket?.id == data.ticket.id){
+              setTicket(data.ticket);
+            }
           }
 
-          if (data.action === 'delete' && data.ticket?.id === ticket?.id && ticketId === ticket?.id) {
-            console.log('167')
-            history.push('/tickets');
+          if (data.action === 'delete') {
+            if(data.ticketId == ticket?.id){
+              history.push('/tickets');
+            }
           }
         });
       }
