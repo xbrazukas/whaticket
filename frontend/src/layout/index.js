@@ -195,15 +195,17 @@ const LoggedInLayout = ({ children }) => {
 
 
     return () => {
-      socket.off(`company-${companyId}-auth`, (data) => {
-        if (data.user.id === +user.id) {
-          toastError("Sua conta foi acessada em outro computador.");
-          setTimeout(() => {
-            localStorage.clear();
-            window.location.reload();
-          }, 1000);
-        }
-      });
+      if(user.id){
+        socket.off(`company-${companyId}-auth`, (data) => {
+          if (data.user.id === +user.id) {
+            toastError("Sua conta foi acessada em outro computador.");
+            setTimeout(() => {
+              localStorage.clear();
+              window.location.reload();
+            }, 1000);
+          }
+        });
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
