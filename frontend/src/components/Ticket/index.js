@@ -165,9 +165,11 @@ const Ticket = () => {
 
         socket.off(`company-${user?.companyId}-ticket`, (data) => {
           if (data.action === 'update') {
+
             if(ticket?.id == data.ticket.id){
               setTicket(data.ticket);
             }
+            
           }
 
           if (data.action === 'delete') {
