@@ -256,6 +256,8 @@ export const update = async (
 ): Promise<Response> => {
   const { ticketId } = req.params;
   const ticketData: TicketData = req.body;
+
+  console.log(req.body)
   const { companyId } = req.user;
 
   const { ticket } = await UpdateTicketService({

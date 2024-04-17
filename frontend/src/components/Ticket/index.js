@@ -120,13 +120,13 @@ const Ticket = () => {
 
       socket.on(`company-${user?.companyId}-ticket`, (data) => {
         if (data.action === 'update') {
-          if(ticket?.id == data.ticket.id){
+          if(ticket?.id == data.ticket.id && data.ticket?.userId === user?.id){
             setTicket(data.ticket);
           }
         }
 
         if (data.action === 'delete') {
-          if(data.ticketId == ticket?.id){
+          if(data.ticketId == ticket?.id && data.ticketUserId == user?.id ){
             history.push('/tickets');
           }
         
