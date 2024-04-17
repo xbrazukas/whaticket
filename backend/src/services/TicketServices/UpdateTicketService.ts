@@ -208,7 +208,8 @@ const UpdateTicketService = async ({
             io.of(companyId.toString())
                 .emit(`company-${ticket.companyId}-ticket`, {
                   action: "delete",
-                  ticketId: ticket.id
+                  ticketId: ticket.id,
+                  ticketUserId: ticket.userId
                 });
 
               return { ticket, oldStatus, oldUserId };
@@ -254,7 +255,8 @@ const UpdateTicketService = async ({
 
             io.of(companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
                   action: "delete",
-                  ticketId: ticket.id
+                  ticketId: ticket.id,
+                  ticketUserId: ticket.userId
                 });
 
               return { ticket, oldStatus, oldUserId };
@@ -290,7 +292,7 @@ const UpdateTicketService = async ({
         ticketTraking.userId = ticket.userId;
 
         queueId = null;
-        userId = null;
+        userId = ticket.userId;
   
   
   
@@ -438,7 +440,8 @@ const UpdateTicketService = async ({
     if (ticket.status !== oldStatus || ticket.user?.id !== oldUserId) {
       io.of(companyId.toString()).emit(`company-${companyId}-ticket`, {
         action: "delete",
-        ticketId: ticket.id
+        ticketId: ticket.id,
+        ticketUserId: ticket.userId
       });
     }
 

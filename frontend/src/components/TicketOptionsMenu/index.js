@@ -63,7 +63,7 @@ const TicketOptionsMenu = ({ ticket, menuOpen, handleClose, anchorEl }) => {
 		try {
 			await api.put(`/tickets/${ticket.id}`, {
 				status: "closed",
-				userId: user?.id || null,
+				userId: user?.id,
 				sendFarewellMessage: false,
 			});
 

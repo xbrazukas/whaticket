@@ -168,7 +168,7 @@ const TicketsListGroup = (props) => {
   } = props;
   const classes = useStyles();
   const [pageNumber, setPageNumber] = useState(1);
-  const [ticketsList, dispatch] = useReducer(reducer, []);
+  let [ticketsList, dispatch] = useReducer(reducer, []);
   const { user,socket } = useContext(AuthContext);
   const { profile, queues } = user;
 
@@ -245,7 +245,7 @@ const TicketsListGroup = (props) => {
               //return;
             }
   
-            if (data.ticket.queue === null) {
+            if (data.ticket?.queue === null) {
               //console.log("Entrei");
               //dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
               //dispatch({ type: "RESET", payload: data.ticket.id });
@@ -281,8 +281,8 @@ const TicketsListGroup = (props) => {
 
         if (
           profile === 'user' &&
-          (queueIds.indexOf(data.ticket.queue?.id) === -1 ||
-            data.ticket.queue === null)
+          (queueIds.indexOf(data.ticket?.queue?.id) === -1 ||
+            data.ticket?.queue === null)
         ) {
           //dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
           //dispatch({ type: "RESET", payload: data.ticket.id });
@@ -341,6 +341,18 @@ const TicketsListGroup = (props) => {
       loadMore();
     }
   };
+
+  if (status) {
+    ticketsList = ticketsList.filter(ticket => ticket?.status === status)
+
+  }
+
+  if (selectedQueueIds.length > 0) {
+    ticketsList = !!status ? ticketsList.filter(ticket => user.profile === 'user' ?
+      selectedQueueIds.includes(ticket?.queueId) :
+      selectedQueueIds.includes(ticket?.queueId) || ticket?.queueId === null) :
+      ticketsList;
+  }
 
   return (
     <Paper className={classes.ticketsListWrapper} style={style}>
