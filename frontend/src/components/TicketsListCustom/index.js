@@ -222,7 +222,7 @@ const TicketsListCustom = (props) => {
 
     const shouldUpdateTicket = (ticket) =>
       (!ticket.userId || ticket.userId === user?.id || showAll) &&
-      (!ticket.queueId || selectedQueueIds.indexOf(ticket.queueId) > -1);
+      (!ticket?.queueId || selectedQueueIds.indexOf(ticket?.queueId) > -1);
 
     const notBelongsToUserQueues = (ticket) =>
       ticket.queueId && selectedQueueIds.indexOf(ticket.queueId) === -1;
@@ -278,8 +278,8 @@ const TicketsListCustom = (props) => {
 
         if (
           profile === 'user' &&
-          (queueIds.indexOf(data.ticket.queue?.id) === -1 ||
-            data.ticket.queue === null)
+          (queueIds.indexOf(data.ticket?.queue?.id) === -1 ||
+            data.ticket?.queue === null)
         ) {
           //dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
           //dispatch({ type: "RESET", payload: data.ticket.id });
