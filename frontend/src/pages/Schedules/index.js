@@ -25,6 +25,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import SearchIcon from "@material-ui/icons/Search";
 import DeleteOutlineIcon from "@material-ui/icons/DeleteOutline";
 import EditIcon from "@material-ui/icons/Edit";
+import Tooltip from "@material-ui/core/Tooltip";
 
 import "./Schedules.css"; // Importe o arquivo CSS
 
@@ -306,18 +307,22 @@ const Schedules = () => {
             title: (
               <div className="event-container">
                 <div style={eventTitleStyle}>{schedule.contact.name}</div>
-                <DeleteOutlineIcon
-                  onClick={() => handleDeleteSchedule(schedule.id)}
-                  title='apagar'
-                />
-                <EditIcon
-                  onClick={() => {
-                    handleEditSchedule(schedule);
-                    setScheduleModalOpen(true);
-                  }}
-                  className="edit-icon"
-                  title="Editar" // Adicione um título para mostrar "Editar" quando o mouse passar sobre o ícone
-                />
+                <Tooltip title="Excluir">
+                  <DeleteOutlineIcon
+                    onClick={() => handleDeleteSchedule(schedule.id)}
+                    className="delete-icon"
+                  />
+                </Tooltip>
+
+                <Tooltip title="Editar">
+                  <EditIcon
+                    onClick={() => {
+                      handleEditSchedule(schedule);
+                      setScheduleModalOpen(true);
+                    }}
+                    className="edit-icon"
+                  />
+                </Tooltip>
               </div>
             ),
             start: new Date(schedule.sendAt),
