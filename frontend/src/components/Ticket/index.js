@@ -119,7 +119,7 @@ const Ticket = () => {
       socket.emit('joinChatBox', `${ticket?.id}`);
 
       socket.on(`company-${user?.companyId}-ticket`, (data) => {
-        if (data.action === 'update' && data.ticket?.id === ticket?.id) {
+        if (data.action === 'update') {
           if(ticket?.id == data.ticket.id){
             setTicket(data.ticket);
           }
@@ -165,9 +165,11 @@ const Ticket = () => {
 
         socket.off(`company-${user?.companyId}-ticket`, (data) => {
           if (data.action === 'update') {
+
             if(ticket?.id == data.ticket.id){
               setTicket(data.ticket);
             }
+
           }
 
           if (data.action === 'delete') {
