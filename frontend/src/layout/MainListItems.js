@@ -207,14 +207,16 @@ const MainListItems = (props) => {
       });
     }
     return () => {
-      socket.off(`company-${companyId}-chat`, (data) => {
-        if (data.action === "new-message") {
-          dispatch({ type: "CHANGE_CHAT", payload: data });
-        }
-        if (data.action === "update") {
-          dispatch({ type: "CHANGE_CHAT", payload: data });
-        }
-      });
+      if(companyId){
+        socket.off(`company-${companyId}-chat`, (data) => {
+          if (data.action === "new-message") {
+            dispatch({ type: "CHANGE_CHAT", payload: data });
+          }
+          if (data.action === "update") {
+            dispatch({ type: "CHANGE_CHAT", payload: data });
+          }
+        });
+      }
     };
   }, []);
 
