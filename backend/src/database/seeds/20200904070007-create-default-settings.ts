@@ -220,35 +220,35 @@ module.exports = {
                         },
                         {
                             key: "urlTypebot",
-                            value: "",
+                            value: ".",
                             companyId: 1,
                             createdAt: new Date(),
                             updatedAt: new Date()
                         },
                         {
                             key: "urlBotTypebot",
-                            value: "",
+                            value: ".",
                             companyId: 1,
                             createdAt: new Date(), 
                             updatedAt: new Date()
                         },
                         {
                             key: "tokenTypebot",
-                            value: "",
+                            value: ".",
                             companyId: 1,
                             createdAt: new Date(),
                             updatedAt: new Date()
                         },
                         {
                             key: "urlN8N",
-                            value: "",
+                            value: ".",
                             companyId: 1,
                             createdAt: new Date(),
                             updatedAt: new Date()
                         },
                         {
                             key: "apiKeyN8N",
-                            value: "",
+                            value: ".",
                             companyId: 1,
                             createdAt: new Date(), 
                             updatedAt: new Date()
