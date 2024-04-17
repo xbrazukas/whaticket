@@ -81,11 +81,13 @@ const UpdateQueueService = async (
 
   const queue = await ShowQueueService(queueId, companyId);
 
-  if (queue.companyId !== companyId) {
+  if (queue?.companyId !== companyId) {
     throw new AppError("Não é permitido alterar registros de outra empresa");
   }
 
-  if (queueData.typebotId) {
+
+
+  if (queueData?.typebotId) {
     const { typebot } = await TypebotService.getTypebot(companyId, queueData.typebotId)
     queueData = {
       ...queueData,
@@ -93,7 +95,7 @@ const UpdateQueueService = async (
     }
   }
 
-  if(queueData.n8n){
+  if(queueData?.n8n){
     const n8n  = await N8nService.getN8N(companyId, queueData.n8n)
     queueData = {
       ...queueData,
