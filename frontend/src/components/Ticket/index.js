@@ -109,75 +109,58 @@ const Ticket = () => {
   }, [ticketId, user, history]);
 
   useEffect(() => {
-    // const companyId = localStorage.getItem('companyId');
+    const companyId = user?.companyId
     // const socket = socketConnection({ companyId });
     if (!ticket && !ticket?.id && ticket?.uuid !== ticketId && ticketId === undefined) {
       return;
     }
 
-    if (user?.id) {
-      socket.emit('joinChatBox', `${ticket?.id}`);
+    const handleUpdateTicket =  (data) =>{
 
-      socket.on(`company-${user?.companyId}-ticket`, (data) => {
-        if (data.action === 'update') {
-          if(ticket?.id == data.ticket.id){
-            setTicket(data.ticket);
+      if(data.action === 'update'){
+        if(ticket?.id == data.ticket.id){
+          setTicket(data.ticket);
+        }
+      }
+
+      if (data.action === 'delete') {
+        if(data.ticketId == ticket?.id ){
+          history.push('/tickets');
+        }
+      }
+    }
+
+    const handleUpdateContact = (data) =>{
+      if (data.action === 'update') {
+        setContact((prevState) => {
+          if (prevState.id === data.contact?.id) {
+            return { ...prevState, ...data.contact };
           }
-        }
+          return prevState;
+        });
+      }
+    }
 
-        if (data.action === 'delete') {
-          if(data.ticketId == ticket?.id && data.ticketUserId == user?.id ){
-            history.push('/tickets');
-          }
-        
-        }
-      });
+    const onConnectTicket = () => {
+      socket.emit("joinChatBox", `${ticket.id}`);
+    }
 
-      socket.on(`company-${user?.companyId}-contact`, (data) => {
-        if (data.action === 'update') {
-          setContact((prevState) => {
-            if (prevState.id === data.contact?.id) {
-              return { ...prevState, ...data.contact };
-            }
-            return prevState;
-          });
-        }
-      });
+    if (companyId) {
+
+      socket.on(onConnectTicket)
+
+      socket.on(`company-${companyId}-ticket`,handleUpdateTicket);
+
+      socket.on(`company-${companyId}-contact`, handleUpdateContact);
     }
 
 
     return () => {
-      if (user.id) {
-        socket.off("joinChatBoxLeave", ticket?.id)
-
-        socket.off("joinTicketsLeave", ticket?.status)
-
-        socket.off(`company-${user?.companyId}-contact`, (data) => {
-          if (data.action === 'update') {
-            setContact((prevState) => {
-              if (prevState.id === data.contact?.id) {
-                return { ...prevState, ...data.contact };
-              }
-              return prevState;
-            });
-          }
-        })
-
-        socket.off(`company-${user?.companyId}-ticket`, (data) => {
-          if (data.action === 'update') {
-
-            if(ticket?.id == data.ticket.id){
-              setTicket(data.ticket);
-            }
-
-          }
-
-          if (data.action === 'delete') {
-            if(data.ticketId == ticket?.id && data.ticketUserId == user?.id){
-              history.push('/tickets');
-            }
-          }
-        });
+      if (companyId) {
+        socket.emit("leaveChatBox", `${ticket.id}`);
+        socket.off("connect", onConnectTicket);
+        socket.off(`company-${companyId}-ticket`, handleUpdateTicket);
+        socket.off(`company-${companyId}-contact`, handleUpdateContact);
       }
     };
   }, [ticketId, ticket, history, socket]);

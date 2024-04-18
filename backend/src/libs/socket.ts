@@ -49,6 +49,20 @@ export const initIO = (httpServer: Server): SocketIO => {
       socket.leave(ticketId);
     });
 
+    socket.on("leaveChatBox", async (ticketId: string) => {
+      if (!ticketId || ticketId === "undefined") {
+        return;
+      }
+
+      let c: number;
+      // o último que sair apaga a luz
+
+
+        socket.leave(ticketId);
+      
+      logger.debug(`leaveChatbox: Channel: ${ticketId}`)
+    });
+
     socket.on("disconnect", () => {
       logger.info(`Client disconnected namespace ${socket.nsp.name}`);
     });
