@@ -297,11 +297,11 @@ const TicketsListCustom = (props) => {
   }, [status, showAll, user, selectedQueueIds, tags, users, profile, queues,socket]);
 
   useEffect(() => {
-    if (typeof updateCount === "function") {
-      updateCount(ticketsList.length);
+    const count = ticketsList.filter((ticket) => !ticket.isGroup).length;
+    if (typeof updateCount === 'function') {
+      updateCount(count);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticketsList]);
+  }, [ticketsList, updateCount]);
 
 
   const loadMore = () => {
