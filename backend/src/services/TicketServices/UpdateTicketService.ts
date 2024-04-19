@@ -67,47 +67,47 @@ const UpdateTicketService = async ({
         key: "userRating"
       }
     });
-  
+
     let sendFarewellWaitingTicket = await Setting.findOne({
       where: {
         companyId,
         key: "sendFarewellWaitingTicket"
       }
     });
-  
+
     //console.log(setting.value);
     //console.log("status da rating");
-  
+
     const enviarMensagemTransferencia = await Setting.findOne({
       where: {
         companyId,
         key: "sendTransferAlert"
       }
     });
-  
+
     const avaliacaoexterna = await Setting.findOne({
       where: {
         companyId,
         key: "userRatingOut"
       }
     });
-  
+
     const urldeavaliacao = await Setting.findOne({
       where: {
         companyId,
         key: "ratingurl"
       }
     });
-  
+
     //console.log(enviarMensagemTransferencia.value);
     //console.log("status da transferencia");
 
     const ticket = await ShowTicketService(ticketId, companyId);
-  
+
     //console.log("Ticket Service Linha 76");
     //console.log(ticket);
-  
-  
+
+
     const ticketTraking = await FindOrCreateATicketTrakingService({
       ticketId,
       companyId,
@@ -125,7 +125,7 @@ const UpdateTicketService = async ({
       chatbot = null;
       queueOptionId = null;
     }
-  
+
     /*
 
     if (status !== undefined && ["closed"].indexOf(status) > -1) {
@@ -163,42 +163,42 @@ const UpdateTicketService = async ({
         const body = `\u200e${complationMessage}`;
         await SendWhatsAppMessage({ body, ticket });
       }
-      
+
       ticketTraking.finishedAt = moment().toDate();
       ticketTraking.whatsappId = ticket.whatsappId;
       ticketTraking.userId = ticket.userId;
-      
+
 
     }
-  
+
     */
-  
+
   if (status !== undefined && ["closed"].indexOf(status) > -1) {
         const { ratingMessage, complationMessage } = await ShowWhatsAppService(
           ticket.whatsappId,
           companyId
         );
-  
+
   		if (setting?.value === "enabled" && avaliacaoexterna?.value === "enabled" && urldeavaliacao?.value !== ""){
-        		
-        
-        
+
+
+
  			  let messageX = "\u200e";
               messageX += ratingMessage
               messageX += "\r\n";
               messageX += urldeavaliacao?.value;
-        
+
         	  if (ticket.channel === "whatsapp") {
                 const msg = await SendWhatsAppMessage({ body: messageX, ticket });
                 // await verifyMessage(msg, ticket, ticket.contact);
               }
-			
-        	  
+
+
 
               await ticketTraking.update({
                 ratingAt: moment().toDate()
               });
-        
+
               await ticket.update({
           		queueId: null,
           		userId: null,
@@ -213,26 +213,26 @@ const UpdateTicketService = async ({
                 });
 
               return { ticket, oldStatus, oldUserId };
-        
-        
-        
+
+
+
         }
-  
-  
+
+
        if (setting?.value === "enabled" && ratingId && (sendFarewellMessage || sendFarewellMessage === undefined)) {
           if (ticketTraking.ratingAt == null) {
             const rating = await ShowService(ratingId, companyId);
             if (rating) {
-            
+
               //console.log(rating);
-            
-            
+
+
               let { message } = rating;
               message += "\r\n";
-            
+
               rating.options.sort((a, b) => Number(a.value) - Number(b.value));
 
-            
+
               rating.options.forEach(option => {
                 message += `\n${option.value} - ${option.name}`;
               });
@@ -246,7 +246,7 @@ const UpdateTicketService = async ({
               await ticketTraking.update({
                 ratingAt: moment().toDate()
               });
-            
+
               await ticket.update({
           		queueId: null,
           		userId: null,
@@ -291,18 +291,18 @@ const UpdateTicketService = async ({
         ticketTraking.whatsappId = ticket.whatsappId;
         ticketTraking.userId = ticket.userId;
 
-        queueId = null;
+        //queueId = null;
         userId = ticket.userId;
-  
-  
-  
+
+
+
   }
-    
+
     if (queueId !== undefined && queueId !== null) {
       ticketTraking.queuedAt = moment().toDate();
     }
 
-  
+
   if (enviarMensagemTransferencia?.value === "enabled") {
       // Mensagem de transferencia da FILA
       if (oldQueueId !== queueId && oldUserId === userId && !isNil(oldQueueId) && !isNil(queueId)) {
@@ -366,18 +366,18 @@ const UpdateTicketService = async ({
             }
 
     }
-    
+
   /*
     if (oldQueueId !== queueId && !isNil(oldQueueId) && !isNil(queueId)) {
-    
+
     console.log("aqui");
-    
+
       const queue = await Queue.findByPk(queueId);
       let body = `\u200e${queue?.greetingMessage}`;
       const wbot = await GetTicketWbot(ticket);
-    
+
       if (enviarMensagemTransferencia?.value === "enabled") {
-	  
+
       /*
       const queueChangedMessage = await wbot.sendMessage(
         `${ticket.contact.number}@${
@@ -388,20 +388,20 @@ const UpdateTicketService = async ({
         }
       );
       */
-      
+
      ///// const bodyTransferMessage = "\u200eEste atendimento foi transferido para outro operador. Aguarde alguns instantes...";
-      
+
     ////  await SendWhatsAppMessage({ body: bodyTransferMessage, ticket });
-      
+
       //await verifyMessage(queueChangedMessage, ticket, ticket.contact);
-      
+
     ///  }
-		
+
       // mensagem padrão desativada em caso de troca de fila
       // const sentMessage = await wbot.sendMessage(`${ticket.contact.number}@c.us`, body);
       // await verifyMessage(sentMessage, ticket, ticket.contact, companyId);
 
-    
+
    // }
 
 
