@@ -16,9 +16,7 @@ import ScheduleModal from "../../components/ScheduleModal";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import toastError from "../../errors/toastError";
 import moment from "moment";
-import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext";
-import usePlans from "../../hooks/usePlans";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import "moment/locale/pt-br";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -28,6 +26,7 @@ import EditIcon from "@material-ui/icons/Edit";
 import Tooltip from "@material-ui/core/Tooltip";
 
 import "./Schedules.css"; // Importe o arquivo CSS
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 // Defina a função getUrlParam antes de usá-la
 function getUrlParam(paramName) {
@@ -106,8 +105,8 @@ const Schedules = () => {
   const classes = useStyles();
   const history = useHistory();
 
-  const { user, socket } = useContext(AuthContext);
-
+  const { user } = useContext(AuthContext);
+  const socketManager = useContext(SocketContext);
   const [loading, setLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -161,34 +160,25 @@ const Schedules = () => {
 
   useEffect(() => {
     handleOpenScheduleModalFromContactId();
-  
-    if(user?.id){
-      socket.on(`company${user.companyId}-schedule`, (data) => {
-        if (data.action === "update" || data.action === "create") {
-          dispatch({ type: "UPDATE_SCHEDULES", payload: data.schedule });
-        }
-  
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_SCHEDULE", payload: +data.scheduleId });
-        }
-  
-      });
+    const socket = socketManager.GetSocket(user.companyId);
+
+    const onSchedule = (data) => {
+      if (data.action === "update" || data.action === "create") {
+        console.log(data)
+        dispatch({ type: "UPDATE_SCHEDULES", payload: data.schedule  });
+      }
+
+      if (data.action === "delete") {
+        dispatch({ type: "DELETE_USER", payload: +data.scheduleId });
+      }
     }
 
+    socket.on(`company-${user.companyId}-schedule`, onSchedule);
+
     return () => {
-      if(user?.id){
-        socket.off(`company${user.companyId}-schedule`, (data) => {
-          if (data.action === "update" || data.action === "create") {
-            dispatch({ type: "UPDATE_SCHEDULES", payload: data.schedule });
-          }
-    
-          if (data.action === "delete") {
-            dispatch({ type: "DELETE_SCHEDULE", payload: +data.scheduleId });
-          }
-        });
-      }
+      socket.disconnect();
     };
-  }, [handleOpenScheduleModalFromContactId, user]);
+  }, [handleOpenScheduleModalFromContactId, user, socketManager]);
 
   const cleanContact = () => {
     setContactId("");

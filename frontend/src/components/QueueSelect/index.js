@@ -39,7 +39,7 @@ const QueueSelect = ({ selectedQueueIds, onChange }) => {
 	};
 
 	return (
-		<div style={{ marginTop: 6 }}>
+		<div style={{ marginTop: 1 }}>
 			<FormControl fullWidth margin="dense" variant="outlined">
 				<InputLabel>{i18n.t("queueSelect.inputLabel")}</InputLabel>
 				<Select

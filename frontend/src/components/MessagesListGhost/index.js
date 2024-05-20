@@ -31,6 +31,7 @@ import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const useStyles = makeStyles((theme) => ({
   messagesListWrapper: {
@@ -320,7 +321,7 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const messageOptionsMenuOpen = Boolean(anchorEl);
   const currentTicketId = useRef(ticketId);
-  const {user, socket} = useContext(AuthContext)
+  const socketManager = useContext(SocketContext);
 
   useEffect(() => {
     dispatch({ type: "RESET" });
@@ -363,32 +364,38 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   }, [pageNumber, ticketId]);
 
   useEffect(() => {
-    const companyId = user.companyId
-    // const socket = socketConnection({ companyId });
-    if(user?.id){
-      socket.emit("joinChatBox", `${ticket.id}`);
-  
-      socket.on(`company-${companyId}-appMessage`, (data) => {
-
-        if(ticketId === data.ticket.id){
-          if (data.action === "create" && ticketId === data.ticket.id) {
-            dispatch({ type: "ADD_MESSAGE", payload: data.message });
-            scrollToBottom();
-          }
-    
-          if (data.action === "update" && ticketId === data.ticket.id) {
-            dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
-          }
-        }
-      });
-
+    if (!ticket.id) {
+      return;
     }
 
+    const companyId = localStorage.getItem("companyId");
+
+    const socket = socketManager.GetSocket(companyId);
+
+    const onConnect = () => {
+      socket.emit("joinChatBox", `${ticket.id}`);
+    }
+	
+  	socketManager.onConnect(onConnect);
+
+    const onAppMessage = (data) => {
+	  console.log("AppMessage", data);
+      if (data.action === "create" && data.message.ticketId === currentTicketId.current) {
+        dispatch({ type: "ADD_MESSAGE", payload: data.message });
+        scrollToBottom();
+      }
+
+      if (data.action === "update" && data.message.ticketId === currentTicketId.current) {
+        dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
+      }
+    }
+
+    socket.on(`company-${companyId}-appMessage`, onAppMessage);
 
     return () => {
-      socket.emit("joinChatBoxLeave",`${ticket.id}`)
+      socket.disconnect();
     };
-  }, [ticketId, ticket]);
+  }, [ticketId, ticket, socketManager]);
 
   const loadMore = () => {
     setPageNumber((prevPageNumber) => prevPageNumber + 1);

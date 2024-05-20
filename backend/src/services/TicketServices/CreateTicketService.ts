@@ -75,11 +75,11 @@ const CreateTicketService = async ({
 
   const io = getIO();
 
-  io.of(companyId.toString()).emit("ticket", {
+  io.to(ticket.id.toString()).emit("ticket", {
     action: "update",
     ticket
   });
-
+  
   return ticket;
 };
 

@@ -6,7 +6,7 @@ const rules = {
 	supervisor: {
 		static: [
 			"dashboard:view",
-			"tickets-manager:showall",
+			"drawer-supervisor-items:view",
 			"ticket-options:deleteTicket",
 			"contacts-page:deleteContact",
 		],

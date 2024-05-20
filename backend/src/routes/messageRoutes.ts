@@ -18,6 +18,7 @@ messageRoutes.post("/api/messages/send", tokenAuth, upload.array("medias"), Mess
 messageRoutes.post("/api/messages/update",tokenAuth,MessageController.apiupdateticket);
 messageRoutes.post("/api/messages/finish",tokenAuth,MessageController.apifinishticket);
 messageRoutes.post("/api/messages/:ticketId",tokenAuth,MessageController.chamaai);
+messageRoutes.post("/messages/edit/:messageId", isAuth, MessageController.edit);
 
 
 export default messageRoutes;

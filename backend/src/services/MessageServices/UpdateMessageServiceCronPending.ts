@@ -20,12 +20,12 @@ const UpdateMessageServiceCronPending = async ({
 
 
 
-  io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
+  io.emit(`company-${ticket.companyId}-ticket`, {
         action: "update",
         ticket
       });
 
-      io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
+      io.emit(`company-${ticket.companyId}-ticket`, {
         action: "delete",
         ticketId: ticket.id
       });

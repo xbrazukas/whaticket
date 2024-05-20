@@ -243,16 +243,12 @@ const TicketsListCustom = (props) => {
 
     socket.on(`company-${companyId}-appMessage`, (data) => {
       const queueIds = queues.map((q) => q.id);
-      
-      console.log(queueIds);
-      console.log(queueIds.indexOf(data.ticket.queue?.id));
     
       if (
         profile === "user" &&
         (queueIds.indexOf(data.ticket.queue?.id) === -1 ||
           data.ticket.queue === null)
       ) {
-      	console.log("retornar");
         return;
       }
 

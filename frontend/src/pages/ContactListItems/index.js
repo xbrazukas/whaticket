@@ -44,6 +44,7 @@ import { Grid } from "@material-ui/core";
 
 import planilhaExemplo from "../../assets/planilha.xlsx";
 import { socketConnection } from "../../services/socket";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_CONTACTS") {
@@ -101,7 +102,8 @@ const useStyles = makeStyles((theme) => ({
 const ContactListItems = () => {
   const classes = useStyles();
 
-  const { user, socket } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
+  const socketManager = useContext(SocketContext);
   const { contactListId } = useParams();
   const history = useHistory();
 
@@ -153,53 +155,36 @@ const ContactListItems = () => {
   }, [searchParam, pageNumber, contactListId]);
 
   useEffect(() => {
-    // const companyId = localStorage.getItem("companyId");
-    // const socket = socketConnection({ companyId });
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
 
-    if(user?.id){
-      socket.on(`company-${user?.companyId}-ContactListItem`, (data) => {
-        if (data.action === "update" || data.action === "create") {
-          dispatch({ type: "UPDATE_CONTACTS", payload: data.record });
-        }
-  
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_CONTACT", payload: +data.id });
-        }
-  
-        if (data.action === "reload") {
-          dispatch({ type: "LOAD_CONTACTS", payload: data.records });
-        }
-      });
-  
-      socket.on(
-        `company-${user.companyId}-ContactListItem-${contactListId}`,
-        (data) => {
-          if (data.action === "reload") {
-            dispatch({ type: "LOAD_CONTACTS", payload: data.records });
-          }
-        }
-      );
+    const onContactListItem = (data) => {
+      if (data.action === "update" || data.action === "create") {
+        dispatch({ type: "UPDATE_CONTACTS", payload: data.record });
+      }
+
+      if (data.action === "delete") {
+        dispatch({ type: "DELETE_CONTACT", payload: +data.id });
+      }
+
+      if (data.action === "reload") {
+        dispatch({ type: "LOAD_CONTACTS", payload: data.records });
+      }
     }
 
-
-    return () => {
-      if(user?.id){
-        socket.off(`company-${user.companyId}-ContactListItem`, (data) => {
-        if (data.action === "update" || data.action === "create") {
-          dispatch({ type: "UPDATE_CONTACTS", payload: data.record });
-        }
-
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_CONTACT", payload: +data.id });
-        }
-
+    const onContactListItemId = (data) => {
         if (data.action === "reload") {
           dispatch({ type: "LOAD_CONTACTS", payload: data.records });
         }
-        });
       }
+
+    socket.on(`company-${companyId}-ContactListItem`, onContactListItem);
+    socket.on(`company-${companyId}-ContactListItem-${contactListId}`, onContactListItemId);
+  
+    return () => {
+      socket.disconnect();
     };
-  }, [contactListId]);
+  }, [contactListId, socketManager]);
 
   const handleSearch = (event) => {
     setSearchParam(event.target.value.toLowerCase());

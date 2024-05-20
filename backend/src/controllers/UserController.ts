@@ -78,7 +78,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   });
 
   const io = getIO();
-  io.of(userCompanyId.toString()).emit(`company-${userCompanyId}-user`, {
+  io.emit(`company-${userCompanyId}-user`, {
     action: "create",
     user
   });
@@ -123,7 +123,7 @@ export const update = async (
 
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-user`, {
+ io.emit(`company-${companyId}-user`, {
     action: "update",
     user
   });
@@ -145,7 +145,7 @@ export const remove = async (
   await DeleteUserService(userId, companyId);
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-user`, {
+ io.emit(`company-${companyId}-user`, {
     action: "delete",
     userId
   });

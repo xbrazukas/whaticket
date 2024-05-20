@@ -33,11 +33,12 @@ import { i18n } from '../../translate/i18n';
 import { AuthContext } from '../../context/Auth/AuthContext';
 import { Can } from '../Can';
 import TicketsQueueSelect from '../TicketsQueueSelect';
-import { Button } from '@material-ui/core';
+import { Button, Grid } from '@material-ui/core';
 import { TagsFilter } from '../TagsFilter';
 import { UsersFilter } from '../UsersFilter';
 
 import { DatePickerMoment } from '../DatePickerMoment';
+import NewTicketGroupModal from '../NewTicketGroup';
 
 const useStyles = makeStyles((theme) => ({
   ticketsWrapper: {
@@ -116,6 +117,7 @@ const TicketsManagerTabs = () => {
   const [tab, setTab] = useState('open');
   const [tabOpen, setTabOpen] = useState('open');
   const [newTicketModalOpen, setNewTicketModalOpen] = useState(false);
+  const [newTicketGroupModalOpen, setNewTicketGroupModalOpen] = useState(false);
   const [showAllTickets, setShowAllTickets] = useState(false);
   const searchInputRef = useRef();
   const { user } = useContext(AuthContext);
@@ -242,6 +244,13 @@ const TicketsManagerTabs = () => {
     }
   };
 
+  const handleCloseOrOpenTicketGroup = (ticket) => {
+    setNewTicketGroupModalOpen(false);
+    if (ticket !== undefined && ticket.uuid !== undefined) {
+      history.push(`/tickets/${ticket.uuid}`);
+    }
+  };
+
   const handleSelectedTags = (selecteds) => {
     const tags = selecteds.map((t) => t.id);
     setSelectedTags(tags);
@@ -259,6 +268,13 @@ const TicketsManagerTabs = () => {
         onClose={(ticket) => {
           // console.log('ticket', ticket);
           handleCloseOrOpenTicket(ticket);
+        }}
+      />
+
+      <NewTicketGroupModal
+        modalOpen={newTicketGroupModalOpen}
+        onClose={(ticket) => {
+          handleCloseOrOpenTicketGroup(ticket);
         }}
       />
 
@@ -342,13 +358,31 @@ const TicketsManagerTabs = () => {
           </div>
         ) : (
           <>
-            <Button
-              variant='outlined'
-              color='primary'
-              onClick={() => setNewTicketModalOpen(true)}
-            >
-              {i18n.t('ticketsManager.buttons.newTicket')}
-            </Button>
+            {
+                (tab === 'open' || tab === 'closed') && ( // Adiciona uma condição para exibir o botão em ambas as guias
+                    <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => setNewTicketModalOpen(true)}
+                    >
+                        {i18n.t('ticketsManager.buttons.newTicket')}
+                    </Button>
+                )
+            }
+
+            {tab === 'group' && (
+
+              <Grid direction="column">
+
+                <Button
+                  variant='outlined'
+                  color='primary'
+                  onClick={() => setNewTicketGroupModalOpen(true)}
+                >
+                  {i18n.t('Criar Grupo')}
+                </Button>
+              </Grid>
+            )}
             <Can
               role={user.profile}
               perform='tickets-manager:showall'

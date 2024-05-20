@@ -7,10 +7,11 @@ import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
 import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const QrcodeModal = ({ open, onClose, whatsAppId }) => {
   const [qrCode, setQrCode] = useState("");
-  const { user,socket } = useContext(AuthContext);
+  const socketManager = useContext(SocketContext);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -28,36 +29,25 @@ const QrcodeModal = ({ open, onClose, whatsAppId }) => {
 
   useEffect(() => {
     if (!whatsAppId) return;
-    // const companyId = localStorage.getItem("companyId");
-    // const socket = socketConnection({ companyId });
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
 
-    if(user?.id){
-      socket.on(`company-${user.companyId}-whatsappSession`, (data) => {
-        if (data.action === "update" && data.session.id === whatsAppId) {
-          setQrCode(data.session.qrcode);
-        }
-  
-        if (data.action === "update" && data.session.qrcode === "") {
-          onClose();
-        }
-      });
+    const onCompanyWhatsappSession = (data) => {
+      if (data.action === "update" && data.session.id === whatsAppId) {
+        setQrCode(data.session.qrcode);
+      }
+
+      if (data.action === "update" && data.session.qrcode === "") {
+        onClose();
+      }
     }
 
+    socket.on(`company-${companyId}-whatsappSession`, onCompanyWhatsappSession);
 
     return () => {
-      if(user.id){
-      socket.off(`company-${user.companyId}-whatsappSession`, (data) => {
-        if (data.action === "update" && data.session.id === whatsAppId) {
-          setQrCode(data.session.qrcode);
-        }
-  
-        if (data.action === "update" && data.session.qrcode === "") {
-          onClose();
-        }
-      });
-    }
+      socket.disconnect();
     };
-  }, [whatsAppId, onClose]);
+  }, [whatsAppId, onClose, socketManager]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="lg" scroll="paper">

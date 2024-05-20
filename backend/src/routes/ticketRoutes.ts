@@ -7,6 +7,8 @@ const ticketRoutes = express.Router();
 
 ticketRoutes.get("/tickets", isAuth, TicketController.index);
 
+ticketRoutes.get("/ticketreport/reports", isAuth, TicketController.report);
+
 ticketRoutes.get("/tickets/dash", isAuth, TicketController.dash);
 
 ticketRoutes.get("/tickets/kanban", isAuth, TicketController.kanban);
@@ -20,6 +22,8 @@ ticketRoutes.get("/tickets/:ticketId", isAuth, TicketController.show);
 ticketRoutes.get("/tickets/u/:uuid", isAuth, TicketController.showFromUUID);
 
 ticketRoutes.post("/tickets", isAuth, TicketController.store);
+
+ticketRoutes.post("/creatGroupAndTicket", isAuth, TicketController.storeGroupAndTicket);
 
 ticketRoutes.put("/tickets/:ticketId", isAuth, TicketController.update);
 

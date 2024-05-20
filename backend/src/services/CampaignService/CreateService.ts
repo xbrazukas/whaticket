@@ -22,10 +22,12 @@ interface Data {
   confirmationMessage4?: string;
   confirmationMessage5?: string;
   whatsappId?: string;
+  whatsappName?:string
+  tagId: number;
 }
 
 const CreateService = async (data: Data): Promise<Campaign> => {
-  const { name } = data;
+  const { name, whatsappId} = data;
 
   const ticketnoteSchema = Yup.object().shape({
     name: Yup.string()
@@ -43,12 +45,20 @@ const CreateService = async (data: Data): Promise<Campaign> => {
     data.status = "PROGRAMADA";
   }
 
-  const record = await Campaign.create(data);
+  if (whatsappId) {
+    const whatsapp = await Whatsapp.findByPk(parseInt(whatsappId));
+    if (whatsapp) {
+      data.whatsappName = whatsapp.name;
+    } else {
+      throw new AppError("ERR_WHATSAPP_NOT_FOUND");
+    }
+  }
 
+  const record = await Campaign.create(data);
   await record.reload({
     include: [
       { model: ContactList }
-      //{ model: Whatsapp, attributes: ["id", "name"] }
+      // { model: Whatsapp, attributes: ["id", "name"] }
     ]
   });
 

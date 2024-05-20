@@ -23,27 +23,27 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
   const { pageNumber, searchParam } = req.query as IndexQuery;
   const { companyId } = req.user;
 
-  console.log("to aqui");
-
   const { ratings, count, hasMore } = await ListService({
     searchParam,
     pageNumber,
     companyId
   });
 
-  console.log(ratings);
 
   return res.json({ ratings, count, hasMore });
 };
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
-  const { name, funil, etapadofunil, fonte, campanha, datadeida, datadevolta, origem, destino, valor, produto, userId} = req.body;
+  const { name, funil, etapadofunil, ticketInfo, ticketId, tagId , fonte, campanha, datadeida, datadevolta, origem, destino, valor, produto, userId} = req.body;
   const { companyId } = req.user;
 
   const rating = await CreateService({
     name,
     funil, 
     etapadofunil, 
+    ticketInfo,
+    ticketId,
+    tagId,
     fonte,
     campanha,
     datadeida,
@@ -57,7 +57,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   });
 
   const io = getIO();
-  io.of(companyId.toString()).emit("oportunidade", {
+ io.emit("oportunidade", {
     action: "create",
     rating
   });
@@ -82,18 +82,18 @@ export const update = async (
   
 
   const { ratingId } = req.params;
-  const ratingData = req.body;
+  const OportunidadeData = req.body;
   const { companyId } = req.user;
 
-  const rating = await UpdateService({ ratingData, id: ratingId, companyId });
+  const oportunidade = await UpdateService({ OportunidadeData, id: ratingId, companyId });
 
   const io = getIO();
-  io.of(companyId.toString()).emit("oportunidade", {
+ io.emit("oportunidade", {
     action: "update",
-    rating
+    oportunidade
   });
 
-  return res.status(200).json(rating);
+  return res.status(200).json(oportunidade);
 };
 
 export const remove = async (
@@ -106,7 +106,7 @@ export const remove = async (
   await DeleteService(ratingId, companyId);
 
   const io = getIO();
-  io.of(companyId.toString()).emit("oportunidade", {
+ io.emit("oportunidade", {
     action: "delete",
     ratingId
   });

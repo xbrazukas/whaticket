@@ -114,7 +114,6 @@ const SignUp = () => {
     try {
         const responsevvv = await api.get("/settings/trial");
         const allowtrialX = responsevvv.data.value;
-        //console.log(allowregisterX);
         settrial(allowtrialX);
         } catch (error) {
             console.error('Error retrieving trial', error);
@@ -163,7 +162,7 @@ const SignUp = () => {
         try {
             await api.post("/companies/internal", values);
             toast.success(i18n.t("signup.toasts.success"));
-            //history.push("/settings");
+
             window.location.reload(); 
         } catch (err) {
             console.log(err);

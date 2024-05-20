@@ -22,21 +22,30 @@ import api from "../../services/api";
 const useStyles = makeStyles((theme) => ({
   mainContainer: {
     display: "flex",
+    color:'black',
     flexDirection: "column",
     position: "relative",
     flex: 1,
     height: "calc(100% - 58px)",
     overflow: "hidden",
     borderRadius: 0,
-    backgroundColor: "white",
+    backgroundColor: theme.palette.background.default,
   },
   chatList: {
     display: "flex",
+    color: theme.palette.text.primary,
+    backgroundColor: theme.palette.background.default,
     flexDirection: "column",
     position: "relative",
     flex: 1,
     overflowY: "scroll",
     ...theme.scrollbarStyles,
+  },
+  secondaryTxt:{
+    color: theme.palette.text.primary,
+  },
+  getItemStyles:{
+    backgroundColor:theme.palette.background.default
   },
   listItem: {
     cursor: "pointer",
@@ -102,15 +111,20 @@ export default function ChatList({
   };
 
   const getSecondaryText = (chat) => {
-    return chat.lastMessage !== ""
+    const secondaryText = chat.lastMessage !== ""
       ? `${datetimeToClient(chat.updatedAt)}: ${chat.lastMessage}`
       : "";
+    
+    return (
+      <span className={classes.secondaryTxt}>{secondaryText}</span>
+    );
   };
+  
 
   const getItemStyle = (chat) => {
     return {
       borderLeft: chat.uuid === id ? "6px solid #002d6e" : null,
-      backgroundColor: chat.uuid === id ? "#eee" : null,
+      backgroundColor: chat.uuid === id ?  classes.getItemStyles: null,
     };
   };
 
@@ -153,6 +167,7 @@ export default function ChatList({
                         aria-label="delete"
                         size="small"
                         style={{ marginRight: 5 }}
+                        color='primary'
                       >
                         <EditIcon />
                       </IconButton>
@@ -164,6 +179,7 @@ export default function ChatList({
                         edge="end"
                         aria-label="delete"
                         size="small"
+                        color='primary'
                       >
                         <DeleteIcon />
                       </IconButton>

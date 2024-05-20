@@ -4,16 +4,16 @@ import api from '../../services/api';
 import { AuthContext } from '../../context/Auth/AuthContext';
 import Board from 'react-trello';
 import { toast } from 'react-toastify';
-
 import { useHistory } from 'react-router-dom';
-
 import usePlans from '../../hooks/usePlans';
 import useTickets from '../../hooks/useTickets';
 import { DatePickerMoment } from '../../components/DatePickerMoment';
 import { UsersFilter } from '../../components/UsersFilter';
 import { KanbanSearch } from '../../components/KanbanSearch/KanbanSearch';
 import moment from 'moment';
-
+import { IconButton, Tooltip } from '@material-ui/core';
+import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
+import RatingModal from '../../components/OportunidadesModal';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -29,20 +29,28 @@ const useStyles = makeStyles((theme) => ({
     fontWeight: 'bold',
     borderRadius: '5px',
   },
+  bottomButtonVisibilityIcon: {
+    position: 'relative',
+    bottom: '-10px',
+  },
 }));
 
 const Kanban = () => {
   const classes = useStyles();
   const history = useHistory();
 
-  const [tags, setTags] = useState([]);
-  const [reloadData, setReloadData] = useState(false);
-  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
-  const [ticketList, setTicketList] = useState([]);
   const { user } = useContext(AuthContext);
   const { profile, queues } = user;
   const jsonString = user.queues.map((queue) => queue.UserQueue.queueId);
-  const [t, setT] = useState(0);
+
+  const [tags, setTags] = useState([]);
+  const [ticketList, setTicketList] = useState([]);
+  const [reloadData, setReloadData] = useState(false);
+  const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [oportunidadeModalOpen, setOportunidadeModalOpen] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+
 
   const [searchParams, setSearchParams] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -53,19 +61,9 @@ const Kanban = () => {
 
   const { getPlanCompany } = usePlans();
 
-  // const { tickets, hasMore, loading } = useTickets({
-  //   searchParam: searchParams
-  //     .toLowerCase()
-  //     .trim()
-  //     .normalize('NFD')
-  //     .replace(/[\u0300-\u036f]]/g, ''),
-  //   users: JSON.stringify(selectedUsers),
-  //   queueIds: JSON.stringify(jsonString),
-  // });
-
   useEffect(() => {
     async function fetchData() {
-      const companyId = localStorage.getItem('companyId');
+      const companyId = user?.companyId
       const planConfigs = await getPlanCompany(undefined, companyId);
       if (!planConfigs.plan.useKanban) {
         toast.error(
@@ -77,44 +75,35 @@ const Kanban = () => {
       }
     }
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    fetchTags();
+  }, [selectedUsers, selectedDate, searchParams]);
 
   const fetchTags = async () => {
     try {
       const response = await api.get('/tags/kanban');
       const fetchedTags = response.data.lista || [];
       setTags(fetchedTags);
-
-      // Fetch tickets after fetching tags
       await fetchTickets(jsonString);
     } catch (error) {
       console.log(error);
     }
   };
 
-  useEffect(() => {
-    fetchTags();
-  }, [selectedUsers, selectedDate, searchParams]);
-
-  const [file, setFile] = useState({
-    lanes: [],
-  });
-
   const fetchTickets = async (jsonString) => {
     try {
-      setT(t + 1);
       const { data } = await api.get('/tickets/kanban', {
         params: {
-          showAll: (profile === 'admin' || profile === 'supervisor') ? true : false,
+          showAll: profile === 'admin' || profile === 'supervisor',
           searchParam: searchParams,
           users: JSON.stringify(selectedUsers),
           queueIds: JSON.stringify(jsonString),
-          dateFrom: selectedDate?.from,
-          dateUntil: selectedDate?.until,
+          dateFrom: selectedDate.from,
+          dateUntil: selectedDate.until,
         },
       });
-
       setTicketList(data.tickets);
     } catch (err) {
       console.log(err);
@@ -122,172 +111,21 @@ const Kanban = () => {
     }
   };
 
-  /*
-
-  const reloadKanbanData = useCallback(async () => {
-    await fetchTags();
-    await fetchTickets(jsonString);
-  }, [fetchTags, fetchTickets, jsonString]);
-
-  useEffect(() => {
-    if (isInitialLoadComplete) {
-      reloadKanbanData();
-    } else {
-      setIsInitialLoadComplete(true);
-    }
-  }, [isInitialLoadComplete, reloadKanbanData]);
-
-  useEffect(() => {
-    const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
-
-    socket.on("connect", () => socket.emit("joinNotification"));
-    socket.on(`company-${companyId}-contact`, (data) => {
-      if (data.action === "updateUnread") {
-        console.log("Received WebSocket data:", data);
-        setReloadData(true);
-      }
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (reloadData && isInitialLoadComplete) {
-      reloadKanbanData();
-      setReloadData(false);
-    }
-  }, [reloadData, isInitialLoadComplete, reloadKanbanData]);
-
-
-*/
-
   const handleCardClick = useCallback(
     (uuid) => {
-      //console.log("Clicked on card with UUID:", uuid);
       history.push('/tickets/' + uuid);
     },
     [history]
   );
 
-  // const popularCards = useCallback(
-  //   (jsonString) => {
-  //     const { button } = classes;
-  //     console.log({ tickets }, 'TICKETS AQUI');
-  //     const filteredTickets = tickets.filter(
-  //       (ticket) => ticket.tags.length === 0
-  //     );
+  const handleClose = () => {
+    setOpen(false);
+  };
 
-  //     //console.log(filteredTickets);
-
-  //     const lanes = [
-  //       {
-  //         id: 'lane0',
-  //         title: 'Em Aberto',
-  //         label: '0',
-  //         cards: filteredTickets.map((ticket) => ({
-  //           id: ticket.id.toString(),
-  //           label: 'Ticket nº ' + ticket.id.toString(),
-  //           description: (
-  //             <div>
-  //               <p>
-  //                 {ticket.contact.number}
-  //                 <br />
-  //                 {ticket.lastMessage}
-  //               </p>
-  //               <button
-  //                 className={classes.button}
-  //                 onClick={() => handleCardClick(ticket.uuid)}
-  //               >
-  //                 Ver Ticket
-  //               </button>
-  //             </div>
-  //           ),
-  //           title: ticket.contact.name,
-  //           draggable: true,
-  //           href: '/tickets/' + ticket.uuid,
-  //         })),
-  //       },
-  //       ...tags.map((tag) => {
-  //         const filteredTickets = tickets.filter((ticket) => {
-  //           const tagIds = ticket.tags.map((tag) => tag.id);
-  //           return tagIds.includes(tag.id);
-  //         });
-
-  //         let somaTotalValorDoLead = 0;
-
-  //         // Percorrendo todos os tickets e somando os valores do campo "Valor do Lead"
-  //         for (const ticketCC of filteredTickets) {
-  //           for (const extraInfo of ticketCC.contact.extraInfo) {
-  //             if (extraInfo.name === 'Valor do Lead') {
-  //               somaTotalValorDoLead += parseFloat(extraInfo.value);
-  //               break;
-  //             }
-  //           }
-  //         }
-
-  //         return {
-  //           id: tag.id.toString(),
-  //           title:
-  //             tag.name +
-  //             ' ' +
-  //             filteredTickets.length +
-  //             ' (' +
-  //             somaTotalValorDoLead +
-  //             ')',
-  //           label: tag.id.toString(),
-  //           cards: filteredTickets.map((ticket) => ({
-  //             id: ticket.id.toString(),
-  //             label: 'Ticket nº ' + ticket.id.toString(),
-  //             description: (
-  //               <div>
-  //                 <p>
-  //                   {ticket.contact.number}
-  //                   <br />
-  //                   {ticket.lastMessage}
-  //                 </p>
-  //                 <button
-  //                   className={button}
-  //                   onClick={() => handleCardClick(ticket.uuid)}
-  //                 >
-  //                   Ver Ticket
-  //                 </button>
-  //               </div>
-  //             ),
-  //             title: ticket.contact.name,
-  //             draggable: true,
-  //             href: '/tickets/' + ticket.uuid,
-  //           })),
-  //           style: { backgroundColor: tag.color, color: 'white' },
-  //         };
-  //       }),
-  //     ];
-
-  //     setFile({ lanes });
-  //   },
-  //   [classes, handleCardClick, tags, tickets]
-  // );
-
-  // const filterByDateRange = useCallback(
-  //   (filterItemList) => {
-  //     if (!selectedDate) {
-  //       return filterItemList;
-  //     }
-
-  //     const filteredList = filterItemList.filter((filterItem) => {
-  //       return moment(
-  //         moment(filterItem.updatedAt).format('YYYY-MM-DD')
-  //       ).isBetween(selectedDate?.from, selectedDate?.until, 'days', '[]');
-  //     });
-
-  //     return filteredList.length === 0 ? filterItemList : filteredList;
-  //   },
-  //   [selectedDate]
-  // );
-
-  // console.log(profile);
+  const handleOportunidadeModalOpen = () => {
+    setOportunidadeModalOpen(true);
+    if (typeof handleClose === "function") handleClose();
+  };
 
   useEffect(() => {
     const { button } = classes;
@@ -297,94 +135,66 @@ const Kanban = () => {
 
     if (!filteredTickets) return;
 
-    const lanes = [
-      // KANBAN TICKETS EM ABERTO
-      // {
-      //   id: 'lane0',
-      //   title: 'Em Aberto',
-      //   label: '0',
-      //   cards: filteredTickets.map((ticket) => ({
-      //     id: ticket.id.toString(),
-      //     label: 'Ticket nº ' + ticket.id.toString(),
-      //     description: (
-      //       <div>
-      //         <p>
-      //           {ticket.contact.number}
-      //           <br />
-      //           {ticket.lastMessage}
-      //         </p>
-      //         <button
-      //           className={classes.button}
-      //           onClick={() => handleCardClick(ticket.uuid)}
-      //         >
-      //           Ver Ticket
-      //         </button>
-      //       </div>
-      //     ),
-      //     title: ticket.contact.name,
-      //     draggable: true,
-      //     href: '/tickets/' + ticket.uuid,
-      //   })),
-      // },
-      ...tags.map((tag) => {
-        const filteredTickets = ticketList.filter((ticket) => {
-          const tagIds = ticket.tags.map((tag) => tag.id);
-          return tagIds.includes(tag.id);
-        });
+    const lanes = tags.map((tag) => {
+      const filteredTickets = ticketList.filter((ticket) =>
+        ticket.tags.some((t) => t.id === tag.id)
+      );
 
-        let somaTotalValorDoLead = 0;
+      let somaTotalValorDoLead = 0;
 
-        // Percorrendo todos os tickets e somando os valores do campo "Valor do Lead"
-        for (const ticketCC of filteredTickets) {
-          if (ticketCC?.contact?.extraInfo) {
-            for (const extraInfo of ticketCC?.contact?.extraInfo) {
-              if (extraInfo.name === 'Valor do Lead') {
-                somaTotalValorDoLead += parseFloat(extraInfo.value);
-                break;
-              }
+      filteredTickets.forEach((ticketCC) => {
+        if (ticketCC.contact.extraInfo) {
+          ticketCC.contact.extraInfo.forEach((extraInfo) => {
+            if (extraInfo.name === 'Valor do Lead') {
+              somaTotalValorDoLead += parseFloat(extraInfo.value);
             }
-          }
+          });
         }
+      });
 
-        return {
-          id: tag.id.toString(),
-          title:
-            tag.name +
-            ' ' +
-            filteredTickets.length +
-            ' (' +
-            somaTotalValorDoLead +
-            ')',
-          label: tag.id.toString(),
-          cards: filteredTickets.map((ticket) => ({
-            id: ticket.id.toString(),
-            label: 'Ticket nº ' + ticket.id.toString(),
-            description: (
-              <div>
-                <p>
-                  {ticket.contact.number}
-                  <br />
-                  {ticket.lastMessage}
-                </p>
-                <button
-                  className={button}
-                  onClick={() => handleCardClick(ticket.uuid)}
-                >
-                  Ver Ticket
-                </button>
-              </div>
-            ),
-            title: ticket.contact.name,
-            draggable: true,
-            href: '/tickets/' + ticket.uuid,
-          })),
-          style: { backgroundColor: tag.color, color: 'white' },
-        };
-      }),
-    ];
+      return {
+        id: tag.id.toString(),
+        title: `${tag.name} ${filteredTickets.length} (${somaTotalValorDoLead})`,
+        label: tag.id.toString(),
+        cards: filteredTickets.map((ticket) => ({
+          id: ticket.id.toString(),
+          label: `Ticket nº ${ticket.id}`,
+          description: (
+            <div>
+              <p>{ticket.contact.number}</p>
+              <p>{ticket.lastMessage}</p>
+              <button
+                className={button}
+                onClick={() => handleCardClick(ticket.uuid)}
+              >
+                Ver Ticket
+              </button>
+              <p></p>
+              <p></p>
+              {ticket.oportunidadeId !== undefined &&
+                ticket.oportunidadeId !== null && (
+                  <button
+                      className={button}
+                      onClick={() => {
+                        setSelectedTicket(ticket);
+                        handleOportunidadeModalOpen();
+                      }}
+                    >
+                      Oportunidades
+                    </button>
+                )}
+            </div>
+          ),
+          title: ticket.contact.name,
+          draggable: true,
+          href: '/tickets/' + ticket.uuid,
+        })),
+        style: { backgroundColor: tag.color, color: 'white' },
+      };
+    });
 
     setFile({ lanes });
-  }, [classes, handleCardClick, tags, ticketList, searchParams]);
+  }, [classes, handleCardClick, tags, ticketList]);
 
   const handleCardMove = async (cardId, sourceLaneId, targetLaneId) => {
     try {
@@ -409,6 +219,8 @@ const Kanban = () => {
   const handleSelectedDate = (value, range) => {
     setSelectedDate({ ...selectedDate, [range]: value });
   };
+
+  const [file, setFile] = useState({ lanes: [] });
 
   return (
     <div>
@@ -441,6 +253,15 @@ const Kanban = () => {
           style={{ backgroundColor: 'rgba(252, 252, 252, 0.03)' }}
         />
       </div>
+      <RatingModal
+        open={oportunidadeModalOpen}
+        onClose={() => setOportunidadeModalOpen(false)}
+        ticketIform={selectedTicket?.contact?.name ? `${selectedTicket?.contact.name} # ${selectedTicket?.id}` : ""}
+        ticketIdLead={selectedTicket?.id}
+        ticket={selectedTicket}
+        aria-labelledby="form-dialog-title"
+      />
+
     </div>
   );
 };

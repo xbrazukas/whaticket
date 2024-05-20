@@ -23,7 +23,7 @@ import ListAltIcon from "@material-ui/icons/ListAlt";
 import { useDate } from "../../hooks/useDate";
 import usePlans from "../../hooks/usePlans";
 
-import { socketConnection } from "../../services/socket";
+import { SocketContext } from "../../context/Socket/SocketContext";
 import { AuthContext } from "../../context/Auth/AuthContext";
 
 const useStyles = makeStyles((theme) => ({
@@ -53,7 +53,8 @@ const CampaignReport = () => {
   const [confirmed, setConfirmed] = useState(0);
   const [percent, setPercent] = useState(0);
   const [loading, setLoading] = useState(false);
-  const {user, socket} = useContext(AuthContext)
+  const socketManager = useContext(SocketContext);
+
   const mounted = useRef(true);
 
   const { datetimeToClient } = useDate();
@@ -115,27 +116,11 @@ const CampaignReport = () => {
   }, [delivered, validContacts]);
 
   useEffect(() => {
-    // const companyId = localStorage.getItem("companyId");
-    // const socket = socketConnection({ companyId });
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
 
-    if(user?.id){
-      socket.on(`company-${user.companyId}-campaign`, (data) => {
-        if (data.record.id === +campaignId) {
-          setCampaign(data.record);
+    const onCampaign = (data) => {
   
-          if (data.record.status === "FINALIZADA") {
-            setTimeout(() => {
-              findCampaign();
-            }, 5000);
-          }
-        }
-      });
-    }
-
-
-    return () => {
-      if(user?.id){
-      socket.off(`company-${user.companyId}-campaign`, (data) => {
       if (data.record.id === +campaignId) {
         setCampaign(data.record);
 
@@ -145,11 +130,15 @@ const CampaignReport = () => {
           }, 5000);
         }
       }
-      });
     }
+
+    socket.on(`company-${companyId}-campaign`, onCampaign);
+    
+    return () => {
+      socket.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [campaignId]);
+  }, [campaignId, socketManager]);
 
   const findCampaign = async () => {
     setLoading(true);
@@ -237,7 +226,7 @@ const CampaignReport = () => {
               <CardCounter
                 icon={<WhatsAppIcon fontSize="inherit" />}
                 title="Conexão"
-                value={campaign.whatsappId}
+                value={campaign.whatsappName}
                 loading={loading}
               />
             </Grid>

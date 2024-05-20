@@ -32,6 +32,7 @@ import { Grid } from "@material-ui/core";
 import { isArray } from "lodash";
 import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 
 const reducer = (state, action) => {
@@ -107,7 +108,8 @@ const Quickemessages = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [searchParam, setSearchParam] = useState("");
   const [quickemessages, dispatch] = useReducer(reducer, []);
-  const { user,socket } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
+  const socketManager = useContext(SocketContext);
   const { profile } = user;
 
   useEffect(() => {
@@ -125,9 +127,9 @@ const Quickemessages = () => {
   }, [searchParam, pageNumber]);
 
   useEffect(() => {
-    // const user.companyId = localStorage.getItem("user.companyId");
-    // const socket = socketConnection({ user.companyId });
-    if(user?.id){
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
+
       socket.on(`company-quickemessage`, (data) => {
         if (data.action === "update" || data.action === "create") {
           dispatch({ type: "UPDATE_QUICKMESSAGES", payload: data.record });
@@ -136,16 +138,8 @@ const Quickemessages = () => {
           dispatch({ type: "DELETE_QUICKMESSAGE", payload: +data.id });
         }
       });
-    }
     return () => {
-      socket.off(`company-quickemessage`, (data) => {
-        if (data.action === "update" || data.action === "create") {
-          dispatch({ type: "UPDATE_QUICKMESSAGES", payload: data.record });
-        }
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_QUICKMESSAGE", payload: +data.id });
-        }
-      });
+      socket.disconnect()
     };
   }, []);
 

@@ -27,6 +27,7 @@ import { toast } from "react-toastify";
 import ConfirmationModal from "../../components/ConfirmationModal";
 import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const useStyles = makeStyles((theme) => ({
   mainPaper: {
@@ -90,7 +91,7 @@ const Queues = () => {
 
   const [queues, dispatch] = useReducer(reducer, []);
   const [loading, setLoading] = useState(false);
-  const {user,socket} = useContext(AuthContext)
+  const socketManager = useContext(SocketContext);
   const [queueModalOpen, setQueueModalOpen] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -111,36 +112,25 @@ const Queues = () => {
   }, []);
 
   useEffect(() => {
-    // const user.companyId = localStorage.getItem("user.companyId");
-    // const socket = socketConnection({ user });
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
 
-    if(user?.id){
-      socket.on(`company-${user.companyId}-queue`, (data) => {
-        if (data.action === "update" || data.action === "create") {
-          dispatch({ type: "UPDATE_QUEUES", payload: data.queue });
-        }
-  
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_QUEUE", payload: data.queueId });
-        }
-      });
+    const onQueue = (data) => {
+      if (data.action === "update" || data.action === "create") {
+        dispatch({ type: "UPDATE_QUEUES", payload: data.queue });
+      }
+
+      if (data.action === "delete") {
+        dispatch({ type: "DELETE_QUEUE", payload: data.queueId });
+      }
     }
-    
+
+    socket.on(`company-${companyId}-queue`, onQueue);
 
     return () => {
-      if(user?.id){
-      socket.off(`company-${user.companyId}-queue`, (data) => {
-        if (data.action === "update" || data.action === "create") {
-          dispatch({ type: "UPDATE_QUEUES", payload: data.queue });
-        }
-  
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_QUEUE", payload: data.queueId });
-        }
-      });
-    }
+      socket.disconnect();
     };
-  }, []);
+  }, [socketManager]);
 
   const handleOpenQueueModal = () => {
     setQueueModalOpen(true);

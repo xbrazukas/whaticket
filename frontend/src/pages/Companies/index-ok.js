@@ -154,16 +154,6 @@ const Companies = () => {
         return () => clearTimeout(delayDebounceFn);
     }, [searchParam, pageNumber]);
 
-    useEffect(() => {
-        // const companyId = localStorage.getItem("companyId");
-        // const socket = socketConnection({ companyId });
-        // const socket = socketConnection();
-
-        return () => {
-            // socket.disconnect();
-        };
-    }, []);
-
     const handleOpenCompanyModal = () => {
         setSelectedCompany(null);
         setCompanyModalOpen(true);

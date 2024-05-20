@@ -88,7 +88,7 @@ const useStyles = makeStyles((theme) => ({
 
 const Invoices = () => {
   const classes = useStyles();
-  const { user, socket } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [hasMore, setHasMore] = useState(false);

@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from "react";
 
-import { useParams, useHistory } from 'react-router-dom';
+import { useParams, useHistory } from "react-router-dom";
 
 import {
   Button,
@@ -14,47 +14,51 @@ import {
   Tab,
   Tabs,
   TextField,
-} from '@material-ui/core';
-import ChatList from './ChatList';
-import ChatMessages from './ChatMessages';
-import { UsersFilter } from '../../components/UsersFilter';
-import api from '../../services/api';
-import { socketConnection } from '../../services/socket';
+} from "@material-ui/core";
+import ChatList from "./ChatList";
+import ChatMessages from "./ChatMessages";
+import { UsersFilter } from "../../components/UsersFilter";
+import api from "../../services/api";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
-import { has, isObject } from 'lodash';
+import { has, isObject } from "lodash";
 
-import { AuthContext } from '../../context/Auth/AuthContext';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import { AuthContext } from "../../context/Auth/AuthContext";
+import withWidth, { isWidthUp } from "@material-ui/core/withWidth";
+import whatsBackground from "../../assets/wa-background.png"
 
-import { toast } from 'react-toastify';
-import usePlans from '../../hooks/usePlans';
-
+import { i18n } from "../../translate/i18n";
+import Title from "../../components/Title";
 const useStyles = makeStyles((theme) => ({
   mainContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    position: 'relative',
+    display: "flex",
+    flexDirection: "column",
+    position: "relative",
     flex: 1,
     padding: theme.spacing(2),
     height: `calc(100% - 48px)`,
-    overflowY: 'hidden',
-    border: '1px solid rgba(0, 0, 0, 0.12)',
+    overflowY: "hidden",
+    border: "1px solid rgba(0, 0, 0, 0.12)",
+    backgroundImage: theme.mode ===  `url(${whatsBackground})`,
+		backgroundPosition: 'center', 
+		backgroundSize: 'cover', 
+		backgroundRepeat: 'no-repeat', 
   },
   gridContainer: {
     flex: 1,
-    height: '100%',
-    border: '1px solid rgba(0, 0, 0, 0.12)',
-    backgroundColor: '#eee',
+    height: "100%",
+    border: "1px solid rgba(0, 0, 0, 0.12)",
+    backgroundColor: "inherit",
   },
   gridItem: {
-    height: '100%',
+    height: "100%",
   },
   gridItemTab: {
-    height: '92%',
-    width: '100%',
+    height: "92%",
+    width: "100%",
   },
   btnContainer: {
-    textAlign: 'right',
+    textAlign: "right",
     padding: 10,
   },
 }));
@@ -66,33 +70,13 @@ export function ChatModal({
   handleClose,
   handleLoadNewChat,
 }) {
-  const history = useHistory();
   const [users, setUsers] = useState([]);
-  const [title, setTitle] = useState('');
-
-  const { getPlanCompany } = usePlans();
+  const [title, setTitle] = useState("");
 
   useEffect(() => {
-    async function fetchData() {
-      const companyId = localStorage.getItem('companyId');
-      const planConfigs = await getPlanCompany(undefined, companyId);
-      if (!planConfigs.plan.useInternalChat) {
-        toast.error(
-          'Você não possui acesso a este recurso! Faça um upgrade em sua assinatura ou contate o suporte!'
-        );
-        setTimeout(() => {
-          history.push(`/`);
-        }, 1000);
-      }
-    }
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    setTitle('');
+    setTitle("");
     setUsers([]);
-    if (type === 'edit') {
+    if (type === "edit") {
       const userList = chat.users.map((u) => ({
         id: u.user.id,
         name: u.user.name,
@@ -104,13 +88,23 @@ export function ChatModal({
 
   const handleSave = async () => {
     try {
-      if (type === 'edit') {
+      if (!title) {
+        alert("Por favor, preencha o título da conversa.");
+        return;
+      }
+
+      if (!users || users.length === 0) {
+        alert("Por favor, selecione pelo menos um usuário.");
+        return;
+      }
+
+      if (type === "edit") {
         await api.put(`/chats/${chat.id}`, {
           users,
           title,
         });
       } else {
-        const { data } = await api.post('/chats', {
+        const { data } = await api.post("/chats", {
           users,
           title,
         });
@@ -118,26 +112,26 @@ export function ChatModal({
       }
       handleClose();
     } catch (err) {}
-  };
+  };  
 
   return (
     <Dialog
       open={open}
       onClose={handleClose}
-      aria-labelledby='alert-dialog-title'
-      aria-describedby='alert-dialog-description'
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
     >
-      <DialogTitle id='alert-dialog-title'>Conversa</DialogTitle>
+      <DialogTitle id="alert-dialog-title">Conversa</DialogTitle>
       <DialogContent>
         <Grid spacing={2} container>
           <Grid xs={12} style={{ padding: 18 }} item>
             <TextField
-              label='Título'
-              placeholder='Título'
+              label="Título"
+              placeholder="Título"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              variant='outlined'
-              size='small'
+              variant="outlined"
+              size="small"
               fullWidth
             />
           </Grid>
@@ -150,10 +144,10 @@ export function ChatModal({
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color='primary'>
+        <Button onClick={handleClose} color="primary">
           Fechar
         </Button>
-        <Button onClick={handleSave} color='primary' variant='contained'>
+        <Button onClick={handleSave} color="primary" variant="contained">
           Salvar
         </Button>
       </DialogActions>
@@ -163,11 +157,11 @@ export function ChatModal({
 
 function Chat(props) {
   const classes = useStyles();
-  const { user, socket } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const history = useHistory();
 
   const [showDialog, setShowDialog] = useState(false);
-  const [dialogType, setDialogType] = useState('new');
+  const [dialogType, setDialogType] = useState("new");
   const [currentChat, setCurrentChat] = useState({});
   const [chats, setChats] = useState([]);
   const [chatsPageInfo, setChatsPageInfo] = useState({ hasMore: false });
@@ -179,6 +173,8 @@ function Chat(props) {
   const isMounted = useRef(true);
   const scrollToBottomRef = useRef();
   const { id } = useParams();
+
+  const socketManager = useContext(SocketContext);
 
   useEffect(() => {
     return () => {
@@ -205,9 +201,9 @@ function Chat(props) {
   }, []);
 
   useEffect(() => {
-    if (isObject(currentChat) && has(currentChat, 'id')) {
+    if (isObject(currentChat) && has(currentChat, "id")) {
       findMessages(currentChat.id).then(() => {
-        if (typeof scrollToBottomRef.current === 'function') {
+        if (typeof scrollToBottomRef.current === "function") {
           setTimeout(() => {
             scrollToBottomRef.current();
           }, 300);
@@ -218,102 +214,40 @@ function Chat(props) {
   }, [currentChat]);
 
   useEffect(() => {
-    // const companyId = localStorage.getItem("companyId");
-    // const socket = socketConnection({ companyId });
-    if(user?.id){
-      socket.on(`company-${user.companyId}-chat-user-${user.id}`, (data) => {
-        if (data.action === "create") {
-          setChats((prev) => [data.record, ...prev]);
-        }
-        if (data.action === "update") {
-          const changedChats = chats.map((chat) => {
-            if (chat.id === data.record.id) {
-              setCurrentChat(data.record);
-              return {
-                ...data.record,
-              };
-            }
-            return chat;
-          });
-          setChats(changedChats);
-        }
-      });
-  
-      socket.on(`company-${user.companyId}-chat`, (data) => {
-        if (data.action === "delete") {
-          const filteredChats = chats.filter((c) => c.id !== +data.id);
-          setChats(filteredChats);
-          setMessages([]);
-          setMessagesPage(1);
-          setMessagesPageInfo({ hasMore: false });
-          setCurrentChat({});
-          history.push("/chats");
-        }
-      });
-  
-      if (isObject(currentChat) && has(currentChat, "id")) {
-        socket.on(`company-${user.companyId}-chat-${currentChat.id}`, (data) => {
-          if (data.action === "new-message") {
-            setMessages((prev) => [...prev, data.newMessage]);
-            const changedChats = chats.map((chat) => {
-              if (chat.id === data.newMessage.chatId) {
-                return {
-                  ...data.chat,
-                };
-              }
-              return chat;
-            });
-            setChats(changedChats);
-            scrollToBottomRef.current();
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
+
+    const onChatUser = (data) => {
+      if (data.action === "create") {
+        setChats((prev) => [data.record, ...prev]);
+      }
+      if (data.action === "update") {
+        const changedChats = chats.map((chat) => {
+          if (chat.id === data.record.id) {
+            setCurrentChat(data.record);
+            return {
+              ...data.record,
+            };
           }
-  
-          if (data.action === "update") {
-            const changedChats = chats.map((chat) => {
-              if (chat.id === data.chat.id) {
-                return {
-                  ...data.chat,
-                };
-              }
-              return chat;
-            });
-            setChats(changedChats);
-            scrollToBottomRef.current();
-          }
+          return chat;
         });
+        setChats(changedChats);
       }
     }
 
-    return () => {
-      if(user?.id){
-      socket.off(`company-${user.companyId}-chat-user-${user.id}`, (data) => {
-        if (data.action === "create") {
-          setChats((prev) => [data.record, ...prev]);
-        }
-        if (data.action === "update") {
-          const changedChats = chats.map((chat) => {
-            if (chat.id === data.record.id) {
-              setCurrentChat(data.record);
-              return {
-                ...data.record,
-              };
-            }
-            return chat;
-          });
-          setChats(changedChats);
-        }
-      });
-      socket.off(`company-${user.companyId}-chat`, (data) => {
-        if (data.action === "delete") {
-          const filteredChats = chats.filter((c) => c.id !== +data.id);
-          setChats(filteredChats);
-          setMessages([]);
-          setMessagesPage(1);
-          setMessagesPageInfo({ hasMore: false });
-          setCurrentChat({});
-          history.push("/chats");
-        }
-      });
-      socket.off(`company-${user.companyId}-chat-${currentChat.id}`, (data) => {
+    const onChat = (data) => {
+      if (data.action === "delete") {
+        const filteredChats = chats.filter((c) => c.id !== +data.id);
+        setChats(filteredChats);
+        setMessages([]);
+        setMessagesPage(1);
+        setMessagesPageInfo({ hasMore: false });
+        setCurrentChat({});
+        history.push("/chats");
+      }
+    }
+
+    const onCurrentChat = (data) => {
         if (data.action === "new-message") {
           setMessages((prev) => [...prev, data.newMessage]);
           const changedChats = chats.map((chat) => {
@@ -340,11 +274,20 @@ function Chat(props) {
           setChats(changedChats);
           scrollToBottomRef.current();
         }
-      });
+      }
+
+    socket.on(`company-${companyId}-chat-user-${user.id}`, onChatUser); 
+    socket.on(`company-${companyId}-chat`, onChat);
+    if (isObject(currentChat) && has(currentChat, "id")) {
+      socket.on(`company-${companyId}-chat-${currentChat.id}`, onCurrentChat);
     }
+        
+    return () => {
+      socket.disconnect();
     };
+    
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentChat]);
+  }, [currentChat, socketManager]);
 
   const selectChat = (chat) => {
     try {
@@ -392,7 +335,7 @@ function Chat(props) {
 
   const findChats = async () => {
     try {
-      const { data } = await api.get('/chats');
+      const { data } = await api.get("/chats");
       return data;
     } catch (err) {
       console.log(err);
@@ -401,20 +344,24 @@ function Chat(props) {
 
   const renderGrid = () => {
     return (
+      <>
+      <Title>{i18n.t("Chat interno")}</Title>
       <Grid className={classes.gridContainer} container>
         <Grid className={classes.gridItem} md={3} item>
-          <div className={classes.btnContainer}>
-            <Button
-              onClick={() => {
-                setDialogType('new');
-                setShowDialog(true);
-              }}
-              color='primary'
-              variant='contained'
-            >
-              Nova Mensagem
-            </Button>
-          </div>
+         
+            <div className={classes.btnContainer}>
+              <Button
+                onClick={() => {
+                  setDialogType("new");
+                  setShowDialog(true);
+                }}
+                color="primary"
+                variant="contained"
+              >
+                Nova
+              </Button>
+            </div>
+        
           <ChatList
             chats={chats}
             pageInfo={chatsPageInfo}
@@ -422,13 +369,13 @@ function Chat(props) {
             handleSelectChat={(chat) => selectChat(chat)}
             handleDeleteChat={(chat) => deleteChat(chat)}
             handleEditChat={() => {
-              setDialogType('edit');
+              setDialogType("edit");
               setShowDialog(true);
             }}
           />
         </Grid>
         <Grid className={classes.gridItem} md={9} item>
-          {isObject(currentChat) && has(currentChat, 'id') && (
+          {isObject(currentChat) && has(currentChat, "id") && (
             <ChatMessages
               chat={currentChat}
               scrollToBottomRef={scrollToBottomRef}
@@ -441,6 +388,7 @@ function Chat(props) {
           )}
         </Grid>
       </Grid>
+      </>
     );
   };
 
@@ -450,13 +398,13 @@ function Chat(props) {
         <Grid md={12} item>
           <Tabs
             value={tab}
-            indicatorColor='primary'
-            textColor='primary'
+            indicatorColor="primary"
+            textColor="primary"
             onChange={(e, v) => setTab(v)}
-            aria-label='disabled tabs example'
+            aria-label="disabled tabs example"
           >
-            <Tab label='Chats' />
-            <Tab label='Mensagens' />
+            <Tab label="Chats" />
+            <Tab label="Mensagens" />
           </Tabs>
         </Grid>
         {tab === 0 && (
@@ -464,8 +412,8 @@ function Chat(props) {
             <div className={classes.btnContainer}>
               <Button
                 onClick={() => setShowDialog(true)}
-                color='primary'
-                variant='contained'
+                color="primary"
+                variant="contained"
               >
                 Novo
               </Button>
@@ -481,7 +429,7 @@ function Chat(props) {
         )}
         {tab === 1 && (
           <Grid className={classes.gridItemTab} md={12} item>
-            {isObject(currentChat) && has(currentChat, 'id') && (
+            {isObject(currentChat) && has(currentChat, "id") && (
               <ChatMessages
                 scrollToBottomRef={scrollToBottomRef}
                 pageInfo={messagesPageInfo}
@@ -513,7 +461,7 @@ function Chat(props) {
         handleClose={() => setShowDialog(false)}
       />
       <Paper className={classes.mainContainer}>
-        {isWidthUp('md', props.width) ? renderGrid() : renderTab()}
+        {isWidthUp("md", props.width) ? renderGrid() : renderTab()}
       </Paper>
     </>
   );

@@ -34,7 +34,6 @@ const CreateOrUpdateContactService = async ({
 }: Request): Promise<Contact> => {
   const number = isGroup ? rawNumber : rawNumber.replace(/[^0-9]/g, "");
 
-  console.log("to aqui");
 
   const newArrayToAdd = [
     { name: 'Código Interno', value: '0' },
@@ -73,23 +72,17 @@ const CreateOrUpdateContactService = async ({
 
   if (contact) {
 
-    console.log("ja existe");
-
     contact.update({ profilePicUrl });
 
     if (isGroup) {
       contact.update({ name });
     }
 
-    io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
+    io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-contact`, {
       action: "update",
       contact
     });
   } else {
-
-    console.log("novo");
-
-    console.log(updatedExtraInfo);
 
     contact = await Contact.create(
     {
@@ -107,7 +100,7 @@ const CreateOrUpdateContactService = async ({
     }
     );
 
-    io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
+    io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-contact`, {
       action: "create",
       contact
     });

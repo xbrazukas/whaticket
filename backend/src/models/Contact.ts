@@ -17,6 +17,7 @@ import ContactCustomField from "./ContactCustomField";
 import Ticket from "./Ticket";
 import Company from "./Company";
 import Schedule from "./Schedule";
+import User from "./User";
 
 @Table
 class Contact extends Model<Contact> {
@@ -81,12 +82,17 @@ class Contact extends Model<Contact> {
   @BelongsTo(() => Company)
   company: Company;
 
+  @Column
+  walleteUserId: number;
+
   @HasMany(() => Schedule, {
     onUpdate: "CASCADE",
     onDelete: "CASCADE",
     hooks: true
   })
   schedules: Schedule[];
+
+
 }
 
 export default Contact;

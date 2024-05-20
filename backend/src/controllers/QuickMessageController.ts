@@ -71,7 +71,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   });
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-quickmessage`, {
+ io.emit(`company-${companyId}-quickmessage`, {
     action: "create",
     record
   });
@@ -114,7 +114,7 @@ export const update = async (
   });
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-quickmessage`, {
+ io.emit(`company-${companyId}-quickmessage`, {
     action: "update",
     record
   });
@@ -132,7 +132,7 @@ export const remove = async (
   await DeleteService(id);
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-quickmessage`, {
+ io.emit(`company-${companyId}-quickmessage`, {
     action: "delete",
     id
   });

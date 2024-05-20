@@ -295,21 +295,35 @@ async function handleSendScheduledMessage(job) {
 
   try {
   
-    //const whatsapp = await GetDefaultWhatsApp(schedule.companyId);
-  	const whatsapp = await Whatsapp.findByPk(schedule.whatsappId);
-    //console.log(whatsapp);  
-    //console.log(schedule);
+  	const whatsapp = await Whatsapp.findByPk(schedule?.whatsappId);
+    const queueId = schedule?.queueId
 
     if(schedule?.geral === true){
 
-  
-      console.log('355',schedule?.geral)
-
       const ticket = await FindOrCreateTicketService(schedule.contact, schedule.whatsappId,0, schedule.companyId,schedule.contact, true);
+
+      if(queueId && queueId !== undefined || queueId !== null){
+        if(schedule?.userId !== null && schedule?.userId !== undefined){
+
+          await ticket.update({
+            queueId:queueId,
+            whatsappId: schedule?.whatsappId,
+            userId: schedule?.userId,
+            isGroup: false,
+            status:'open'
+          })
+        }else{
+          await ticket.update({
+            queueId:queueId,
+            whatsappId: schedule?.whatsappId,
+            isGroup: false,
+            status:'pending'
+          })
+        }
+      }
 
       if(schedule?.mediaPath){
 
-        console.log('360',schedule?.mediaPath)
         const url = `public/company${schedule.companyId}/${schedule.mediaPath}`
 
         const nomeDoArquivo = path.basename(url);
@@ -341,18 +355,14 @@ async function handleSendScheduledMessage(job) {
 
       }
       if(!schedule.mediaPath){
-        const Request2 =  {
-          body: schedule.body,
-          ticket: ticket,
-          quotedMsg: null
-        }
         
-        await SendWhatsAppMessage(Request2)
+        const wbot = await getWbot(whatsapp.id)
+        const sentMessage = wbot.sendMessage(`${ticket?.contact?.number}@s.whatsapp.net`,{
+          text: schedule?.body
+        })
       }
 
     }else{
-
-      console.log('404')
 
       if(schedule?.mediaPath){
         const url = `public/company${schedule.companyId}/${schedule.mediaPath}`
@@ -369,12 +379,6 @@ async function handleSendScheduledMessage(job) {
         companyId: schedule.companyId
       });
     }
-  
-    // await SendMessage(whatsapp, {
-    //   number: schedule.contact.number,
-    //   body: schedule.body,
-    //   companyId: schedule.companyId
-    // });
 
     await scheduleRecord?.update({
       sentAt: moment().format("YYYY-MM-DD HH:mm"),

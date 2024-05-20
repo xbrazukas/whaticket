@@ -207,6 +207,9 @@ const TicketListItemCustom = ({ ticket }) => {
   const { profile } = user;
   const [buttonDisabled, setButtonDisabled] = useState(false);
   const [verpreview, setverpreview] = useState(false);
+  const [lastInteractionLabel, setLastInteractionLabel] = useState('');
+  const intervalRef = useRef(null);
+
 
   useEffect(() => {
     if (ticket.userId && ticket.user) {
@@ -239,6 +242,69 @@ const TicketListItemCustom = ({ ticket }) => {
   }, []);
 
   useEffect(() => {
+
+   setTag(ticket.tags )
+
+    return () => {
+      isMounted.current = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[ticket]);
+
+  useEffect(() => {
+    const renderLastInteractionLabel = () => {
+      let labelColor = '';
+      let labelText = '';
+
+      if (!ticket.lastMessage) return '';
+
+      const lastInteractionDate = parseISO(ticket.updatedAt);
+      const currentDate = new Date();
+      const timeDifference = currentDate - lastInteractionDate;
+      const hoursDifference = Math.floor(timeDifference / (1000 * 60 * 60));
+      const minutesDifference = Math.floor(timeDifference / (1000 * 60));
+
+
+      if (minutesDifference >= 3 && minutesDifference <= 10) {
+        labelText = `(${minutesDifference} m atrás)`;
+        labelColor = 'green';
+      } else if (minutesDifference >= 30 && minutesDifference < 60) {
+        labelText = `(${minutesDifference} m atrás)`;
+        labelColor = 'Orange';
+      } else if (minutesDifference > 60  && hoursDifference < 24) {
+        labelText = `(${hoursDifference} h atrás)`;
+        labelColor = 'red';
+      } else if (hoursDifference >= 24) {
+        labelText = `(${Math.floor(hoursDifference / 24)} dias atrás)`;
+        labelColor = 'red';
+      }
+
+
+      return { labelText, labelColor };
+    };
+
+    // Função para atualizar o estado do componente
+    const updateLastInteractionLabel = () => {
+      const { labelText, labelColor } = renderLastInteractionLabel();
+      setLastInteractionLabel(
+        <Badge
+          className={classes.lastInteractionLabel}
+          style={{ color: labelColor }}
+        >
+          {labelText}
+        </Badge>
+      );
+      // Agendando a próxima atualização após 30 segundos
+      setTimeout(updateLastInteractionLabel, 30 * 1000);
+    };
+
+    // Inicializando a primeira atualização
+    updateLastInteractionLabel();
+
+  }, [ticket]); // Executando apenas uma vez ao montar o componente
+
+
+  useEffect(() => {
     const fetchppw = async () => {
       let settingIndexCC;
 
@@ -260,29 +326,10 @@ const TicketListItemCustom = ({ ticket }) => {
     fetchppw();
   }, []);
 
-  /*
-  const handleAcepptTicket = async (id) => {
-    setLoading(true);
-    try {
-      await api.put(`/tickets/${id}`, {
-        status: "open",
-        userId: user?.id,
-      });
-    } catch (err) {
-      setLoading(false);
-      toastError(err);
-    }
-    if (isMounted.current) {
-      setLoading(false);
-    }
-    history.push(`/tickets/${ticket.uuid}`);
-  };
   
- */
 
   const handleAcepptTicket = async (id) => {
     if (setButtonDisabled) {
-      //alert("Use APENAS 1 Clique !!!");
     }
 
     setLoading(true);
@@ -327,7 +374,7 @@ const TicketListItemCustom = ({ ticket }) => {
       read: 1,
       fromMe: true,
       mediaUrl: '',
-      body: `*Assistente Virtual:*\n${msg.trim()}`,
+      body: `${msg.trim()}`,
     };
     try {
       await api.post(`/messages/${id}`, message);
@@ -507,7 +554,7 @@ const TicketListItemCustom = ({ ticket }) => {
                   variant='body2'
                   color='textPrimary'
                 >
-                  <strong>{ticket.contact.name}</strong>
+                  <strong>{ticket.contact.name} {lastInteractionLabel}</strong>
                 </Typography>
               </Typography>
               <ListItemSecondaryAction>

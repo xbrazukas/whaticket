@@ -10,6 +10,7 @@ import TicketsListSkeleton from "../TicketsListSkeleton";
 import useTickets from "../../hooks/useTickets";
 import { i18n } from "../../translate/i18n";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const useStyles = makeStyles((theme) => ({
   ticketsListWrapper: {
@@ -169,7 +170,8 @@ const TicketsListCustom = (props) => {
   const [update, setUpdate] = useState(0);
   const [ticketsList, dispatch] = useReducer(reducer, []);
   const [ticketsListUpdated, setTicketsListUpdated] = useState([]);
-  const { user, socket } = useContext(AuthContext);
+  const socketManager = useContext(SocketContext);
+  const { user } = useContext(AuthContext);
   const { profile, queues } = user;
 
   useEffect(() => {
@@ -201,7 +203,8 @@ const TicketsListCustom = (props) => {
   }, [tickets, status, searchParam, queues, profile]);
 
   useEffect(() => {
-    const companyId = user?.companyId
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
 
     const shouldUpdateTicket = (ticket) =>
       (!ticket.userId || ticket.userId === user?.id || showAll) &&
@@ -249,6 +252,7 @@ const TicketsListCustom = (props) => {
     }
     
     const onCompanyAppMessage = (data) => {
+	  console.log("recebi mensagem", data);
 
       const queueIds = queues.map((q) => q.id);
       if (
@@ -276,9 +280,7 @@ const TicketsListCustom = (props) => {
       }
     }
     
-	if(socket.connect){
-    onConnectTicketList()
-  }
+	socketManager.onConnect(onConnectTicketList);
 	
     socket.on(`company-${companyId}-ticket`, onCompanyTicket);
     socket.on(`company-${companyId}-appMessage`, onCompanyAppMessage);
@@ -287,14 +289,13 @@ const TicketsListCustom = (props) => {
     return () => {
       if (status) {
         socket.emit("leaveTickets", status);
+      } else {
+        socket.emit("leaveNotification");
       }
-      socket.off("connect", onConnectTicketList);
-      socket.off(`company-${companyId}-ticket`, onCompanyTicket);
-      socket.off(`company-${companyId}-appMessage`, onCompanyAppMessage);
-      socket.off(`company-${companyId}-contact`, onCompanyContact );
+      socket.disconnect();
     };
     
-  }, [status, showAll, user, selectedQueueIds, tags, users, profile, queues,socket]);
+  }, [status, showAll, user, selectedQueueIds, tags, users, profile, queues, socketManager]);
 
   useEffect(() => {
     const count = ticketsList.filter((ticket) => !ticket.isGroup).length;

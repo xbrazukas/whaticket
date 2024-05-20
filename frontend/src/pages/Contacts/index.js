@@ -30,7 +30,7 @@ import DeleteOutlineIcon from "@material-ui/icons/DeleteOutline";
 import EditIcon from "@material-ui/icons/Edit";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import CancelIcon from "@material-ui/icons/Cancel";
-import BlockIcon from "@material-ui/icons/Block";
+import Checkbox from '@material-ui/core/Checkbox';
 
 import api from "../../services/api";
 import TableRowSkeleton from "../../components/TableRowSkeleton";
@@ -48,6 +48,7 @@ import { Can } from "../../components/Can";
 import NewTicketModal from "../../components/NewTicketModal";
 import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import ContactsExport from "../../components/ContactsExport";
+import WalletModal from "../../components/WalletClientsModal";
 
 
 import {
@@ -57,6 +58,7 @@ import {
     ContactPhone,
 } from "@material-ui/icons";
 import { Menu, MenuItem } from "@material-ui/core";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const reducer = (state, action) => {
     if (action.type === "LOAD_CONTACTS") {
@@ -109,34 +111,34 @@ const useStyles = makeStyles((theme) => ({
         overflowY: "scroll",
         ...theme.scrollbarStyles,
     },
-  exporte: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50 %, -50 %)",
-    width: "400px",
-    backgroundColor: "white",
-    padding: "20px",
-    boxShadow: "0 0 20px rgba(0, 0, 0, 0.2)",
-    zIndex: 0,
-    width: "235px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  botoesResponsivos: {
-    display: "flex",
-    flexWrap: "wrap",
-  }
-    
+    exporte: {
+        position: "absolute",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50 %, -50 %)",
+        width: "400px",
+        backgroundColor: "white",
+        padding: "20px",
+        boxShadow: "0 0 20px rgba(0, 0, 0, 0.2)",
+        zIndex: 0,
+        width: "235px",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    botoesResponsivos: {
+        display: "flex",
+        flexWrap: "wrap",
+    }
+
 }));
 
 const Contacts = () => {
     const classes = useStyles();
     const history = useHistory();
 
-    const { user, socket } = useContext(AuthContext);
-
+    const { user } = useContext(AuthContext);
+    const socketManager = useContext(SocketContext);
     const [loading, setLoading] = useState(false);
     const [pageNumber, setPageNumber] = useState(1);
     const [searchParam, setSearchParam] = useState("");
@@ -153,6 +155,34 @@ const Contacts = () => {
     const [newTicketModalOpen, setNewTicketModalOpen] = useState(false);
     const [contactTicket, setContactTicket] = useState({});
     const fileUploadRef = useRef(null);
+    const [selectAll, setSelectAll] = useState(false); // Estado para controlar se todos os checkboxes estão marcados
+    const [selectedContacts, setSelectedContacts] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [addContactsWallet, setAddContactsWallet] = useState([])
+    const [walletModalOpen, setWalletModalOpen] = useState(false)
+
+    useEffect(() => {
+        if (selectAll) {
+            setSelectedContacts(contacts.map((contact) => contact.id));
+        } else {
+            setSelectedContacts([]);
+        }
+    }, [contacts, selectAll]);
+
+    const handleSelectAll = () => {
+        setSelectAll(!selectAll); // Alterna o estado de selectAll
+    };
+
+    const handleCheckboxChange = (contactId) => {
+        setSelectedContacts((prevSelected) => {
+            if (prevSelected.includes(contactId)) {
+                return prevSelected.filter((id) => id !== contactId);
+            } else {
+                return [...prevSelected, contactId];
+            }
+        });
+    };
+
 
     const handleImportExcel = async () => {
         try {
@@ -169,57 +199,21 @@ const Contacts = () => {
         }
     };
 
-/*
-    const handleExportExcel = async () => {
-        try {
-            const { data } = await api.post("/contacts/export", {});
-
-            const url = `${process.env.REACT_APP_BACKEND_URL}/public/${data}`;
-
-            window.open(url, "_blank");
-        } catch (err) {
-            toastError(err);
-        }
-    };
-
-    const teste = async () => {
-        return <CSVLink
-            className={classes.csvbtn}
-            separator=";"
-            filename={'contacts.csv'}
-            data={
-                contacts.map((contact) => ({
-                    name: contact.name,
-                    number: contact.number,
-                    email: contact.email
-                }))
-            }>
-            <Button
-                variant="contained"
-                color="primary">
-                <Archive />
-                  {i18n.t("contacts.buttons.export")}
-            </Button>
-        </CSVLink>
-    }
-    
-*/
-
-  /* Exportar */ /*
-  const handleOpenContactExport = () => {
-    if(!contactExportOpen){
-      setContactExportOpen(true);
-      useStyles.apply("ContactsExport", {
-        visibility: "visible"
-      })
-    }else{
-      setContactExportOpen(false);
-      useStyles.apply("ContactsExport", {
-        visibility: "hidden"
-      })
-    }
-    
-  };*/
+    useEffect(() => {
+        setLoading(true);
+        const delayDebounceFn = setTimeout(async () => {
+            try {
+                const { data } = await api.get("/users/", {
+                    params: { searchParam },
+                });
+                setUsers(data?.users);
+                setLoading(false);
+            } catch (err) {
+                toastError(err);
+            }
+        }, 500);
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchParam]);
 
     useEffect(() => {
         dispatch({ type: "RESET" });
@@ -247,40 +241,40 @@ const Contacts = () => {
     }, [searchParam, pageNumber]);
 
     useEffect(() => {
-        // const companyId = localStorage.getItem("companyId");
-        // const socket = socketConnection({ companyId });
-        if(user?.id){
-            socket.on(`company-${user.companyId}-contact`, (data) => {
-                    if (data.action === "update" || data.action === "create") {
-                        dispatch({ type: "UPDATE_CONTACTS", payload: data.contact });
-                    }
-        
-                    if (data.action === "delete") {
-                        dispatch({ type: "DELETE_CONTACT", payload: +data.contactId });
-                    }
-            });
-        }
-
-        return () => {
-            if(user?.id){
-            socket.off(`company-${user.companyId}-contact`, (data) => {
-                if (data.action === "update" || data.action === "create") {
-                    dispatch({ type: "UPDATE_CONTACTS", payload: data.contact });
-                }
+        const companyId = localStorage.getItem("companyId");
+        const socket = socketManager.GetSocket(companyId);
     
-                if (data.action === "delete") {
-                    dispatch({ type: "DELETE_CONTACT", payload: +data.contactId });
-                }
-              });
-            }
+        const onContact = (data) => {
+          if (data.action === "update" || data.action === "create") {
+            dispatch({ type: "UPDATE_CONTACTS", payload: data.contact });
+          }
+    
+          if (data.action === "delete") {
+            dispatch({ type: "DELETE_CONTACT", payload: +data.contactId });
+          }
+        }
+        
+        socket.on(`company-${companyId}-contact`, onContact);
+    
+        return () => {
+          socket.disconnect();
         };
-    }, []);
+      }, [socketManager]);
+    
 
     const handleCloseOrOpenTicket = (ticket) => {
         setNewTicketModalOpen(false);
         if (ticket !== undefined && ticket.uuid !== undefined) {
             history.push(`/tickets/${ticket.uuid}`);
         }
+    };
+
+    const handleCloseWalletModal = () => {
+        setWalletModalOpen(false);
+    };
+
+    const handleCloseOrOpenWalletModal = () => {
+        setWalletModalOpen(true);
     };
 
     const handleSearch = (event) => {
@@ -329,6 +323,30 @@ const Contacts = () => {
         setSearchParam("");
         setPageNumber(1);
     };
+
+    const handleDeleteSelectedContacts = async () => {
+        try {
+            for (const contactId of selectedContacts) {
+                await api.delete(`/contacts/${contactId}`);
+            }
+            toast.success(i18n.t("contacts.toasts.deleted"));
+            setSelectedContacts([]);
+            setSelectAll(false);
+
+            setSearchParam("");
+            setPageNumber(1);
+        } catch (err) {
+            toastError(err);
+        }
+    };
+
+    const handleSaveWalle = async () => {
+
+        const filteredContacts = contacts.filter(contact => selectedContacts.includes(contact.id));
+
+        setAddContactsWallet(filteredContacts)
+
+    }
 
     const handleBlockContact = async (contactId) => {
         try {
@@ -387,21 +405,21 @@ const Contacts = () => {
     };
 
     /* POPUP */
-  	const [showPopup, setShowPopup] = useState(false);
-  	const [queue, setQueue] = useState("");
+    const [showPopup, setShowPopup] = useState(false);
+    const [queue, setQueue] = useState("");
 
-  	const handleFilter = (event) => {
-    	event.preventDefault();
-    // Filtra os tickets por fila
-  	};
+    const handleFilter = (event) => {
+        event.preventDefault();
+        // Filtra os tickets por fila
+    };
 
-  	const handleQueueChange = (event) => {
-    	setQueue(event.target.value);
-  	};
+    const handleQueueChange = (event) => {
+        setQueue(event.target.value);
+    };
 
-  const togglePopup = () => {
-    setShowPopup(!showPopup);
-  };
+    const togglePopup = () => {
+        setShowPopup(!showPopup);
+    };
 
     function getDateLastMessage(contact) {
         if (!contact) return null;
@@ -426,25 +444,30 @@ const Contacts = () => {
         return null;
     }
 
-    
+
 
     return (
         <MainContainer className={classes.mainContainer}>
             {showPopup && (
-               <ContactsExport
-                  className={classes.exporte}
-                  handleClose={togglePopup}
-                  handleFilter={handleFilter}
-                  handleQueueChange={handleQueueChange}
-               />
+                <ContactsExport
+                    className={classes.exporte}
+                    handleClose={togglePopup}
+                    handleFilter={handleFilter}
+                    handleQueueChange={handleQueueChange}
+                />
             )}
-      
+
             <NewTicketModal
                 modalOpen={newTicketModalOpen}
                 initialContact={contactTicket}
                 onClose={(ticket) => {
                     handleCloseOrOpenTicket(ticket);
                 }}
+            />
+            <WalletModal
+                open={walletModalOpen}
+                onClose={handleCloseWalletModal}
+                contactData={addContactsWallet}
             />
             <ContactModal
                 open={contactModalOpen}
@@ -518,23 +541,53 @@ const Contacts = () => {
                             ),
                         }}
                     />
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleSelectAll}
+                    >
+                        {selectAll ? "Desmarcar Todos" : "Marcar Todos"}
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                            handleSaveWalle()
+                            handleCloseOrOpenWalletModal()
+                        }}
+                    >
+                        {i18n.t("Adicionar a carteira")}
+                    </Button>
+                    <Can
+                        role={user.profile}
+                        perform="contacts-page:deleteContact"
+                        yes={() => (
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleDeleteSelectedContacts}
+                            >
+                                {selectAll ? "Excluir Todos" : "Excluir"}
+                            </Button>
+                        )}
+                    />
                     <PopupState variant="popover" popupId="demo-popup-menu">
                         {(popupState) => (
                             <React.Fragment>
-                      <Can
-						role={user.profile}
-						perform="contact-page:exports"
-						yes={() => (
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    {...bindTrigger(popupState)}
-                                >
-                                    Importar / Exportar
-                                    <ArrowDropDown />
-                                </Button>
-                                )}
-					 />
+                                <Can
+                                    role={user.profile}
+                                    perform="contact-page:exports"
+                                    yes={() => (
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            {...bindTrigger(popupState)}
+                                        >
+                                            Importar / Exportar
+                                            <ArrowDropDown />
+                                        </Button>
+                                    )}
+                                />
                                 <Menu {...bindMenu(popupState)}>
                                     <MenuItem
                                         onClick={() => {
@@ -627,7 +680,7 @@ const Contacts = () => {
                         {i18n.t("contacts.buttons.add")}
                     </Button>
                 </MainHeaderButtonsWrapper>
-            </MainHeader>
+            </MainHeader >
             <Paper
                 className={classes.mainPaper}
                 variant="outlined"
@@ -649,7 +702,10 @@ const Contacts = () => {
                 <Table size="small">
                     <TableHead>
                         <TableRow>
-                            <TableCell padding="checkbox" />
+                            <TableCell padding="checkbox" align="center"/>
+                            <TableCell >
+                                {i18n.t("Foto de Perfil")}
+                            </TableCell>
                             <TableCell>
                                 {i18n.t("contacts.table.name")}
                             </TableCell>
@@ -658,6 +714,9 @@ const Contacts = () => {
                             </TableCell>
                             <TableCell align="center">
                                 {i18n.t("contacts.table.email")}
+                            </TableCell>
+                            <TableCell align="center">
+                                {i18n.t("Carteira")}
                             </TableCell>
                             <TableCell align="center">
                                 {"Última Interação"}
@@ -672,15 +731,26 @@ const Contacts = () => {
                         <>
                             {contacts.map((contact) => (
                                 <TableRow key={contact.id}>
-                                    <TableCell style={{ paddingRight: 0 }}>
+                                    <TableCell padding="checkbox">
+                                        <Checkbox
+                                            checked={selectedContacts.includes(contact.id)}
+                                            onChange={() => handleCheckboxChange(contact.id)}
+                                        />
+                                    </TableCell>
+                                    <TableCell style={{ paddingLeft: 40 }}>
                                         {<Avatar src={contact.profilePicUrl} />}
                                     </TableCell>
                                     <TableCell>{contact.name}</TableCell>
-                                    <TableCell align="center">
-                                        {contact.number}
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        {contact.email}
+                                    <TableCell align="center">{contact.number}</TableCell>
+                                    <TableCell align="center">{contact.email}</TableCell>
+                                    <TableCell>
+                                    {users.map(user => (
+                                        user.id === contact?.walleteUserId && (
+                                            <TableCell key={user.id} align="center">
+                                                {user.name}
+                                            </TableCell>
+                                        )
+                                    ))}
                                     </TableCell>
                                     <TableCell align="center">
                                         {getDateLastMessage(contact)}
@@ -704,7 +774,6 @@ const Contacts = () => {
                                             onClick={() => {
                                                 setContactTicket(contact);
                                                 setNewTicketModalOpen(true);
-                                                // handleSaveTicket(contact.id);
                                             }}
                                         >
                                             <WhatsAppIcon color="secondary" />
@@ -712,36 +781,11 @@ const Contacts = () => {
 
                                         <IconButton
                                             size="small"
-                                            onClick={() =>
-                                                hadleEditContact(contact.id)
-                                            }
+                                            onClick={() => hadleEditContact(contact.id)}
                                         >
                                             <EditIcon color="secondary" />
                                         </IconButton>
-                                        {/* <IconButton
-                                            size="small"
-                                            onClick={
-                                                contact.active
-                                                    ? () => {
-                                                        setConfirmOpen(true);
-                                                        setBlockingContact(
-                                                            contact
-                                                        );
-                                                    }
-                                                    : () => {
-                                                        setConfirmOpen(true);
-                                                        setUnBlockingContact(
-                                                            contact
-                                                        );
-                                                    }
-                                            }
-                                        >
-                                            {contact.active ? (
-                                                <BlockIcon color="secondary" />
-                                            ) : (
-                                                <CheckCircleIcon color="secondary" />
-                                            )}
-                                        </IconButton> */}
+
                                         <Can
                                             role={user.profile}
                                             perform="contacts-page:deleteContact"
@@ -750,9 +794,7 @@ const Contacts = () => {
                                                     size="small"
                                                     onClick={(e) => {
                                                         setConfirmOpen(true);
-                                                        setDeletingContact(
-                                                            contact
-                                                        );
+                                                        setDeletingContact(contact);
                                                     }}
                                                 >
                                                     <DeleteOutlineIcon color="secondary" />

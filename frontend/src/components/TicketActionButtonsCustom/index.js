@@ -3,12 +3,11 @@ import { useHistory } from "react-router-dom";
 
 import { Can } from "../Can";
 import { makeStyles, createTheme, ThemeProvider } from "@material-ui/core/styles";
-import { IconButton } from "@material-ui/core";
-import { MoreVert, Replay } from "@material-ui/icons";
-
+import { IconButton, ListItemIcon, ListItemText, Menu } from "@material-ui/core";
+import { Replay } from "@material-ui/icons";
+import Link from "@material-ui/core/Link";
 import { i18n } from "../../translate/i18n";
 import api from "../../services/api";
-import TicketOptionsMenu from "../TicketOptionsMenu";
 import ButtonWithSpinner from "../ButtonWithSpinner";
 import toastError from "../../errors/toastError";
 import usePlans from "../../hooks/usePlans";
@@ -30,20 +29,24 @@ import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import TransferTicketModalCustom from "../TransferTicketModalCustom";
 import TransferWithinAStationIcon from '@material-ui/icons/TransferWithinAStation';
+import RatingModal from "../OportunidadesModal"
+import WalletModal from "../WalletClientsModal"
+import PhoneIcon from '@material-ui/icons/Phone';
 //icones
+// import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import SettingsIcon from '@mui/icons-material/Settings';
 import EventIcon from "@material-ui/icons/Event";
 import HighlightOffIcon from "@material-ui/icons/HighlightOff";
-import CancelPresentationIcon from "@material-ui/icons/CancelPresentation";
-import RemoveCircleOutlineIcon from "@material-ui/icons/RemoveCircleOutline";
-import CachedOutlinedIcon from "@material-ui/icons/CachedOutlined";
 import DeleteOutlineIcon from "@material-ui/icons/DeleteOutline";
 import UndoIcon from '@material-ui/icons/Undo';
-import CheckCircleIcon from "@material-ui/icons/CheckCircle";
-import UndoRoundedIcon from '@material-ui/icons/UndoRounded';
+import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
+import AccountBalanceWalletIcon from '@material-ui/icons/AccountBalanceWallet';
+
 
 import ScheduleModal from "../ScheduleModal";
 import MenuItem from "@material-ui/core/MenuItem";
 import { Switch } from "@material-ui/core";
+// import AddParticipantesInTicket from "../AddParticipantsInTicketModal";
 
 const useStyles = makeStyles(theme => ({
     actionButtons: {
@@ -89,6 +92,10 @@ const TicketActionButtonsCustom = ({ ticket }) => {
     const [confirmationOpen, setConfirmationOpen] = useState(false);
     const [transferTicketModalOpen, setTransferTicketModalOpen] = useState(false);
     const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+    const [walletModalOpen, setWalletModalOpen] = useState(false);
+    const [contactData, setContactData] = useState(null);
+    const [oportunidadeModalOpen, setOportunidadeModalOpen] = useState(false);
+    const [addParticipantTicket, setAddParticipantTicketModalOpen] = useState(false);
     const [contactId, setContactId] = useState(null);
     const [acceptAudioMessage, setAcceptAudio] = useState(ticket.contact.acceptAudioMessage);
     const [showSchedules, setShowSchedules] = useState(false);
@@ -177,8 +184,8 @@ const TicketActionButtonsCustom = ({ ticket }) => {
     };
 
     const handleOpenTransferModal = (e) => {
-        setTransferTicketModalOpen(true);
         if (typeof handleClose == "function") handleClose();
+        setTransferTicketModalOpen(true);
     };
 
     const handleOpenConfirmationModal = (e) => {
@@ -186,16 +193,32 @@ const TicketActionButtonsCustom = ({ ticket }) => {
         if (typeof handleClose == "function") handleClose();
     };
 
+    const handleWalletModalOpen = (e) => {
+        setWalletModalOpen(true);
+        setContactData(ticket?.contact)
+        if (typeof handleClose == "function") handleClose();
+    };
+
+    const handleOportunidadeModalOpen = (e) => {
+        setOportunidadeModalOpen(true);
+        if (typeof handleClose == "function") handleClose();
+    };
+
+    const handleOpenAddParticipantTicket = (e) => {
+        setAddParticipantTicketModalOpen(true)
+        if (typeof handleClose == "function") handleClose();
+    }
+
     const handleCloseTicketOptionsMenu = e => {
         setAnchorEl(null);
     };
 
     const handleCloseTicketWithoutFarewellMsg = async () => {
-        
-        if(setButtonDisabledWithoutFarewellMsg){
-        	//alert("Use APENAS 1 Clique !!!");
+
+        if (setButtonDisabledWithoutFarewellMsg) {
+            // alert("Use APENAS 1 Clique !!!");
         }
-    
+
         setLoading(true);
         setButtonDisabledWithoutFarewellMsg(true);
         try {
@@ -238,33 +261,36 @@ const TicketActionButtonsCustom = ({ ticket }) => {
         }
     };
 
-    const handleUpdateTicketStatus = async (e, status, userId) => {
-        
-        if(setButtonDisabled){
-        	//alert("Use APENAS 1 Clique !!!");
+    const handleUpdateTicketStatus = async (e, status, userId, queueId, farewellMessage) => {
+
+
+        if (setButtonDisabled) {
+            // console.log(farewellMessage)
+            // alert(farewellMessage);
         }
-    
+
         setLoading(true);
         setButtonDisabled(true);
-    
+
         try {
             await api.put(`/tickets/${ticket.id}`, {
                 status: status,
                 userId: userId || null,
+                sendFarewellMessage: farewellMessage !== undefined ? true : false
             });
 
             setLoading(false);
-        	
+
             if (status === "open") {
                 setCurrentTicket({ ...ticket, code: "#open" });
             } else {
                 setCurrentTicket({ id: null, code: null })
                 history.push("/tickets");
             }
-        
-        	setButtonDisabled(false);
-        
-        
+
+            setButtonDisabled(false);
+
+
         } catch (err) {
             setLoading(false);
             toastError(err);
@@ -288,6 +314,10 @@ const TicketActionButtonsCustom = ({ ticket }) => {
         }
     };
 
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+
     return (
         <>
             <div className={classes.actionButtons}>
@@ -303,6 +333,7 @@ const TicketActionButtonsCustom = ({ ticket }) => {
                 )}
                 {ticket.status === "open" && (
                     <>
+
                         <IconButton className={classes.bottomButtonVisibilityIcon}>
                             <Tooltip title={i18n.t("messagesList.header.buttons.resolve")}>
                                 <HighlightOffIcon
@@ -329,21 +360,73 @@ const TicketActionButtonsCustom = ({ ticket }) => {
                                 />
                             </Tooltip>
                         </IconButton>
+                        <IconButton className={classes.bottomButtonVisibilityIcon}>
+                            <Tooltip title="Telefone">
+                                <Link href={`tel:${ticket.contact.number.slice(0, 4)}9${ticket.contact.number.slice(4)}`}>
+                                    <PhoneIcon>{`${ticket.contact.number.slice(0, 4)}9${ticket.contact.number.slice(4)}`}</PhoneIcon>
+                                </Link>
+                            </Tooltip>
+                        </IconButton>
 
-						{showSchedules && (
-                            <>
-                                <IconButton className={classes.bottomButtonVisibilityIcon}>
-                                    <Tooltip title="Agendamento">
-                                        <EventIcon
-                                            color="primary"
-                                            onClick={handleOpenScheduleModal}
-                                        />
-                                    </Tooltip>
-                                </IconButton>
-							</>
-                        )}
 
-                        <MenuItem className={classes.bottomButtonVisibilityIcon}>
+                        <IconButton className={classes.bottomButtonVisibilityIcon}>
+                            <Tooltip title="Opções">
+                                <SettingsIcon
+                                    color="primary"
+                                    onClick={handleOpenTicketOptionsMenu}
+                                />
+                            </Tooltip>
+                        </IconButton>
+
+                        {/* <IconButton className={classes.bottomButtonVisibilityIcon}>
+                            <Tooltip title="Adicionar Usuário a conversa">
+                                <GroupAddIcon
+                                    color="primary"
+                                    onClick={handleOpenAddParticipantTicket}
+                                />
+                            </Tooltip>
+                        </IconButton> */}
+                        <Menu
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl)}
+                            onClose={handleMenuClose}
+                            keepMounted
+                        >
+                            <MenuItem onClick={handleWalletModalOpen}>
+                                <ListItemIcon color='secondary'>
+                                    <AccountBalanceWalletIcon color='secondary' fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText color='primary' primary="Carteira de Clientes" />
+                            </MenuItem>
+                            <MenuItem onClick={handleOportunidadeModalOpen}>
+                                <ListItemIcon color='secondary'>
+                                    <AttachMoneyIcon color='secondary' fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText color='primary' primary="Oportunidades" />
+                            </MenuItem>
+                            {showSchedules && (
+                                <MenuItem onClick={handleOpenScheduleModal}>
+                                    <ListItemIcon color='secondary'>
+                                        <EventIcon color='secondary' fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText color='primary' primary="Agendamentos" />
+                                </MenuItem>
+                            )}
+                            <Can
+                                role={user.profile}
+                                perform="ticket-options:deleteTicket"
+                                yes={() => (
+                                    <MenuItem onClick={handleOpenConfirmationModal}>
+                                        <ListItemIcon>
+                                            <DeleteOutlineIcon color='secondary' fontSize="small" />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Deletar Ticket" />
+                                    </MenuItem>
+                                )}
+                            />
+                        </Menu>
+
+                        {/* <MenuItem className={classes.bottomButtonVisibilityIcon}>
                             <Tooltip title={i18n.t("ticketOptionsMenu.acceptAudioMessage")}>
                                 <Switch
                                     size="small"
@@ -352,9 +435,9 @@ const TicketActionButtonsCustom = ({ ticket }) => {
                                     onChange={() => handleContactToggleAcceptAudio()}
                                 />
                             </Tooltip>
-                        </MenuItem>
+                        </MenuItem> */}
 
-                        <Can
+                        {/* <Can
                             role={user.profile}
                             perform="ticket-options:deleteTicket"
                             yes={() => (
@@ -367,7 +450,7 @@ const TicketActionButtonsCustom = ({ ticket }) => {
                                     </Tooltip>
                                 </IconButton>
                             )}
-                        />
+                        /> */}
 
                         <ConfirmationModal
                             title={`${i18n.t("ticketOptionsMenu.confirmationModal.title")} #${ticket.id}?`}
@@ -388,6 +471,25 @@ const TicketActionButtonsCustom = ({ ticket }) => {
                             aria-labelledby="form-dialog-title"
                             contactId={contactId}
                         />
+                        <WalletModal
+                            open={walletModalOpen}
+                            onClose={setWalletModalOpen}
+                            contactName={ticket?.contact?.name}
+                            contactData={contactData}
+                        />
+                        <RatingModal
+                            open={oportunidadeModalOpen}
+                            onClose={setOportunidadeModalOpen}
+                            ticketIform={`${ticket?.contact.name} # ${ticket?.id}`}
+                            ticketIdLead={ticket?.id}
+                            ticket={ticket}
+                            aria-labelledby="form-dialog-title"
+                        />
+                        {/* <AddParticipantesInTicket
+                            open={addParticipantTicket}
+                            onClose={setAddParticipantTicketModalOpen}
+                            ticket={ticket}
+                        /> */}
 
                     </>
                 )}
@@ -425,7 +527,7 @@ const TicketActionButtonsCustom = ({ ticket }) => {
                             aria-describedby="alert-dialog-description"
                         >
                             <Form>
-                                <DialogTitle 
+                                <DialogTitle
                                     id="alert-dialog-title">{ratings ? i18n.t("messagesList.header.dialogRatingTitle") : i18n.t("messagesList.header.dialogClosingTitle")}
                                 </DialogTitle>
                                 <DialogContent>
@@ -463,7 +565,7 @@ const TicketActionButtonsCustom = ({ ticket }) => {
                                     </Button>
 
                                     <Button
-                                        onClick={e => handleUpdateTicketStatus(e, "closed", user?.id, ticket?.queue?.id)}
+                                        onClick={e => handleUpdateTicketStatus(e, "closed", user?.id, ticket?.queue?.id, user?.farewellMessage)}
                                         disabled={buttonDisabled}
                                         style={{ background: "#34BCFF", color: "white" }}
                                     >

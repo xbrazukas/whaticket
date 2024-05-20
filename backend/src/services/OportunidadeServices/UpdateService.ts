@@ -5,10 +5,13 @@ import Oportunidade from "../../models/Oportunidade";
 import ShowService from "./ShowService";
 
 
-interface RatingData {
+interface OportunidadeData {
   id?: number;
   name: string;
   funil?: string;
+  ticketInfo?: string;
+  ticketId: number
+  tagId?: number
   etapadofunil?: string;
   fonte?: string;
   campanha?: string;
@@ -21,23 +24,23 @@ interface RatingData {
 }
 
 interface Request {
-  ratingData: RatingData;
+  OportunidadeData: OportunidadeData;
   id: string | number;
   companyId: number;
 }
 
 const UpdateService = async ({
-  ratingData,
+  OportunidadeData,
   id,
   companyId
 }: Request): Promise<Oportunidade | undefined> => {
-  const rating = await ShowService(id, companyId);
+  const Oportunidades = await ShowService(id, companyId);
 
   const schema = Yup.object().shape({
     name: Yup.string().min(3)
   });
 
-  const { name, funil, etapadofunil, fonte, campanha, datadeida, datadevolta, origem, destino, valor, produto } = ratingData;
+  const { name, funil,   ticketInfo, etapadofunil, fonte, campanha, datadeida, datadevolta, origem, destino, valor, produto, ticketId, tagId } = OportunidadeData;
 
   try {
     await schema.validate({ name });
@@ -47,9 +50,12 @@ const UpdateService = async ({
   }
 
 
-  await rating.update({
+  await Oportunidades.update({
     name,
     funil,
+    ticketInfo,
+    ticketId,
+    tagId,
     etapadofunil,
     fonte,
     campanha,
@@ -61,10 +67,10 @@ const UpdateService = async ({
     produto
   });
 
-  await rating.reload({
+  await Oportunidades.reload({
     attributes: ["id", "name", "companyId"]
   });
-  return rating;
+  return Oportunidades;
 };
 
 export default UpdateService;

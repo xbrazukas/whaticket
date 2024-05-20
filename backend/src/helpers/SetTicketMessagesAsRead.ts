@@ -1,5 +1,5 @@
-import { proto, WASocket } from "@adiwajshing/baileys";
-import WALegacySocket from "@adiwajshing/baileys"
+import { proto, WASocket } from "@laxeder/baileys";
+import WALegacySocket from "@laxeder/baileys"
 import { getIO } from "../libs/socket";
 import Message from "../models/Message";
 import Ticket from "../models/Ticket";
@@ -8,6 +8,7 @@ import GetTicketWbot from "./GetTicketWbot";
 
 const SetTicketMessagesAsRead = async (ticket: Ticket): Promise<void> => {
   await ticket.update({ unreadMessages: 0 });
+  let companyid;
 
   try {
     const wbot = await GetTicketWbot(ticket);
@@ -21,7 +22,7 @@ const SetTicketMessagesAsRead = async (ticket: Ticket): Promise<void> => {
       },
       order: [["createdAt", "DESC"]]
     });
-
+    companyid = getJsonMessage[0]?.companyId;
     if (getJsonMessage.length > 0) {
       const lastMessages: proto.IWebMessageInfo = JSON.parse(
         JSON.stringify(getJsonMessage[0].dataJson)
@@ -75,10 +76,12 @@ const SetTicketMessagesAsRead = async (ticket: Ticket): Promise<void> => {
   }
 
   const io = getIO();
-  io.of(ticket.companyId.toString()).emit("ticket", {
-    action: "updateUnread",
-    ticketId: ticket.id
-  });
+  if (companyid){
+    io.to(`company-${companyid}-mainchannel`).emit(`company-${companyid}-ticket`, {
+      action: "updateUnread",
+      ticketId: ticket?.id
+    });
+  }
 };
 
 export default SetTicketMessagesAsRead;

@@ -12,6 +12,7 @@ import { i18n } from "../../translate/i18n.js";
 import toastError from "../../errors/toastError";
 import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext.js";
+import { SocketContext } from "../../context/Socket/SocketContext.js";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -38,7 +39,7 @@ const Settings = () => {
   const classes = useStyles();
 
   const [settings, setSettings] = useState([]);
-  const {user, socket} = useContext(AuthContext)
+  const socketManager = useContext(SocketContext);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -53,34 +54,26 @@ const Settings = () => {
   }, []);
 
   useEffect(() => {
-    // const user.companyId = localStorage.getItem("user.companyId");
-    // const socket = socketConnection({ user.companyId });
-    if(user?.id){
-      socket.on(`company-${user?.companyId}-settings`, (data) => {
-        if (data.action === "update") {
-          setSettings((prevState) => {
-            const aux = [...prevState];
-            const settingIndex = aux.findIndex((s) => s.key === data.setting.key);
-            aux[settingIndex].value = data.setting.value;
-            return aux;
-          });
-        }
-      });
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
+
+    const onSettings = (data) => {
+      if (data.action === "update") {
+        setSettings((prevState) => {
+          const aux = [...prevState];
+          const settingIndex = aux.findIndex((s) => s.key === data.setting.key);
+          aux[settingIndex].value = data.setting.value;
+          return aux;
+        });
+      }
     }
+    
+    socket.on(`company-${companyId}-settings`, onSettings);
 
     return () => {
-      socket.off(`company-${user.companyId}-settings`, (data) => {
-        if (data.action === "update") {
-          setSettings((prevState) => {
-            const aux = [...prevState];
-            const settingIndex = aux.findIndex((s) => s.key === data.setting.key);
-            aux[settingIndex].value = data.setting.value;
-            return aux;
-          });
-        }
-      });
+      socket.disconnect();
     };
-  }, []);
+  }, [socketManager]);
 
   const handleChangeSetting = async (e) => {
     const selectedValue = e.target.value;

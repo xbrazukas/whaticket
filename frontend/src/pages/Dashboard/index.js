@@ -176,7 +176,6 @@ const Dashboard = () => {
       const companiesList = await finding(companyId);
       setCompanyDueDate(moment(companiesList.dueDate).format('DD/MM/yyyy'));
     } catch (e) {
-      console.log('�??? Console Log : e', e);
       // toast.error("Não foi possível carregar a lista de registros");
     }
     setLoading(false);

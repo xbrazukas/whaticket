@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useHistory } from "react-router-dom";
 import { has, isArray } from "lodash";
 import { Redirect } from 'react-router'
@@ -10,12 +10,13 @@ import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import { socketConnection } from "../../services/socket";
 import moment from "moment";
+import { SocketContext } from "../../context/Socket/SocketContext";
 const useAuth = () => {
   const history = useHistory();
   const [isAuth, setIsAuth] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState({});
-  const [socket,setSocket] = useState({})
+  const socketManager = useContext(SocketContext);
 
   api.interceptors.request.use(
     (config) => {
@@ -75,25 +76,22 @@ const useAuth = () => {
   }, []);
 
   useEffect(() => {
-    // const companyId = localStorage.getItem("companyId");
-    // const socket = socketConnection({ companyId });
-    if (Object.keys(user).length && user.id > 0) {
-      // console.log("Entrou useWhatsapp com user", Object.keys(user).length, Object.keys(socket).length ,user, socket)
-      let io;
-      if (!Object.keys(socket).length){
-        io = socketConnection({ user });
-        setSocket(io)
-      } else {
-        io = socket
+    const companyId = localStorage.getItem("companyId");
+    if (!companyId) {
+		return () => {};
+	}
+    const socket = socketManager.GetSocket(companyId);
+
+    const onCompanyUserUseAuth = (data) => {
+      if (data.action === "update" && data.user.id === user.id) {
+        setUser(data.user);
       }
-      io.on(`company-${user.companyId}-user`, (data) => {
-        if (data.action === "update" && data.user.id === user.id) {
-          setUser(data.user);
-        }
-      });
     }
+
+    socket.on(`company-${companyId}-user`, onCompanyUserUseAuth);
+
     return () => {
-      // io.disconnect();
+      socket.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -193,8 +191,7 @@ Entre em contato com o Suporte para mais informações! `);
     loading,
     handleLogin,
     handleLogout,
-    getCurrentUserInfo,
-    socket
+    getCurrentUserInfo
   };
 };
 

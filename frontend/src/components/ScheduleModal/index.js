@@ -241,7 +241,7 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 
 		const scheduleData = {
 			...values,
-			userId: user.id,
+			userId: values.atribuirUser === true ? user.id : null,
 			whatsappId: connId,
 			queueId,
 			selectDaysRecorrenci: Array.isArray(selectDaysRecorrenciValue) ? selectDaysRecorrenciValue.join(', ') : selectDaysRecorrenciValue
@@ -353,6 +353,24 @@ const ScheduleModal = ({ open, onClose, scheduleId, contactId, cleanContact, rel
 											<MenuItem value={false}><ListItemText primary="Não" /></MenuItem>
 										</Field>
 									</FormControl>
+									{values.geral === true &&(
+										<FormControl variant="outlined" margin="dense" fullWidth>
+											<InputLabel id="atribuirUser-selection-label">
+												{i18n.t("Atribuir a mim?")}
+											</InputLabel>
+											<Field
+												as={Select}
+												label={i18n.t("Atribuir a mim?")}
+												placeholder={i18n.t("Atribuir a mim?")}
+												labelId="atribuirUser-selection-label"
+												id="atribuirUser"
+												name="atribuirUser"
+											>
+												<MenuItem value={true}><ListItemText primary="Sim" /></MenuItem>
+												<MenuItem value={false}><ListItemText primary="Não" /></MenuItem>
+											</Field>
+										</FormControl>
+									)}
 								</div>
 								<br />
 

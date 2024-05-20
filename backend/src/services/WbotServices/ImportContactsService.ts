@@ -19,13 +19,13 @@ const ImportContactsService = async (companyId: number): Promise<void> => {
     where: { key: "allowupserts", companyId: 1 },
   });
 
-  if (allowupserts.value !== "enabled") {
+  if (allowupserts?.value !== "enabled") {
     logger.info("Upserts Bloqueados");
   	return;
   }
-
+  
   try {
-    const contactsString = await ShowBaileysService(wbot.id);
+    const contactsString = await ShowBaileysService(wbot?.id);
     phoneContacts = JSON.parse(JSON.stringify(contactsString.contacts));
 
   } catch (err) {

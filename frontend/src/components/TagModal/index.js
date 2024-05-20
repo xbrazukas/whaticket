@@ -85,7 +85,8 @@ const TagModal = ({ open, onClose, tagId, reload }) => {
 	const initialState = {
 		name: "",
 		color: "",
-        kanban: 0
+        kanban: 0, 
+		order: 0
 	};
 
 	const [tag, setTag] = useState(initialState);
@@ -213,6 +214,24 @@ const handleKanbanChange = (e) => {
 								</div>
                                 {(user.profile === "admin" || user.profile === "supervisor") && (
                                 <>
+
+								{tag?.kanban === 1 && (
+									<div>
+										<Field
+										as={TextField}
+										label={i18n.t("Ordenarar Kanban")}
+										name="order"
+										error={touched.order && Boolean(errors.order)}
+										helperText={touched.order && errors.order}
+										variant="outlined"
+										margin="dense"
+										onChange={(e) => setTag(prev => ({ ...prev, order: e.target.value }))}
+										fullWidth
+										/>
+									</div>
+								)}
+
+
 								<div className={classes.multFieldLine}>
         							<FormControlLabel
           								control={
@@ -226,7 +245,7 @@ const handleKanbanChange = (e) => {
           								label={i18n.t('tagModal.form.kanban')}
           								labelPlacement="start"
         							/>
-      							</div>
+								</div>
       							<br />
                                 </>
 								)}

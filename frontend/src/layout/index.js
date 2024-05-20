@@ -44,6 +44,7 @@ import { useDate } from "../hooks/useDate";
 import { mainEvents } from "../App";
 
 import api from "../services/api";
+import { SocketContext } from "../context/Socket/SocketContext";
 
 const drawerWidth = 300;
 
@@ -51,7 +52,7 @@ const drawerWidth = 300;
 const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
-    height: "100vh",
+    height: "95vh",
     [theme.breakpoints.down("sm")]: {
       height: "calc(100vh - 56px)",
     },
@@ -155,7 +156,8 @@ const LoggedInLayout = ({ children }) => {
   const { handleLogout, loading } = useContext(AuthContext);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerVariant, setDrawerVariant] = useState("permanent");
-  const { user,socket } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
+  const socketManager = useContext(SocketContext)
   const { profile } = user;
   const [volume, setVolume] = useState(localStorage.getItem("volume") || 1);
   const { dateToClient } = useDate();
@@ -178,37 +180,33 @@ const LoggedInLayout = ({ children }) => {
   }, [drawerOpen]);
 
   useEffect(() => {
+    const companyId = localStorage.getItem("companyId");
+    const userId = localStorage.getItem("userId");
 
-    const companyId = user?.companyId
-    let interval;
-    if(companyId){
-      socket.on(`company-${companyId}-auth`, (data) => {
-        if (data.user.id === +user?.id) {
-          toastError("Sua conta foi acessada em outro computador.");
-          setTimeout(() => {
-            localStorage.clear();
-            window.location.reload();
-          }, 1000);
-        }
-      });
+    const socket = socketManager.GetSocket(companyId);
+
+    const onCompanyAuthLayout = (data) => {
+      if (data.user.id === +userId) {
+        toastError("Sua conta foi acessada em outro computador.");
+        setTimeout(() => {
+          localStorage.clear();
+          window.location.reload();
+        }, 1000);
+      }
     }
 
+    socket.on(`company-${companyId}-auth`, onCompanyAuthLayout);
+
+    socket.emit("userStatus");
+    const interval = setInterval(() => {
+      socket.emit("userStatus");
+    }, 1000 * 60 * 5);
 
     return () => {
-      if(user.id){
-        socket.off(`company-${companyId}-auth`, (data) => {
-          if (data.user.id === +user.id) {
-            toastError("Sua conta foi acessada em outro computador.");
-            setTimeout(() => {
-              localStorage.clear();
-              window.location.reload();
-            }, 1000);
-          }
-        });
-      }
+      socket.disconnect();
+      clearInterval(interval);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [socketManager]);
 
   const [checked, setChecked] = useState(false);
 

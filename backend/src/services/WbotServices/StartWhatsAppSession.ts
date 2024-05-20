@@ -24,7 +24,7 @@ export const StartWhatsAppSession = async (
   await whatsapp.update({ status: "OPENING" });
 
   const io = getIO();
-  io.of(companyId.toString()).emit("whatsappSession", {
+  io.emit("whatsappSession", {
     action: "update",
     session: whatsapp
   });

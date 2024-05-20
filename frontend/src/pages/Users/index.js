@@ -30,6 +30,7 @@ import ConfirmationModal from "../../components/ConfirmationModal";
 import toastError from "../../errors/toastError";
 import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_USERS") {
@@ -87,8 +88,8 @@ const useStyles = makeStyles((theme) => ({
 const Users = () => {
   const classes = useStyles();
 
-  const {user, socket} = useContext(AuthContext)
-
+  const {user} = useContext(AuthContext)
+  const socketManager = useContext(SocketContext);
   const [loading, setLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -125,32 +126,25 @@ const Users = () => {
   }, [searchParam, pageNumber]);
 
   useEffect(() => {
-    // const user.companyId = localStorage.getItem("user.companyId");
-    // const socket = socketConnection({ user.companyId });
-    if(user?.id){
-      socket.on(`company-${user.companyId}-user`, (data) => {
-        if (data.action === "update" || data.action === "create") {
-          dispatch({ type: "UPDATE_USERS", payload: data.user });
-        }
-  
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_USER", payload: +data.userId });
-        }
-      });
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
+
+    const onCompanyUser = (data) => {
+      if (data.action === "update" || data.action === "create") {
+        dispatch({ type: "UPDATE_USERS", payload: data.user });
+      }
+
+      if (data.action === "delete") {
+        dispatch({ type: "DELETE_USER", payload: +data.userId });
+      }
     }
 
+    socket.on(`company-${companyId}-user`, onCompanyUser);
+
     return () => {
-      socket.off(`company-${user.companyId}-user`, (data) => {
-        if (data.action === "update" || data.action === "create") {
-          dispatch({ type: "UPDATE_USERS", payload: data.user });
-        }
-  
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_USER", payload: +data.userId });
-        }
-      });
+      socket.disconnect();
     };
-  }, []);
+  }, [socketManager]);
   
   const handleOpenUserModal = () => {
     setSelectedUser(null);

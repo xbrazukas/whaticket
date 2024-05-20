@@ -33,18 +33,19 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
 };
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
-  const { name, color, kanban } = req.body;
+  const { name, color, kanban, order } = req.body;
   const { companyId } = req.user;
 
   const tag = await CreateService({
     name,
     color,
     kanban,
+    order,
     companyId
   });
 
   const io = getIO();
-  io.of(companyId.toString()).emit("tag", {
+ io.emit("tag", {
     action: "create",
     tag
   });
@@ -75,7 +76,7 @@ export const update = async (
   const tag = await UpdateService({ tagData, id: tagId });
 
   const io = getIO();
-  io.of(companyId.toString()).emit("tag", {
+ io.emit("tag", {
     action: "update",
     tag
   });
@@ -93,7 +94,7 @@ export const remove = async (
   await DeleteService(tagId);
 
   const io = getIO();
-  io.of(companyId.toString()).emit("tag", {
+ io.emit("tag", {
     action: "delete",
     tagId
   });
@@ -126,7 +127,17 @@ export const syncTags = async (
   const data = req.body;
   const { companyId } = req.user;
 
-  const tags = await SyncTagService({ ...data, companyId });
+  const ticket = await SyncTagService({ ...data, companyId });
 
-  return res.json(tags);
+  const io = getIO();
+  io.to(`company-${companyId}-${ticket.status}`)
+	.to(`queue-${ticket.queueId}-${ticket.status}`)
+    .emit(`company-${companyId}-ticket`, {
+    action: "update",
+    ticket
+  });
+
+
+
+  return res.json(ticket);
 };

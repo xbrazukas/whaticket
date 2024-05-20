@@ -30,7 +30,7 @@ import ConfirmationModal from "../../components/ConfirmationModal";
 import toastError from "../../errors/toastError";
 import { Grid } from "@material-ui/core";
 import { isArray } from "lodash";
-import { socketConnection } from "../../services/socket";
+import { SocketContext } from "../../context/Socket/SocketContext";
 import { AuthContext } from "../../context/Auth/AuthContext";
 
 const reducer = (state, action) => {
@@ -106,6 +106,7 @@ const Announcements = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [searchParam, setSearchParam] = useState("");
   const [announcements, dispatch] = useReducer(reducer, []);
+  const socketManager = useContext(SocketContext);
 
   // trava para nao acessar pagina que não pode  
   useEffect(() => {
@@ -137,20 +138,23 @@ const Announcements = () => {
 
   useEffect(() => {
     const companyId = localStorage.getItem("companyId");
-    const socket = socketConnection({ companyId });
+    const socket = socketManager.GetSocket(companyId);
 
-    socket.on(`company-announcement`, (data) => {
+    const onAnnouncement = (data) => {
       if (data.action === "update" || data.action === "create") {
         dispatch({ type: "UPDATE_ANNOUNCEMENTS", payload: data.record });
       }
       if (data.action === "delete") {
         dispatch({ type: "DELETE_ANNOUNCEMENT", payload: +data.id });
       }
-    });
+    }
+    
+    socket.on(`company-announcement`, onAnnouncement);
+    
     return () => {
-      // socket.disconnect();
+      socket.disconnect();
     };
-  }, []);
+  }, [socketManager]);
 
   const fetchAnnouncements = async () => {
     try {

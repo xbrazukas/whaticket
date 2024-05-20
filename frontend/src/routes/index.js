@@ -36,9 +36,10 @@ import Kanban from "../pages/Kanban";
 import Ratings from "../pages/Ratings/";
 import Integrations from '../pages/Integrations';
 import Oportunidades from "../pages/Oportunidades/";
-
+import Wallets from "../pages/Wallet";
 import Survey from "../pages/Survey/";
 import ForgotPassword from "../pages/ForgotPassword/ForgotPassword";
+import Relatorios from "../pages/Relatórios";
 
 
 const Routes = () => {
@@ -78,6 +79,12 @@ const Routes = () => {
                 />
                 <Route
                   exact
+                  path="/relatorios"
+                  component={Relatorios}
+                  isPrivate
+                />
+                <Route
+                  exact
                   path="/quick-messages"
                   component={QuickMessages}
                   isPrivate
@@ -86,6 +93,12 @@ const Routes = () => {
                   exact
                   path="/schedules"
                   component={Schedules}
+                  isPrivate
+                />
+                <Route
+                  exact
+                  path="/wallets"
+                  component={Wallets}
                   isPrivate
                 />
                 <Route
@@ -149,7 +162,7 @@ const Routes = () => {
                 />
                 <Route exact path="/ratings" component={Ratings} isPrivate />
                 <Route exact path="/integrations" component={Integrations} isPrivate />
-                
+
                 <Route exact path="/chats/:id?" component={Chat} isPrivate />
                 {showCampaigns && (
                   <>

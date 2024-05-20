@@ -67,19 +67,10 @@ const UpdateUserService = async ({
 
   let updatedProfile = profile; // Initialize a new variable to store the updated value
 
-  //console.log(updatedProfile);
-  //console.log(SuperIs);
 
   if (SuperIs == true) {
   	updatedProfile = "admin"; // Update the new variable instead of the constant
-    //console.log("to aqui");
-    //console.log(SuperIs);
-    //console.log("entrei");
-    //console.log(updatedProfile);
   }
-
-  //console.log(user.id);
-  //console.log(SuperIs);
 
   if(user.id === 1){
   

@@ -37,6 +37,7 @@ import ConfirmationModal from "../../components/ConfirmationModal";
 import toastError from "../../errors/toastError";
 import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const reducer = (state, action) => {
     if (action.type === "LOAD_RATINGS") {
@@ -94,7 +95,7 @@ const useStyles = makeStyles((theme) => ({
 const Ratings = () => {
     const classes = useStyles();
 
-    const { user,socket } = useContext(AuthContext);
+    const { user } = useContext(AuthContext);
 
     const [loading, setLoading] = useState(false);
     const [pageNumber, setPageNumber] = useState(1);
@@ -105,6 +106,7 @@ const Ratings = () => {
     const [searchParam, setSearchParam] = useState("");
     const [ratings, dispatch] = useReducer(reducer, []);
     const [ratingModalOpen, setRatingModalOpen] = useState(false);
+    const socketManager = useContext(SocketContext);
 
     const fetchRatings = useCallback(async () => {
         try {
@@ -133,7 +135,9 @@ const Ratings = () => {
     }, [searchParam, pageNumber, fetchRatings]);
 
     useEffect(() => {
-        if(user?.id){
+        const companyId = localStorage.getItem("companyId");
+        const socket = socketManager.GetSocket(companyId);
+
             socket.on("user", (data) => {
                 if (data.action === "update" || data.action === "create") {
                     dispatch({ type: "UPDATE_RATINGS", payload: data.ratings });
@@ -143,18 +147,9 @@ const Ratings = () => {
                     dispatch({ type: "DELETE_USER", payload: +data.ratingId });
                 }
             });
-        }
 
         return () => {
-            socket.off("user", (data) => {
-                if (data.action === "update" || data.action === "create") {
-                    dispatch({ type: "UPDATE_RATINGS", payload: data.ratings });
-                }
-    
-                if (data.action === "delete") {
-                    dispatch({ type: "DELETE_USER", payload: +data.ratingId });
-                }
-            });
+            socket.disconnect();
         };
     }, [user]);
 

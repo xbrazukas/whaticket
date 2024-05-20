@@ -12,6 +12,7 @@ import { i18n } from "../../translate/i18n";
 import { ListSubheader } from "@material-ui/core";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { socketConnection } from "../../services/socket";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const useStyles = makeStyles((theme) => ({
   ticketsListWrapper: {
@@ -163,7 +164,7 @@ const TicketsList = ({
   const classes = useStyles();
   const [pageNumber, setPageNumber] = useState(1);
   const [ticketsList, dispatch] = useReducer(reducer, []);
-  const { user, socket } = useContext(AuthContext);
+  const socketManager = useContext(SocketContext);
 
   useEffect(() => {
     dispatch({ type: "RESET" });
@@ -188,8 +189,8 @@ const TicketsList = ({
   }, [tickets, status, searchParam]);
 
   useEffect(() => {
-    // const companyId = localStorage.getItem("companyId");
-    // const socket = socketConnection({ companyId });
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
 
     const shouldUpdateTicket = (ticket) =>
       (!ticket.userId || ticket.userId === user?.id || showAll) &&
@@ -198,105 +199,65 @@ const TicketsList = ({
     const notBelongsToUserQueues = (ticket) =>
       ticket.queueId && selectedQueueIds.indexOf(ticket.queueId) === -1;
 
+    const onConnect = (data) => {
       if (status) {
         socket.emit("joinTickets", status);
       } else {
         socket.emit("joinNotification");
       }
-
-    if(user?.id){
-
-      socket.on(`company-${user.companyId}-ticket`, (data) => {
-        if (data.action === "updateUnread") {
-          dispatch({
-            type: "RESET_UNREAD",
-            payload: data.ticketId,
-          });
-        }
-  
-        if (data.action === "update" && shouldUpdateTicket(data.ticket)) {
-          dispatch({
-            type: "UPDATE_TICKET",
-            payload: data.ticket,
-          });
-        }
-  
-        if (data.action === "update" && notBelongsToUserQueues(data.ticket)) {
-          dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
-        }
-  
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_TICKET", payload: data.ticketId });
-        }
-      });
-  
-      socket.on(`company-${user.companyId}-appMessage`, (data) => {
-        if (data.action === "create" && shouldUpdateTicket(data.ticket)) {
-          dispatch({
-            type: "UPDATE_TICKET_UNREAD_MESSAGES",
-            payload: data.ticket,
-          });
-        }
-      });
-  
-      socket.on(`company-${user.companyId}-contact`, (data) => {
-        if (data.action === "update") {
-          dispatch({
-            type: "UPDATE_TICKET_CONTACT",
-            payload: data.contact,
-          });
-        }
-      });
     }
 
+    const onTicket = (data) => {
+      if (data.action === "updateUnread") {
+        dispatch({
+          type: "RESET_UNREAD",
+          payload: data.ticketId,
+        });
+      }
+
+      if (data.action === "update" && shouldUpdateTicket(data.ticket)) {
+        dispatch({
+          type: "UPDATE_TICKET",
+          payload: data.ticket,
+        });
+      }
+
+      if (data.action === "update" && notBelongsToUserQueues(data.ticket)) {
+        dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
+      }
+
+      if (data.action === "delete") {
+        dispatch({ type: "DELETE_TICKET", payload: data.ticketId });
+      }
+    }
+
+    const onAppMessage = (data) => {
+      if (data.action === "create" && shouldUpdateTicket(data.ticket)) {
+        dispatch({
+          type: "UPDATE_TICKET_UNREAD_MESSAGES",
+          payload: data.ticket,
+        });
+      }
+    }
+
+    const onContact = (data) => {
+      if (data.action === "update") {
+        dispatch({
+          type: "UPDATE_TICKET_CONTACT",
+          payload: data.contact,
+        });
+      }
+    }
+
+    socket.on("connect", onConnect);
+    socket.on(`company-${companyId}-ticket`, onTicket);
+    socket.on(`company-${companyId}-appMessage`, onAppMessage);  
+    socket.on(`company-${companyId}-contact`, onContact);
 
     return () => {
-      if(user?.id){
-      socket.off("joinTicketsLeave", status);
-      
-      socket.off(`company-${user.companyId}-ticket`, (data) => {
-        if (data.action === "updateUnread") {
-          dispatch({
-            type: "RESET_UNREAD",
-            payload: data.ticketId,
-          });
-        }
-  
-        if (data.action === "update" && shouldUpdateTicket(data.ticket)) {
-          dispatch({
-            type: "UPDATE_TICKET",
-            payload: data.ticket,
-          });
-        }
-  
-        if (data.action === "update" && notBelongsToUserQueues(data.ticket)) {
-          dispatch({ type: "DELETE_TICKET", payload: data.ticket.id });
-        }
-  
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_TICKET", payload: data.ticketId });
-        }
-      });
-      socket.off(`company-${user.companyId}-appMessage`, (data) => {
-
-        if (data.action === "create" && shouldUpdateTicket(data.ticket)) {
-          dispatch({
-            type: "UPDATE_TICKET_UNREAD_MESSAGES",
-            payload: data.ticket,
-          });
-        }
-      });
-      socket.off(`company-${user.companyId}-contact`, (data) => {
-        if (data.action === "update") {
-          dispatch({
-            type: "UPDATE_TICKET_CONTACT",
-            payload: data.contact,
-          });
-        }
-      })
-    }
+      socket.disconnect();
     };
-  }, [status, showAll, user, selectedQueueIds]);
+  }, [status, showAll, user, selectedQueueIds, socketManager]);
 
   const loadMore = () => {
     setPageNumber((prevState) => prevState + 1);

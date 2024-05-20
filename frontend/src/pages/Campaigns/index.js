@@ -38,9 +38,10 @@ import toastError from "../../errors/toastError";
 import { Grid } from "@material-ui/core";
 import { isArray } from "lodash";
 import { useDate } from "../../hooks/useDate";
-import { socketConnection } from "../../services/socket";
+
 import usePlans from "../../hooks/usePlans";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_CAMPAIGNS") {
@@ -111,16 +112,17 @@ const Campaigns = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [searchParam, setSearchParam] = useState("");
   const [campaigns, dispatch] = useReducer(reducer, []);
-  const {user, socket} = useContext(AuthContext)
+  const {user} = useContext(AuthContext)
+  const socketManager = useContext(SocketContext);
 
   const { datetimeToClient } = useDate();
   const { getPlanCompany } = usePlans();
 
   useEffect(() => {
     async function fetchData() {
-      const companyId = localStorage.getItem("companyId");
+      const companyId = user?.companyId;
       const planConfigs = await getPlanCompany(undefined, companyId);
-      if (!planConfigs.plan.useCampaigns) {
+      if (!planConfigs?.plan?.useCampaigns) {
         toast.error("Você não possui acesso a este recurso! Faça um upgrade em sua assinatura ou contate o suporte!");
         setTimeout(() => {          
           history.push(`/`)
@@ -146,31 +148,23 @@ const Campaigns = () => {
   }, [searchParam, pageNumber]);
 
   useEffect(() => {
-    // const companyId = localStorage.getItem("companyId");
-    // const socket = socketConnection({ companyId });
-    if(user?.id){
-      socket.on(`company-${user.companyId}-campaign`, (data) => {
-        if (data.action === "update" || data.action === "create") {
-          dispatch({ type: "UPDATE_CAMPAIGNS", payload: data.record });
-        }
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_CAMPAIGN", payload: +data.id });
-        }
-      });
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
+
+    const onCompanyCampaign = (data) => {
+      if (data.action === "update" || data.action === "create") {
+        dispatch({ type: "UPDATE_CAMPAIGNS", payload: data.record });
+      }
+      if (data.action === "delete") {
+        dispatch({ type: "DELETE_CAMPAIGN", payload: +data.id });
+      }
     }
+
+    socket.on(`company-${companyId}-campaign`, onCompanyCampaign);
     return () => {
-      if(user?.id){
-      socket.off(`company-${user.companyId}-campaign`, (data) => {
-        if (data.action === "update" || data.action === "create") {
-          dispatch({ type: "UPDATE_CAMPAIGNS", payload: data.record });
-        }
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_CAMPAIGN", payload: +data.id });
-        }
-      });
-    }
+      socket.disconnect();
     };
-  }, []);
+  }, [socketManager]);
 
   const fetchCampaigns = async () => {
     try {
@@ -379,7 +373,7 @@ const Campaigns = () => {
                   </TableCell>
                   <TableCell align="center">
                     {campaign.whatsappId
-                      ? campaign.whatsappId
+                      ? campaign.whatsappName
                       : "Não definido"}
                   </TableCell>
                   <TableCell align="center">

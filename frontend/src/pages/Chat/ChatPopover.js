@@ -8,8 +8,7 @@ import React, {
 import { makeStyles } from "@material-ui/core/styles";
 import toastError from "../../errors/toastError";
 import Popover from "@material-ui/core/Popover";
-//import ForumIcon from "@material-ui/icons/Forum";
-import MarkunreadMailboxIcon from '@material-ui/icons/MarkunreadMailbox';
+import ForumIcon from "@material-ui/icons/Forum";
 import {
   Badge,
   IconButton,
@@ -21,7 +20,7 @@ import {
 } from "@material-ui/core";
 import api from "../../services/api";
 import { isArray } from "lodash";
-import { socketConnection } from "../../services/socket";
+import { SocketContext } from "../../context/Socket/SocketContext";
 import { useDate } from "../../hooks/useDate";
 import { AuthContext } from "../../context/Auth/AuthContext";
 
@@ -36,6 +35,10 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(1),
     overflowY: "scroll",
     ...theme.scrollbarStyles,
+  },
+  customBadge: {
+    backgroundColor: theme.palette.background.default,
+    color: theme.palette.background.default,
   },
 }));
 
@@ -98,7 +101,7 @@ const reducer = (state, action) => {
 export default function ChatPopover() {
   const classes = useStyles();
 
-  const { user,socket } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -110,6 +113,8 @@ export default function ChatPopover() {
   const { datetimeToClient } = useDate();
   const [play] = useSound(notifySound);
   const soundAlertRef = useRef();
+
+  const socketManager = useContext(SocketContext);
 
   useEffect(() => {
     soundAlertRef.current = play;
@@ -136,39 +141,29 @@ export default function ChatPopover() {
   }, [searchParam, pageNumber]);
 
   useEffect(() => {
-    // const companyId = localStorage.getItem("companyId");
-    // const socket = socketConnection({ companyId });
-    if(user?.id){      
-      socket.on(`company-${user.companyId}-chat`, (data) => {
-        if (data.action === "new-message") {
-          dispatch({ type: "CHANGE_CHAT", payload: data });
-          if (data.newMessage.senderId !== user.id) {
-            soundAlertRef.current();
-          }
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
+
+    const onCompanyChatPopover = (data) => {
+      if (data.action === "new-message") {
+        dispatch({ type: "CHANGE_CHAT", payload: data });
+        if (data.newMessage.senderId !== user.id) {
+        
+          soundAlertRef.current();
         }
-        if (data.action === "update") {
-          dispatch({ type: "CHANGE_CHAT", payload: data });
-        }
-      });
+      }
+      if (data.action === "update") {
+        dispatch({ type: "CHANGE_CHAT", payload: data });
+      }
     }
+
+    socket.on(`company-${companyId}-chat`, onCompanyChatPopover);
+
     return () => {
-      if(user?.id){
-      socket.off(`company-${user.companyId}-chat`, (data) => {
-        if (data.action === "new-message") {
-          dispatch({ type: "CHANGE_CHAT", payload: data });
-          if (data.newMessage.senderId !== user.id) {
-            soundAlertRef.current();
-          }
-        }
-        if (data.action === "update") {
-          dispatch({ type: "CHANGE_CHAT", payload: data });
-        }
-      });
-    }
+      socket.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  }, [socketManager]);
 
   useEffect(() => {
     let unreadsCount = 0;
@@ -232,15 +227,13 @@ export default function ChatPopover() {
   return (
     <div>
       <IconButton
-        //color="secondary"
         aria-describedby={id}
         variant="contained"
-        style={{ color: "white" }}
-        //color={invisible ? "secondary" : "secondary"}
+        color={invisible ? "default" : "inherit"}
         onClick={handleClick}
       >
-        <Badge color="error" variant="dot" invisible={invisible}>
-          <MarkunreadMailboxIcon />
+        <Badge classes={{ badge: classes.customBadge }} variant="dot" invisible={invisible}>
+          <ForumIcon style={{ color: "white" }} />
         </Badge>
       </IconButton>
       <Popover
@@ -272,7 +265,6 @@ export default function ChatPopover() {
                 <ListItem
                   key={key}
                   style={{
-                    background: key % 2 === 0 ? "#ededed" : "white",
                     border: "1px solid #eee",
                     cursor: "pointer",
                   }}

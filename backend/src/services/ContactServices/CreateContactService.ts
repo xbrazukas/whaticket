@@ -17,6 +17,7 @@ interface Request {
   email?: string;
   profilePicUrl?: string;
   acceptAudioMessage?: boolean;
+  disableBot?: boolean;
   active?: boolean;
   companyId: number;
   extraInfo?: ExtraInfo[];
@@ -27,31 +28,11 @@ const CreateContactService = async ({
   number,
   email = "",
   acceptAudioMessage,
+  disableBot,
   active,
   companyId,
   extraInfo = []
 }: Request): Promise<Contact> => {
-
-  //  const newArrayToAdd = [
-  //   { name: 'Código', value: '0' },
-  //   { name: 'Valor do Lead', value: '0' },
-  //   { name: 'CEP', value: '0' },
-  //   { name: 'Endereço', value: '0' },
-  //   { name: 'Número', value: '0' },
-  //   { name: 'Complemento', value: '0' },
-  //   { name: 'Bairro', value: '0' },
-  //   { name: 'Cidade', value: '0' },
-  //   { name: 'Nascimento', value: '0' },
-  //   { name: 'CPF', value: '0' },
-  //   { name: 'RG', value: '0' },
-  //   { name: 'Passaporte', value: '0' },
-  //   { name: 'Validade Passaporte', value: '0' },
-  //   { name: 'Observações', value: '0' },
-  //   { name: 'Vendedor', value: '0' },
-  //   { name: 'Inscrição Municipal', value: '0' },
-  //   { name: 'Sexo', value: '0' },
-  //   { name: 'Estrangeiro', value: '0' }
-  // ];
 
   const newArrayToAdd = [
     { name: 'Código Interno', value: '0' },
@@ -93,6 +74,7 @@ const CreateContactService = async ({
       number,
       email,
       acceptAudioMessage,
+      disableBot,
       active,
       extraInfo: updatedExtraInfo,
       companyId

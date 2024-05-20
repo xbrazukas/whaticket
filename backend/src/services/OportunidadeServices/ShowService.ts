@@ -4,7 +4,7 @@ import AppError from "../../errors/AppError";
 const OportunidadeService = async (id: string | number, companyId: number): Promise<Oportunidade> => {
   const rating = await Oportunidade.findOne({
     where: { id, companyId },
-    attributes: ["id", "name","companyId", "funil", "userId", "etapadofunil", "fonte", "campanha", "datadeida", "datadevolta", "origem", "destino", "valor", "produto"],
+    attributes: ["id", "name","companyId", "funil", "ticketInfo","tagId","ticketId", "etapadofunil", "fonte", "campanha", "datadeida", "datadevolta", "origem", "destino", "valor", "produto"],
   });
 
   if (!rating) {

@@ -31,6 +31,15 @@ class Oportunidade extends Model<Oportunidade> {
   funil: string;
 
   @Column
+  ticketInfo: string;
+
+  @Column
+  ticketId: number;
+
+  @Column
+  tagId: number;
+
+  @Column
   etapadofunil: string;
 
   @Column

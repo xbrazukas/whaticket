@@ -1179,6 +1179,7 @@ export default function Options(props) {
               }}
             >
               <MenuItem value={'text'}>Texto</MenuItem>
+              <MenuItem value={'list'}>Listas</MenuItem>
             </Select>
             <FormHelperText>
               {loadingChatbotType && 'Atualizando...'}

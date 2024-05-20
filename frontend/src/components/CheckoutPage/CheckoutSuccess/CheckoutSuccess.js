@@ -8,11 +8,12 @@ import { socketConnection } from "../../../services/socket";
 import { useDate } from "../../../hooks/useDate";
 import { toast } from "react-toastify";
 import { AuthContext } from '../../../context/Auth/AuthContext';
+import { SocketContext } from '../../../context/Socket/SocketContext';
 
 function CheckoutSuccess(props) {
 
   const { pix } = props;
-  const {user, socket} = useContext(AuthContext)
+  const socketManager = useContext(SocketContext);
   const [pixString,] = useState(pix?.qrcode?.qrcode || '');
   const [stripeURL,] = useState(pix.stripeURL);
   const [asaasURL,] = useState(pix.asaasURL);
@@ -24,21 +25,25 @@ function CheckoutSuccess(props) {
   const { dateToClient } = useDate();
 
   useEffect(() => {
-    // const companyId = localStorage.getItem("companyId");
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
 
-    // const socket = socketConnection({ user });
-    if(user?.id){      
-      socket.on(`company-${user.companyId}-payment`, (data) => {
-  
-        if (data.action === "CONCLUIDA") {
-          toast.success(`Sua licença foi renovada até ${dateToClient(data.company.dueDate)}!`);
-          setTimeout(() => {
-            history.push("/");
-          }, 4000);
-        }
-      });
+    const onCompanyPayment = (data) => {
+
+      if (data.action === "CONCLUIDA") {
+        toast.success(`Sua licença foi renovada até ${dateToClient(data.company.dueDate)}!`);
+        setTimeout(() => {
+          history.push("/");
+        }, 4000);
+      }
     }
-  }, [history, dateToClient,socket]);
+
+    socket.on(`company-${companyId}-payment`, onCompanyPayment);
+    
+    return () => {
+      socket.disconnect();
+    }
+  }, [history, dateToClient, socketManager]);
 
   const handleCopyQR = () => {
     setTimeout(() => {

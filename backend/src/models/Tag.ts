@@ -31,6 +31,9 @@ class Tag extends Model<Tag> {
   @Column
   kanban: number;
 
+  @Column
+  order: Number;
+
   @HasMany(() => TicketTag)
   ticketTags: TicketTag[];
 

@@ -1,5 +1,3 @@
-import { subHours } from "date-fns";
-import { subMilliseconds } from 'date-fns';
 import { Op } from "sequelize";
 import Contact from "../../models/Contact";
 import Ticket from "../../models/Ticket";
@@ -7,6 +5,7 @@ import ShowTicketService from "./ShowTicketService";
 import FindOrCreateATicketTrakingService from "./FindOrCreateATicketTrakingService";
 import Setting from "../../models/Setting";
 import Whatsapp from "../../models/Whatsapp";
+import { isNil, isNull, head } from "lodash";
 
 interface TicketData {
   status?: string;
@@ -35,7 +34,6 @@ const FindOrCreateTicketService = async (
     order: [["id", "DESC"]]
   });
 
-  //console.log(ticket);
 
   if(ticket && openTicketSchedule){
     await ticket.update({ status:"open", unreadMessages });
@@ -44,8 +42,10 @@ const FindOrCreateTicketService = async (
   if (ticket) {
     await ticket.update({ unreadMessages, whatsappId });
   }
-  
-  if (ticket?.status === "closed") {
+
+  if (ticket?.status === "closed" && !isNil(contact?.walleteUserId)) {
+    await ticket.update({ status:'open', userId: ticket?.userId ,queueId: ticket?.queueId ,sessiontypebot:null, startChatTime:null });
+  }else if(ticket?.status === "closed" && isNil(contact?.walleteUserId)){
     await ticket.update({ queueId: null, userId: null, sessiontypebot:null, startChatTime:null });
   }
 

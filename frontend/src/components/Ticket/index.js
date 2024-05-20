@@ -19,6 +19,7 @@ import { AuthContext } from '../../context/Auth/AuthContext';
 import { TagsContainer } from '../TagsContainer';
 import { socketConnection } from '../../services/socket';
 import { isNil } from 'lodash';
+import { SocketContext } from '../../context/Socket/SocketContext';
 
 const drawerWidth = 320;
 
@@ -64,7 +65,8 @@ const Ticket = () => {
   const history = useHistory();
   const classes = useStyles();
 
-  const { user, socket } = useContext(AuthContext);
+  const socketManager = useContext(SocketContext);
+  const { user } = useContext(AuthContext);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -109,29 +111,29 @@ const Ticket = () => {
   }, [ticketId, user, history]);
 
   useEffect(() => {
-    const companyId = user?.companyId
-    // const socket = socketConnection({ companyId });
-    if (!ticket && !ticket?.id && ticket?.uuid !== ticketId && ticketId === undefined) {
-      return;
+    const companyId = localStorage.getItem("companyId");
+
+    const socket = socketManager.GetSocket(companyId);
+
+    const onConnectTicket = () => {
+      socket.emit("joinChatBox", `${ticket.id}`);
     }
 
-    const handleUpdateTicket =  (data) =>{
+    socketManager.onConnect(onConnectTicket);
 
-      if(data.action === 'update'){
-        if(ticket?.id == data.ticket.id){
-          setTicket(data.ticket);
-        }
+    const onCompanyTicket = (data) => {
+      if (data.action === "update" && data.ticket.id === ticket.id) {
+        setTicket(data.ticket);
       }
 
-      if (data.action === 'delete') {
-        if(data.ticketId == ticket?.id ){
-          history.push('/tickets');
-        }
+      if (data.action === "delete" && data.ticketId === ticket.id) {
+        toast.success("Ticket deleted sucessfully.");
+        history.push("/tickets");
       }
-    }
+    };
 
-    const handleUpdateContact = (data) =>{
-      if (data.action === 'update') {
+    const onCompanyContact = (data) => {
+      if (data.action === "update") {
         setContact((prevState) => {
           if (prevState.id === data.contact?.id) {
             return { ...prevState, ...data.contact };
@@ -139,31 +141,15 @@ const Ticket = () => {
           return prevState;
         });
       }
-    }
+    };
 
-    const onConnectTicket = () => {
-      socket.emit("joinChatBox", `${ticket.id}`);
-    }
-
-    if (companyId) {
-
-      socket.on(onConnectTicket)
-
-      socket.on(`company-${companyId}-ticket`,handleUpdateTicket);
-
-      socket.on(`company-${companyId}-contact`, handleUpdateContact);
-    }
-
+    socket.on(`company-${companyId}-ticket`, onCompanyTicket);
+    socket.on(`company-${companyId}-contact`, onCompanyContact);
 
     return () => {
-      if (companyId) {
-        socket.emit("leaveChatBox", `${ticket.id}`);
-        socket.off("connect", onConnectTicket);
-        socket.off(`company-${companyId}-ticket`, handleUpdateTicket);
-        socket.off(`company-${companyId}-contact`, handleUpdateContact);
-      }
+      socket.disconnect();
     };
-  }, [ticketId, ticket, history, socket]);
+  }, [ticketId, ticket, history, socketManager]);
 
   const handleDrawerOpen = () => {
     setDrawerOpen(true);

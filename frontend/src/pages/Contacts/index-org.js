@@ -115,7 +115,7 @@ const Contacts = () => {
   const classes = useStyles();
   const history = useHistory();
 
-  const { user, socket } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   const [loading, setLoading] = useState(false);
   const [pageNumber, setPageNumber] = useState(1);

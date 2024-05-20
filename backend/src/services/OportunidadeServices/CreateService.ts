@@ -6,6 +6,9 @@ import Oportunidade from "../../models/Oportunidade";
 interface Request {
   name: string;
   companyId: number;
+  ticketInfo?: string;
+  ticketId?: number;
+  tagId?: number;
   userId: number;
   funil?: string;
   etapadofunil?: string;
@@ -22,6 +25,9 @@ interface Request {
 const CreateService = async ({
   name,
   companyId,
+  ticketInfo,
+  ticketId,
+  tagId,
   userId,
   funil,
   etapadofunil,
@@ -61,13 +67,16 @@ const CreateService = async ({
   } catch (err: any) {
     throw new AppError(err.message);
   }
-  const [rating] = await Oportunidade.findOrCreate({
+  const [oportunidade] = await Oportunidade.findOrCreate({
     where: { name, funil, etapadofunil },
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignores
     defaults: {
       name,
   	  companyId,
+      ticketInfo,
+      ticketId,
+      tagId,
       userId,
       funil,
       etapadofunil,
@@ -83,11 +92,11 @@ const CreateService = async ({
   });
 
 
-  await rating.reload({
+  await oportunidade.reload({
     attributes: ["id", "name","companyId"],
   });
 
-  return rating;
+  return oportunidade;
 };
 
 export default CreateService;

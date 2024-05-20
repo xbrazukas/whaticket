@@ -1,6 +1,7 @@
 import {
   WAMessage,
-} from "@adiwajshing/baileys";
+  proto, WASocket
+} from "@laxeder/baileys";
 import axios from "axios";
 import { isNil} from "lodash";
 import mime from "mime-types";
@@ -10,12 +11,17 @@ import Queue from "../../models/Queue";
 import Setting from "../../models/Setting";
 import Ticket from "../../models/Ticket";
 
-import { getBodyMessage } from "./wbotMessageListener";
+import { getBodyMessage, verifyMessage } from "./wbotMessageListener";
 import { TypebotService } from "../TypebotService/apiTypebotService";
 import SendWhatsAppMessage from "./SendWhatsAppMessage";
 import SendWhatsAppMedia from "./SendWhatsAppMedia";
 import path from "path";
 import { Readable } from "stream";
+
+
+type Session = WASocket & {
+  id?: number;
+};
 
 const publicFolder = path.resolve(__dirname, "..", "..", "..", "public");
 
@@ -86,7 +92,16 @@ const continueChat = async (msgBody, ticket) => {
   return TypebotService.continueChat(msgBody, ticket.sessiontypebot, ticket.companyId)
 }
   
-const SendMessageReturnTypebot = async (requestData, ticket,resetChatbotMsg) => {
+const SendMessageReturnTypebot = async (requestData, ticket,resetChatbotMsg, wbot) => {
+
+  const companyId = ticket?.companyId
+
+  const buttonActive = await Setting.findOne({
+    where: {
+      key: "chatBotType",
+      companyId
+    }
+  });
 
   const messages = requestData.messages
   for (const message of messages){
@@ -138,33 +153,66 @@ const SendMessageReturnTypebot = async (requestData, ticket,resetChatbotMsg) => 
           }catch(e){}
       }
   }
+
   const input = requestData.input
   if (input) {
     if (input.type === 'choice input') {
       let formattedText = '';
       const items = input.items;
+      const sectionsRows = []; // Movido para fora do loop para armazenar todas as linhas de seção
+  
       for (const item of items) {
-        formattedText += `▶ ${item.content}\n`;
+        if (buttonActive.value === "list") {
+          sectionsRows.push({
+            title: item.content,
+            rowId: item.content // Se o ID estiver disponível no objeto item, caso contrário, substitua por uma identificação adequada
+          });
+        } else {
+          formattedText += `▶ ${item.content}\n`;
+        }
       }
-      formattedText = formattedText.replace(/\n$/, '');
-      await SendWhatsAppMessage({
-        body: formattedText,
-        ticket,
-        quotedMsg: null
-       })
-      //await timer(rndInt * 1000)
+  
+      if (buttonActive.value === "list") {
+        const sections = [{
+          title: `${'Selecione uma das opções a seguir'}`,
+          rows: sectionsRows
+        }];
+  
+        const listMessage = {
+          text: 'Selecione uma das opções a seguir',
+          buttonText: "Escolha uma opção",
+          listType: 2,
+          sections
+        };
+  
+        const sendMsg = await wbot.sendMessage(
+          `${ticket.contact.number}@${ticket.isGroup ? "g.us" : "s.whatsapp.net"}`,
+          listMessage
+        );
+
+        await verifyMessage(sendMsg, ticket, ticket.contact);
+
+      } else {
+        formattedText = formattedText.replace(/\n$/, '');
+        await SendWhatsAppMessage({
+          body: formattedText,
+          ticket,
+          quotedMsg: null
+        });
+      }
     }
   }
+
   if (resetChatbotMsg) {
     await SendWhatsAppMessage({
-      body: `* # * - Menu inicial`,
+      body: `# - Digite # para retornar ao Menu inicial`,
       ticket,
       quotedMsg: null
      })
   }
 }
 
-const handleTypebot = async (ticket: Ticket, msg: WAMessage, queue: Queue) => {
+const handleTypebot = async (ticket: Ticket, msg: WAMessage, queue: Queue, wbot?: Session) => {
   
   let possuiSession: Boolean = true;
 
@@ -194,7 +242,7 @@ const handleTypebot = async (ticket: Ticket, msg: WAMessage, queue: Queue) => {
                           ? await continueChat(contentMsgboby, ticket) 
                           : await startChat(contentMsgboby,  ticket, typebot);      
   if (requestTypeBot) {
-    delay(2000, await SendMessageReturnTypebot(requestTypeBot, ticket, queue.resetChatbotMsg))
+    delay(2000, await SendMessageReturnTypebot(requestTypeBot, ticket, queue.resetChatbotMsg, wbot))
   }
 }
 

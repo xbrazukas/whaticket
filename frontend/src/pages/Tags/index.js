@@ -39,6 +39,7 @@ import toastError from "../../errors/toastError";
 import { Chip } from "@material-ui/core";
 import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const reducer = (state, action) => {
   if (action.type === "LOAD_TAGS") {
@@ -96,7 +97,8 @@ const useStyles = makeStyles((theme) => ({
 const Tags = () => {
   const classes = useStyles();
 
-  const { user, socket } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
+  const socketManager = useContext(SocketContext);
   const { id, profile, name } = user;
 
   const [loading, setLoading] = useState(false);
@@ -136,23 +138,24 @@ const Tags = () => {
   }, [searchParam, pageNumber, fetchTags]);
 
   useEffect(() => {
-    // const socket = socketConnection({ companyId: user.companyId });
-    if(user?.id){
-      socket.on(`tags-${user.companyId}`, (data) => {
-        if (data.action === "update" || data.action === "create") {
-          dispatch({ type: "UPDATE_TAGS", payload: data.tags });
-        }
-  
-        if (data.action === "delete") {
-          dispatch({ type: "DELETE_TAGS", payload: +data.tagId });
-        }
-      });
+    const socket = socketManager.GetSocket(user.companyId);
+
+    const onUser = (data) => {
+      if (data.action === "update" || data.action === "create") {
+        dispatch({ type: "UPDATE_TAGS", payload: data.tags });
+      }
+
+      if (data.action === "delete") {
+        dispatch({ type: "DELETE_USER", payload: +data.tagId });
+      }
     }
+    
+    socket.on("user", onUser);
 
     return () => {
-      socket.off();
+      socket.disconnect();
     };
-  }, [user]);
+  }, [user, socketManager]);
 
   const handleOpenTagModal = () => {
     setSelectedTag(null);
@@ -293,7 +296,7 @@ const Tags = () => {
                   <>
                   {((user.profile === "admin" || user.profile === "supervisor")) && (
                     <IconButton size="small" onClick={() => handleEditTag(tag)}>
-                      <EditIcon />
+                      <EditIcon color="primary"/>
                     </IconButton>
                     
                   )}
@@ -303,6 +306,7 @@ const Tags = () => {
 
                     <IconButton
                       size="small"
+                      color="primary"
                       onClick={(e) => {
                         setConfirmModalOpen(true);
                         setDeletingTag(tag);

@@ -67,7 +67,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   });
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-announcement`, {
+  io.emit(`company-announcement`, {
     action: "create",
     record
   });
@@ -107,7 +107,7 @@ export const update = async (
   });
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-announcement`, {
+ io.emit(`company-announcement`, {
     action: "update",
     record
   });
@@ -125,7 +125,7 @@ export const remove = async (
   await DeleteService(id);
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-announcement`, {
+ io.emit(`company-${companyId}-announcement`, {
     action: "delete",
     id
   });
@@ -162,7 +162,7 @@ export const mediaUpload = async (
     await announcement.reload();
 
     const io = getIO();
-    io.of(companyId.toString()).emit(`company-announcement`, {
+   io.emit(`company-announcement`, {
       action: "update",
       record: announcement
     });
@@ -195,7 +195,7 @@ export const deleteMedia = async (
     await announcement.reload();
 
     const io = getIO();
-    io.of(companyId.toString()).emit(`company-announcement`, {
+   io.emit(`company-announcement`, {
       action: "update",
       record: announcement
     });

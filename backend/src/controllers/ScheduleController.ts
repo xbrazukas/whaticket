@@ -74,7 +74,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   });
 
   const io = getIO();
-  io.of(companyId.toString()).emit("schedule", {
+  io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-schedule`, {
     action: "create",
     schedule
   });
@@ -117,7 +117,7 @@ export const update = async (
   const schedule = await UpdateService({ scheduleData, id: scheduleId, companyId,  mediaPath:file?.filename, mediaName:file?.originalname });
 
   const io = getIO();
-  io.of(companyId.toString()).emit("schedule", {
+  io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-schedule`, {
     action: "update",
     schedule
   });
@@ -135,7 +135,7 @@ export const remove = async (
   await DeleteService(scheduleId, companyId);
 
   const io = getIO();
-  io.of(companyId.toString()).emit("schedule", {
+ io.emit("schedule", {
     action: "delete",
     scheduleId
   });

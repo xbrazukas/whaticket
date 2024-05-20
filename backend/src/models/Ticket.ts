@@ -123,6 +123,9 @@ class Ticket extends Model<Ticket> {
 
   @Column
   startChatTime: Date;
+  
+  @Column
+  oportunidadeId: number;
 
 }
 

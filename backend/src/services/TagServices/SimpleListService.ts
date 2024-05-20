@@ -28,7 +28,7 @@ const ListService = async ({
 
   const tags = await Tag.findAll({
     where: { ...whereCondition, companyId },
-    order: [["name", "ASC"]]
+    order: [["order", "ASC"]]
   });
 
   return tags;

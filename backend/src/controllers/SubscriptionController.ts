@@ -111,49 +111,6 @@ export const createSubscription = async (
 const valor = Number(price.toLocaleString("pt-br", { minimumFractionDigits: 2 }).replace(",", "."));
 const valorext = price;
 
-//console.log(valor);
-
-/*
-if(key_MP_ACCESS_TOKEN){
-
-const mercadopago = require("mercadopago");
-//console.log("merc", mercadopago);
-mercadopago.configure({
-  access_token:key_MP_ACCESS_TOKEN
-});
-
-//console.log(mercadopago);
-
-let preference = {
-  external_reference: String(invoiceId),
-  notification_url: String(process.env.MP_NOTIFICATION_URL),
-  items: [
-    {
-      title: `#Fatura:${invoiceId}`,
-      unit_price: valor,
-      quantity: 1
-    }
-  ]
-};
-
-mercadopago.preferences
-  .create(preference)
-  .then(function(response) {
-    console.log("mercres", response);
-	mercadopagoURL = response.body.init_point;
-	//console.log(mercadopagoURL);
-  })
-  .catch(function(error) {
-    console.log(error);
-});
-
-console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-console.log(mercadopagoURL);
-
-}
-
-*/
-
 async function createMercadoPagoPreference() {
   if (key_MP_ACCESS_TOKEN) {
     const mercadopago = require("mercadopago");
@@ -427,7 +384,7 @@ export const webhook = async (
     	  	Sentry.captureException(e);
   		  }
 
-          io.of(companyId.toString()).emit(`company-${companyId}-payment`, {
+         io.emit(`company-${companyId}-payment`, {
             action: detahe.status,
             company: companyUpdate
           });
@@ -499,7 +456,7 @@ export const stripewebhook = async (
     	  	Sentry.captureException(e);
   		  }
 
-          io.of(companyId.toString()).emit(`company-${companyId}-payment`, {
+         io.emit(`company-${companyId}-payment`, {
             action: 'CONCLUIDA',
             company: companyUpdate
           });
@@ -608,7 +565,7 @@ export const mercadopagowebhook = async (
     	  	Sentry.captureException(e);
   		  }
 
-          io.of(companyId.toString()).emit(`company-${companyId}-payment`, {
+         io.emit(`company-${companyId}-payment`, {
             action: 'CONCLUIDA',
             company: companyUpdate
           });
@@ -631,9 +588,6 @@ export const asaaswebhook = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-
-  console.log(req.body);
-  console.log(req.params);
 
   res.status(200).json(req.body);
 

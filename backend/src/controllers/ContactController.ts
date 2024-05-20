@@ -2,11 +2,7 @@ import * as Yup from "yup";
 import { Request, Response } from "express";
 import { getIO } from "../libs/socket";
 import { head } from "lodash";
-import { Op } from 'sequelize';
 import Contact from "../models/Contact";
-import Tag from "../models/Tag";
-import Ticket from "../models/Ticket";
-import Queue from "../models/Queue";
 import ListContactsService from "../services/ContactServices/ListContactsService";
 import ListContactsServiceNT from "../services/ContactServices/ListContactsServiceNT";
 import CreateContactService from "../services/ContactServices/CreateContactService";
@@ -14,10 +10,10 @@ import ShowContactService from "../services/ContactServices/ShowContactService";
 import UpdateContactService from "../services/ContactServices/UpdateContactService";
 import DeleteContactService from "../services/ContactServices/DeleteContactService";
 import GetContactService from "../services/ContactServices/GetContactService";
+import ListWalletContactService from "../services/ContactServices/ListWalletContactService";
 
 import CheckContactNumber from "../services/WbotServices/CheckNumber";
 import CheckIsValidContact from "../services/WbotServices/CheckIsValidContact";
-import GetProfilePicUrl from "../services/WbotServices/GetProfilePicUrl";
 import AppError from "../errors/AppError";
 import SimpleListService, {
   SearchContactParams
@@ -26,8 +22,7 @@ import ContactCustomField from "../models/ContactCustomField";
 import ToggleAcceptAudioContactService from "../services/ContactServices/ToggleAcceptAudioContactService";
 import BlockUnblockContactService from "../services/ContactServices/BlockUnblockContactService";
 import { ImportContactsService } from "../services/ContactServices/ImportContactsService";
-import { createObjectCsvWriter } from 'csv-writer';
-import fs from "fs";
+import User from "../models/User";
 
 
 type IndexQuery = {
@@ -50,6 +45,7 @@ interface ContactData {
   email?: string;
   extraInfo?: ExtraInfo[];
   disableBot?: boolean;
+  walleteUserId?: number;
 }
 
 export const index = async (req: Request, res: Response): Promise<Response> => {
@@ -60,6 +56,26 @@ export const index = async (req: Request, res: Response): Promise<Response> => {
     searchParam,
     pageNumber,
     companyId
+  });
+
+  return res.json({ contacts, count, hasMore });
+};
+
+export const indexWallet = async (req: Request, res: Response): Promise<Response> => {
+  const { searchParam, pageNumber } = req.query as IndexQuery;
+  const {companyId } = req.user;
+  const {id} = req.user
+
+  const profileUser = await User.findByPk(parseInt(id),{
+    attributes:['profile']
+  })
+
+  const { contacts, count, hasMore } = await ListWalletContactService({
+    searchParam,
+    pageNumber,
+    companyId,
+    walleteUserId: parseInt(id),
+    profileUser: profileUser.profile
   });
 
   return res.json({ contacts, count, hasMore });
@@ -141,6 +157,8 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
    */
   // const profilePicUrl = await GetProfilePicUrl(validNumber.jid, companyId);
 
+  console.log('newContact',newContact)
+
   const contact = await CreateContactService({
     ...newContact,
     //number,
@@ -149,7 +167,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   });
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
+  io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-contact`, {
     action: "create",
     contact
   });
@@ -195,6 +213,8 @@ export const update = async (
 
   const { contactId } = req.params;
 
+  console.log('contactData?.walleteUserId',contactData?.walleteUserId)
+
   const contact = await UpdateContactService({
     contactData,
     contactId,
@@ -202,7 +222,7 @@ export const update = async (
   });
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
+  io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-contact`, {
     action: "update",
     contact
   });
@@ -222,7 +242,7 @@ export const remove = async (
   await DeleteContactService(contactId);
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
+  io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-contact`, {
     action: "delete",
     contactId
   });
@@ -239,7 +259,6 @@ export const list = async (req: Request, res: Response): Promise<Response> => {
   return res.json(contacts);
 };
 
-
 export const toggleAcceptAudio = async (
   req: Request,
   res: Response
@@ -250,7 +269,7 @@ export const toggleAcceptAudio = async (
   const contact = await ToggleAcceptAudioContactService({ contactId });
 
   const io = getIO();
-  io.of(companyId.toString()).emit("contact", {
+ io.to(`company-${companyId}-mainchannel`).emit("contact", {
     action: "update",
     contact
   });
@@ -269,7 +288,7 @@ export const blockUnblock = async (
   const contact = await BlockUnblockContactService({ contactId, companyId, active });
 
   const io = getIO();
-  io.of(companyId.toString()).emit("contact", {
+ io.emit("contact", {
     action: "update",
     contact
   });
@@ -286,7 +305,7 @@ export const upload = async (req: Request, res: Response) => {
 
   const io = getIO();
 
-  io.of(companyId.toString()).emit(`company-${companyId}-contact`, {
+ io.emit(`company-${companyId}-contact`, {
     action: "reload",
     records: response
   });

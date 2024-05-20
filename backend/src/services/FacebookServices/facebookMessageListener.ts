@@ -690,7 +690,7 @@ export const handleRating = async (
         status: "closed",
       });
 
-      io.of(ticket.companyId.toString()).emit(`company-${ticket.companyId}-ticket`, {
+      io.emit(`company-${ticket.companyId}-ticket`, {
         action: "delete",
         ticket,
         ticketId: ticket.id,

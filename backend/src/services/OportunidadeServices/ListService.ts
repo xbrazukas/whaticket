@@ -22,8 +22,6 @@ const ListService = async ({
   const limit = 20;
   const offset = limit * (+pageNumber - 1);
 
-  console.log("entrei");
-
   if (searchParam) {
     whereCondition = {
       [Op.or]: [{ name: { [Op.like]: `%${searchParam}%` } }]

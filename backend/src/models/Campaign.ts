@@ -96,12 +96,19 @@ class Campaign extends Model<Campaign> {
   @Column
   whatsappId: string;
 
+  @Column
+  whatsappName: string;
+
+  @Column
+  tagId: number;
+
 /*
   @ForeignKey(() => Whatsapp)
   @Column
   whatsappId: number;
 
   @BelongsTo(() => Whatsapp)
+  
   whatsapp: Whatsapp;
 */
 

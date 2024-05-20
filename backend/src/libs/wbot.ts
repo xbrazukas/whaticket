@@ -1,6 +1,8 @@
 import * as Sentry from "@sentry/node";
 import makeWASocket, {
   WASocket,
+  Browsers,
+  proto,
   AuthenticationState,
   DisconnectReason,
   fetchLatestBaileysVersion,
@@ -9,13 +11,12 @@ import makeWASocket, {
   isJidBroadcast,
   jidNormalizedUser,
   makeCacheableSignalKeyStore
-} from "@adiwajshing/baileys";
-import makeWALegacySocket from "@adiwajshing/baileys";
+} from "@laxeder/baileys";
 import P from "pino";
 import { FindOptions } from "sequelize/types";
 import Whatsapp from "../models/Whatsapp";
 import { logger } from "../utils/logger";
-import MAIN_LOGGER from "@adiwajshing/baileys/lib/Utils/logger";
+import MAIN_LOGGER from "@laxeder/baileys/lib/Utils/logger";
 import authState from "../helpers/authState";
 import { Boom } from "@hapi/boom";
 import AppError from "../errors/AppError";
@@ -31,6 +32,11 @@ type Session = WASocket & {
   id?: number;
   store?: Store;
 };
+
+interface IMessage {
+  messages: IMessage[];
+  isLatest: boolean;
+}
 
 const sessions: Session[] = [];
 
@@ -150,29 +156,34 @@ export const initWASocket = async (whatsapp: Whatsapp): Promise<Session> => {
           auth: state as AuthenticationState,
           generateHighQualityLinkPreview: false,
           shouldIgnoreJid: jid => isJidBroadcast(jid),
-          browser: ["Chat", "Chrome", "10.15.7"],
+          browser: Browsers.appropriate("Desktop"),
           defaultQueryTimeoutMs: 0,
-          patchMessageBeforeSending: (message) => {
+          patchMessageBeforeSending: (msg) => {
             const requiresPatch = !!(
-                message.buttonsMessage ||
+              msg.buttonsMessage ||
                 // || message.templateMessage
-                message.listMessage
+                msg.listMessage
             );
-            if (requiresPatch) {
-                message = {
-                    viewOnceMessage: {
-                        message: {
-                            messageContextInfo: {
-                                deviceListMetadataVersion: 2,
-                                deviceListMetadata: {},
-                            },
-                            ...message,
-                        },
-                    },
-                };
+            if(requiresPatch){
+              const patchMessageBeforeSending = (msg: proto.IMessage) => {
+                    const isProductList = (listMessage: proto.Message.IListMessage | null | undefined) =>
+                      listMessage?.listType === proto.Message.ListMessage.ListType.PRODUCT_LIST
+                
+                    if (isProductList(msg.deviceSentMessage?.message?.listMessage) || isProductList(msg.listMessage)) {
+                      msg = JSON.parse(JSON.stringify(msg))
+                      if (msg.deviceSentMessage?.message?.listMessage) {
+                        msg.deviceSentMessage.message.listMessage.listType = proto.Message.ListMessage.ListType.SINGLE_SELECT
+                      }
+                      if (msg.listMessage) {
+                        msg.listMessage.listType = proto.Message.ListMessage.ListType.SINGLE_SELECT
+                      }
+                    }
+                    return msg
+              }
             }
 
-            return message;
+
+            return msg;
         },
         })
 
@@ -204,7 +215,7 @@ export const initWASocket = async (whatsapp: Whatsapp): Promise<Session> => {
               } else {
                 await whatsapp.update({ status: "PENDING", session: "", number: "" });
                 await DeleteBaileysService(whatsapp.id);
-                io.emit(`company-${whatsapp.companyId}-whatsappSession`, {
+                io.of(whatsapp.companyId.toString()).emit(`company-${whatsapp.companyId}-whatsappSession`, {
                   action: "update",
                   session: whatsapp
                 });
@@ -291,7 +302,7 @@ export const initWASocket = async (whatsapp: Whatsapp): Promise<Session> => {
       })();
     } catch (error) {
       Sentry.captureException(error);
-      console.log(error);
+      // console.log(error);
       reject(error);
     }
   });

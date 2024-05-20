@@ -152,6 +152,26 @@ const messages = {
           actions: 'Ações',
         },
       },
+      Wallet: {
+        title: 'Carteira',
+        toasts: {
+          remove: 'Contato removido da carteira com sucesso!',
+        },
+        searchPlaceholder: 'Pesquisar...',
+        confirmationModal: {
+          removeWalletContactTitle: 'Remover ',
+          continueWalletTitle: 'da carteira',
+          messages:{
+            removeMessage: 'Você realmente deseja remover este contato de sua carteira?'
+          }
+        },
+        table: {
+          name: 'Nome',
+          whatsapp: 'Número WhatsApp',
+          email: 'E-Mail',
+          actions: 'Ações',
+        },
+      },
       contactModal: {
         title: {
           add: 'Adicionar contato',
@@ -271,7 +291,7 @@ const messages = {
       },
       ticketsManager: {
         buttons: {
-          newTicket: 'Novo',
+          newTicket: 'Abrir Ticket',
         },
       },
       ticketsQueueSelect: {
@@ -295,10 +315,29 @@ const messages = {
         search: {
           placeholder: 'Buscar atendimento e mensagens',
           kanbanPlaceholder: 'Buscar atendimento',
+          ticketsPerPage:'Tickets por página'
         },
         buttons: {
           showAll: 'Todos',
         },
+      },
+      reports:{
+        title: 'Relatórios de Tickets',
+        table:{
+          id: 'Ticket',
+          whatsapp: 'Conexão',
+          contact:'Cliente',
+          user:'Usuário',
+          queue:'Fila',
+          status:'Status',
+          lastMessage:'Últ. Mensagem',
+          dateOpen:'Data Abertura',
+          dateClose:'Data Fechamento',
+          actions:'Ação'
+        },
+        buttons:{
+          filter: 'Aplicar Filtro'
+        }
       },
       transferTicketModal: {
         title: 'Transferir Ticket',
@@ -337,7 +376,7 @@ const messages = {
         listItems: {
           dashboard: 'Dashboard',
           connections: 'Conexões',
-          tickets: 'Chats',
+          tickets: 'Atendimento',
           quickMessages: 'Respostas Rápidas',
           contacts: 'Contatos',
           queues: 'Setores & Chatbot',
@@ -357,6 +396,8 @@ const messages = {
           kanban: 'Kanban',
           rating: 'Avaliações',
           ratings: 'Avaliações',
+          oportunidades:'Oportunidades',
+          wallet:'Carteira de Clientes'
         },
         appBar: {
           user: {
@@ -794,6 +835,7 @@ const messages = {
       messageOptionsMenu: {
         delete: 'Deletar',
         reply: 'Responder',
+        edit: 'Editar Mensagem',
         confirmationModal: {
           title: 'Apagar mensagem?',
           message: 'Esta ação não pode ser revertida.',

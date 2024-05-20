@@ -2,7 +2,7 @@ import {
   WASocket,
   BinaryNode,
   Contact as BContact,
-} from "@adiwajshing/baileys";
+} from "@laxeder/baileys";
 import * as Sentry from "@sentry/node";
 
 import { Op } from "sequelize";
@@ -15,6 +15,7 @@ import Whatsapp from "../../models/Whatsapp";
 import { logger } from "../../utils/logger";
 import createOrUpdateBaileysService from "../BaileysServices/CreateOrUpdateBaileysService";
 import CreateMessageService from "../MessageServices/CreateMessageService";
+import { addContactsUpdateJob } from "./ProcessContactsUpdate";
 
 type Session = WASocket & {
   id?: number;
@@ -115,10 +116,7 @@ const wbotMonitor = async (
   
     	wbot.ev.on("contacts.upsert", async (contacts: BContact[]) => {
       	  console.log("upsert", contacts);
-      	  await createOrUpdateBaileysService({
-        	whatsappId: whatsapp.id,
-        	contacts,
-      	  });
+      	  await addContactsUpdateJob(whatsapp?.id,contacts);
     	});
     
     }

@@ -20,20 +20,21 @@ import useTickets from "../../hooks/useTickets";
 import alertSound from "../../assets/sound.mp3";
 import { AuthContext } from "../../context/Auth/AuthContext";
 import { socketConnection } from "../../services/socket";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const useStyles = makeStyles((theme) => ({
   tabContainer: {
     overflowY: "auto",
-    maxHeight: 350,
+    maxHeight: 500,
     ...theme.scrollbarStyles,
   },
   popoverPaper: {
     width: "100%",
-    maxWidth: 350,
+    maxWidth: 500,
     marginLeft: theme.spacing(2),
     marginRight: theme.spacing(1),
     [theme.breakpoints.down("sm")]: {
-      maxWidth: 270,
+      maxWidth: 330,
     },
   },
   noShadow: {
@@ -52,12 +53,13 @@ const NotificationsPopOver = ({ volume }) => {
   const classes = useStyles();
 
   const history = useHistory();
-  const { user,socket } = useContext(AuthContext);
+  const socketManager = useContext(SocketContext);
   const ticketIdUrl = +history.location.pathname.split("/")[2];
   const ticketIdRef = useRef(ticketIdUrl);
   const anchorEl = useRef();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const { user } = useContext(AuthContext);
   const { profile, queues } = user;
 
   const [, setDesktopNotifications] = useState([]);
@@ -138,151 +140,76 @@ const NotificationsPopOver = ({ volume }) => {
   }, [ticketIdUrl]);
 
   useEffect(() => {
-    // const companyId = localStorage.getItem("companyId");
-    // const socket = socketConnection({ companyId });
+    const companyId = localStorage.getItem("companyId");
+    const socket = socketManager.GetSocket(companyId);
 
     const queueIds = queues.map((q) => q.id);
 
-    if(user?.id){
-      socket.emit("joinNotification");
-  
-      socket.on(`company-${user.companyId}-ticket`, (data) => {
-        if (data.action === "updateUnread" || data.action === "delete") {
-          setNotifications((prevState) => {
-            const ticketIndex = prevState.findIndex(
-              (t) => t.id === data.ticketId
-            );
-            if (ticketIndex !== -1) {
-              prevState.splice(ticketIndex, 1);
-              return [...prevState];
-            }
-            return prevState;
-          });
-  
-          setDesktopNotifications((prevState) => {
-            const notfiticationIndex = prevState.findIndex(
-              (n) => n.tag === String(data.ticketId)
-            );
-            if (notfiticationIndex !== -1) {
-              prevState[notfiticationIndex].close();
-              prevState.splice(notfiticationIndex, 1);
-              return [...prevState];
-            }
-            return prevState;
-          });
-        }
-      });
-  
-      socket.on(`company-${user.companyId}-appMessage`, (data) => {
-        if (
-          data.action === "create" &&
-          !data.message.read &&
-          (data.ticket.userId === user?.id || !data.ticket.userId)
-        ) {
-          if (
-            profile === "user" &&
-            (queueIds.indexOf(data.ticket.queue?.id) === -1 ||
-              data.ticket.queue === null)
-          ) {
-            return;
-          }
-  
-          setNotifications((prevState) => {
-            const ticketIndex = prevState.findIndex(
-              (t) => t.id === data.ticket.id
-            );
-            if (ticketIndex !== -1) {
-              prevState[ticketIndex] = data.ticket;
-              return [...prevState];
-            }
-            return [data.ticket, ...prevState];
-          });
-  
-          const shouldNotNotificate =
-            (data.message.ticketId === ticketIdRef.current &&
-              document.visibilityState === "visible") ||
-            (data.ticket.userId && data.ticket.userId !== user?.id) ||
-            data.ticket.isGroup ||
-            data.ticket.isBot;
-  
-          if (shouldNotNotificate) return;
-  
-          handleNotifications(data);
-        }
-      });
+    const onConnectNotificationsPopover = () => {
+		socket.emit("joinNotification");
+	}
 
-    }
+	const onCompanyTicketNotificationsPopover = (data) => {
+      if (data.action === "updateUnread" || data.action === "delete") {
+				setNotifications(prevState => {
+					const ticketIndex = prevState.findIndex(t => t.id === data.ticketId);
+					if (ticketIndex !== -1) {
+						prevState.splice(ticketIndex, 1);
+						return [...prevState];
+					}
+					return prevState;
+				});
 
-
-    return () => {
-      if(user.id){
-       socket.off("joinNotification");
-       socket.off(`company-${user.companyId}-ticket`, (data) => {
-        if (data.action === "updateUnread" || data.action === "delete") {
-          setNotifications((prevState) => {
-            const ticketIndex = prevState.findIndex(
-              (t) => t.id === data.ticketId
-            );
-            if (ticketIndex !== -1) {
-              prevState.splice(ticketIndex, 1);
-              return [...prevState];
-            }
-            return prevState;
-          });
-  
-          setDesktopNotifications((prevState) => {
-            const notfiticationIndex = prevState.findIndex(
-              (n) => n.tag === String(data.ticketId)
-            );
-            if (notfiticationIndex !== -1) {
-              prevState[notfiticationIndex].close();
-              prevState.splice(notfiticationIndex, 1);
-              return [...prevState];
-            }
-            return prevState;
-          });
-        }
-       });
-       socket.off(`company-${user.companyId}-appMessage`, (data) => {
-        if (
-          data.action === "create" &&
-          !data.message.read &&
-          (data.ticket.userId === user?.id || !data.ticket.userId)
-        ) {
-          if (
-            profile === "user" &&
-            (queueIds.indexOf(data.ticket.queue?.id) === -1 ||
-              data.ticket.queue === null)
-          ) {
-            return;
-          }
-  
-          setNotifications((prevState) => {
-            const ticketIndex = prevState.findIndex(
-              (t) => t.id === data.ticket.id
-            );
-            if (ticketIndex !== -1) {
-              prevState[ticketIndex] = data.ticket;
-              return [...prevState];
-            }
-            return [data.ticket, ...prevState];
-          });
-  
-          const shouldNotNotificate =
-            (data.message.ticketId === ticketIdRef.current &&
-              document.visibilityState === "visible") ||
-            (data.ticket.userId && data.ticket.userId !== user?.id) ||
-            data.ticket.isGroup ||
-            data.ticket.isBot;
-  
-          if (shouldNotNotificate) return;
-  
-          handleNotifications(data);
-        }
-       });
+				setDesktopNotifications(prevState => {
+					const notfiticationIndex = prevState.findIndex(
+						n => n.tag === String(data.ticketId)
+					);
+					if (notfiticationIndex !== -1) {
+						prevState[notfiticationIndex].close();
+						prevState.splice(notfiticationIndex, 1);
+						return [...prevState];
+					}
+					return prevState;
+				});
       }
     };
-  }, [user, profile, queues]);
+    
+    const onCompanyAppMessageNotificationsPopover = (data) => {
+      
+			if (
+				data.action === "create" &&
+				!data.message.read &&
+				(data.ticket.userId === user?.id || !data.ticket.userId)
+			) {
+				setNotifications(prevState => {
+					const ticketIndex = prevState.findIndex(t => t.id === data.ticket.id);
+					if (ticketIndex !== -1) {
+						prevState[ticketIndex] = data.ticket;
+						return [...prevState];
+					}
+					return [data.ticket, ...prevState];
+				});
+
+				const shouldNotNotificate =
+					(data.message.ticketId === ticketIdRef.current &&
+						document.visibilityState === "visible") ||
+					(data.ticket.userId && data.ticket.userId !== user?.id) ||
+					data.ticket.isGroup;
+
+				if (shouldNotNotificate) return;
+
+				handleNotifications(data);
+			}
+    }
+
+    socketManager.onConnect(onConnectNotificationsPopover);
+    socket.on(`company-${companyId}-ticket`, onCompanyTicketNotificationsPopover);
+    socket.on(`company-${companyId}-appMessage`, onCompanyAppMessageNotificationsPopover);
+
+    return () => {
+       socket.disconnect();
+    };
+  }, [user, profile, queues, socketManager]);
 
   const handleNotifications = (data) => {
     const { message, contact, ticket } = data;

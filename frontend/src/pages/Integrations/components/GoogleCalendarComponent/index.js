@@ -143,7 +143,6 @@ const GoogleCalendarComponent = () => {
   // };
 
   const responseError = (response) => {
-    console.log(response);
   };
 
   return (

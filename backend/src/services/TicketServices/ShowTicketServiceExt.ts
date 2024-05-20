@@ -14,7 +14,7 @@ const ShowTicketServiceExt = async (
       {
         model: Contact,
         as: "contact",
-        attributes: ["id", "name", "number", "email", "profilePicUrl", "acceptAudioMessage"],
+        attributes: ["id", "name", "number", "email", "profilePicUrl", "acceptAudioMessage","walleteUserId"],
         include: ["extraInfo"]
       },
       {

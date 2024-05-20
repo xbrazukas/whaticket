@@ -105,6 +105,7 @@ const CampaignModal = ({
     scheduledAt: "",
     //whatsappId: "",
     contactListId: "",
+    tagId: '',
     tagListId: "Nenhuma",
     groupListId: "Nenhum",
     companyId,
@@ -115,7 +116,7 @@ const CampaignModal = ({
   const [selectedWhatsapps, setSelectedWhatsapps] = useState([]);
   const [contactLists, setContactLists] = useState([]);
   const [groupLists, setGroupLists] = useState([]);
-  const [tagLists, setTagLists] = useState([]);
+  const [tagLists, setTagLists] = useState(0);
   const [messageTab, setMessageTab] = useState(0);
   const [attachment, setAttachment] = useState(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
@@ -186,6 +187,7 @@ const CampaignModal = ({
       if (!campaignId) return;
 
       api.get(`/campaigns/${campaignId}`).then(({ data }) => {
+        console.log(data)
         setCampaign((prev) => {
           let prevCampaignData = Object.assign({}, prev);
 
@@ -234,6 +236,7 @@ const CampaignModal = ({
       const dataValues = {
         ...values,  // Merge the existing values object
         whatsappId: selectedWhatsapps.join(","),
+        tagId: tagLists
       };
     
       //console.log(values);
@@ -490,9 +493,9 @@ const CampaignModal = ({
                       as={Select}
                       label={i18n.t("campaigns.dialog.form.tagList")}
                       placeholder={i18n.t("campaigns.dialog.form.tagList")}
-                      labelId="tagList-selection-label"
-                      id="tagListId"
-                      name="tagListId"
+                      labelId="tagId-selection-label"
+                      id="tagId"
+                      name="tagId"
                       error={touched.tagListId && Boolean(errors.tagListId)}
                       disabled={!campaignEditable}
                     >
@@ -560,44 +563,44 @@ const CampaignModal = ({
                   </Grid>
                   
                   <Grid xs={12} md={12} item>
-  <FormControl
-    variant="outlined"
-    margin="dense"
-    fullWidth
-    className={classes.formControl}
-  >
-    <InputLabel id="whatsapp-selection-label">
-      {i18n.t("campaigns.dialog.form.whatsapp")}
-    </InputLabel>
-    <Field
-      as={Select}
-      multiple 
-      label={i18n.t("campaigns.dialog.form.whatsapp")}
-      placeholder={i18n.t("campaigns.dialog.form.whatsapp")}
-      labelId="whatsapp-selection-label"
-      id="whatsappIds"
-      name="whatsappIds"
-      error={touched.whatsappId && Boolean(errors.whatsappId)}
-      disabled={!campaignEditable}
-      value={selectedWhatsapps}  
-      onChange={(event) => setSelectedWhatsapps(event.target.value)} 
-      renderValue={(selected) => (
-        <div>
-          {selected.map((value) => (
-            <Chip key={value} label={whatsapps.find((whatsapp) => whatsapp.id === value).name} />
-          ))}
-        </div>
-      )}
-    >
-      {whatsapps &&
-        whatsapps.map((whatsapp) => (
-          <MenuItem key={whatsapp.id} value={whatsapp.id}>
-            {whatsapp.name}
-          </MenuItem>
-        ))}
-    </Field>
-  </FormControl>
-</Grid>
+                    <FormControl
+                      variant="outlined"
+                      margin="dense"
+                      fullWidth
+                      className={classes.formControl}
+                    >
+                      <InputLabel id="whatsapp-selection-label">
+                        {i18n.t("campaigns.dialog.form.whatsapp")}
+                      </InputLabel>
+                      <Field
+                        as={Select}
+                        multiple 
+                        label={i18n.t("campaigns.dialog.form.whatsapp")}
+                        placeholder={i18n.t("campaigns.dialog.form.whatsapp")}
+                        labelId="whatsapp-selection-label"
+                        id="whatsappIds"
+                        name="whatsappIds"
+                        error={touched.whatsappId && Boolean(errors.whatsappId)}
+                        disabled={!campaignEditable}
+                        value={selectedWhatsapps}  
+                        onChange={(event) => setSelectedWhatsapps(event.target.value)} 
+                        renderValue={(selected) => (
+                          <div>
+                            {selected.map((value) => (
+                              <Chip key={value} label={whatsapps.find((whatsapp) => whatsapp.id === value).name} />
+                            ))}
+                          </div>
+                        )}
+                      >
+                        {whatsapps &&
+                          whatsapps.map((whatsapp) => (
+                            <MenuItem key={whatsapp.id} value={whatsapp.id}>
+                              {whatsapp.name}
+                            </MenuItem>
+                          ))}
+                      </Field>
+                    </FormControl>
+                  </Grid>
                   
                   
                   <Grid xs={12} item>

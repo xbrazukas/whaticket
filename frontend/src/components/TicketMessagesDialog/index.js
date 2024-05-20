@@ -18,6 +18,7 @@ import { ReplyMessageProvider } from "../../context/ReplyingMessage/ReplyingMess
 import TicketHeader from "../TicketHeader";
 import TicketInfo from "../TicketInfo";
 import { socketConnection } from "../../services/socket";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const drawerWidth = 320;
 
@@ -60,8 +61,8 @@ export default function TicketMessagesDialog({ open, handleClose, ticketId }) {
   const history = useHistory();
   const classes = useStyles();
 
-  const { user, socket} = useContext(AuthContext);
-
+  const socketManager = useContext(SocketContext);
+  const { user } = useContext(AuthContext);
   const [, setDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [contact, setContact] = useState({});
@@ -104,62 +105,52 @@ export default function TicketMessagesDialog({ open, handleClose, ticketId }) {
   }, [ticketId, user, history, open]);
 
   useEffect(() => {
-    const companyId = user.companyId
-    // const socket = socketConnection({ user });
-    // let socket = null;
+    const companyId = localStorage.getItem("companyId");
+    let socket = null;
+    let onReturn = () => { };
 
     if (open) {
-      if(companyId){
+      socket = socketManager.GetSocket(companyId);
+
+      const onConnectTicketMessagesDialog = () => {
         socket.emit("joinChatBox", `${ticket.id}`);
-  
-        socket.on(`company-${companyId}-ticket`, (data) => {
-          if (data.action === "update") {
-            setTicket(data.ticket);
-          }
-  
-          if (data.action === "delete") {
-            history.push("/tickets");
-          }
-        });
-  
-        socket.on(`company-${companyId}-contact`, (data) => {
-          if (data.action === "update") {
-            setContact((prevState) => {
-              if (prevState.id === data.contact?.id) {
-                return { ...prevState, ...data.contact };
-              }
-              return prevState;
-            });
-          }
-        });
       }
+
+      const onCompanyTicketMessagesDialog = (data) => {
+        if (data.action === "update") {
+          setTicket(data.ticket);
+        }
+
+        if (data.action === "delete") {
+          toast.success("Ticket deleted sucessfully.");
+          history.push("/tickets");
+        }
+      }
+
+      const onCompanyContactMessagesDialog = (data) => {
+        if (data.action === "update") {
+          setContact((prevState) => {
+            if (prevState.id === data.contact?.id) {
+              return { ...prevState, ...data.contact };
+            }
+            return prevState;
+          });
+        }
+      }
+
+      onReturn = () => {
+        if (socket !== null) {
+          socket.disconnect();
+        }
+      }
+
+      socketManager.onConnect(onConnectTicketMessagesDialog);
+      socket.on(`company-${companyId}-ticket`, onCompanyTicketMessagesDialog);
+      socket.on(`company-${companyId}-contact`, onCompanyContactMessagesDialog);
     }
 
-    return () => {
-      if (socket !== null) {
-        socket.emit("joinChatBoxLeave", `${ticket.id}`);
-        socket.off(`company-${user.companyId}-ticket`, (data) => {
-          if (data.action === "update") {
-            setTicket(data.ticket);
-          }
-  
-          if (data.action === "delete") {
-            history.push("/tickets");
-          }
-        });
-        socket.off(`company-${user.companyId}-contact`, (data) => {
-          if (data.action === "update") {
-            setContact((prevState) => {
-              if (prevState.id === data.contact?.id) {
-                return { ...prevState, ...data.contact };
-              }
-              return prevState;
-            });
-          }
-        })
-      }
-    };
-  }, [ticketId, ticket, history, open, socket]);
+    return onReturn;
+  }, [ticketId, ticket, history, open, socketManager]);
 
   const handleDrawerOpen = () => {
     setDrawerOpen(true);

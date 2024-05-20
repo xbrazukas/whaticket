@@ -24,6 +24,7 @@ import {
 } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 import { format } from 'date-fns';
+import { SocketContext, socketManager } from './context/Socket/SocketContext';
 
 
 
@@ -155,8 +156,10 @@ const App = () => {
 
   return (
     <ThemeProvider theme={theme === 'light' ? lightTheme : darkTheme}>
+     <SocketContext.Provider value={socketManager}>
       <Routes />
       <CssBaseline />
+     </SocketContext.Provider>
     </ThemeProvider>
   );
 };

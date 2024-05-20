@@ -28,7 +28,7 @@ import Contact from "../models/Contact";
 import CreateOrUpdateContactService from "../services/ContactServices/CreateOrUpdateContactService";
 import FindOrCreateTicketService from "../services/TicketServices/FindOrCreateTicketService";
 import UpdateTicketService from "../services/TicketServices/UpdateTicketService";
-
+import EditWhatsAppMessage from "../services/WbotServices/EditWhatsAppMessage";
 import ShowPlanCompanyService from "../services/CompanyService/ShowPlanCompanyService";
 
 
@@ -67,9 +67,6 @@ export const chamaai = async (req: Request, res: Response): Promise<Response> =>
 
 
 export const apifinishticket = async (req: Request, res: Response): Promise<Response> => {
-  
-  //console.log(req.body.companyId);
-  //console.log(req.body.ticketId);
 
   const ticketId = req.body.ticketId;
 
@@ -79,26 +76,6 @@ export const apifinishticket = async (req: Request, res: Response): Promise<Resp
           userId: null,
           status: "closed"
         });
-
-/*
-  const io = getIO();
-
-  io.to("open").emit(`company-${ticket.companyId}-ticket`, {
-    action: "delete",
-    ticket,
-    ticketId: ticket.id
-  });
-
-  io.to(ticket.status)
-    .to(ticket.id.toString())
-    .emit(`company-${ticket.companyId}-ticket`, {
-      action: "update",
-      ticket,
-      ticketId: ticket.id,
-    });
-*/
-  console.log("Finalização Remota");
-  //console.log(finishTicket);
 
   return res.status(200).json({res: finishTicket});
 
@@ -177,33 +154,30 @@ export const ghost = async (req: Request, res: Response): Promise<Response> => {
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
   const { ticketId } = req.params;
+  const { companyId } = req.user;
   const { body, quotedMsg }: MessageData = req.body;
   const medias = req.files as Express.Multer.File[];
-  const { companyId } = req.user;
 
   const originalHeaders = req.headers;
+  const ticket = await ShowTicketService(ticketId, companyId);
+  
+  if(medias && medias.length < 1){
+
 
   const pattern = /^\s*\[(.*?)\]$/;
   const patternB = /\s*\*.*?\*/g;
 
   const checaQuick = body.replace(patternB, '');
 
-  const ticket = await ShowTicketService(ticketId, companyId);
   const matches = pattern.test(checaQuick);
 
-  //console.log("Matches");
-  //console.log(matches);
-  //console.log("ChecaQuick");
-  //console.log(checaQuick);
 
   SetTicketMessagesAsRead(ticket);
 
-  //console.log(ticket);
 
   if (matches) {
    
  	const extractedValue = pattern.exec(checaQuick)?.[1];
-  	//console.log(extractedValue); 
   
     try {
     	const quickMessage = await QuickMessage.findOne({
@@ -217,15 +191,9 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     	if (quickMessage) {
       		const { mediaPath, mediaName, caption } = quickMessage;
         
-            //const filePath = path.resolve(`public/company${companyId}`, mediaPath);
-            //const mediaX = await getMessageOptions(mediaName, filePath, companyId.toString());
-        
         	const publicFolder = path.resolve(__dirname, "..", "..", "..", "backend/public");
         	const filePath: string = `${publicFolder}/company${companyId}/quick/${mediaPath}`;
-            console.log(filePath);
-			//const media = fs.readFileSync(filePath);
         	const mimeType: string = lookup(filePath);
-            console.log(mimeType);
         
         	const media = {
   				fieldname: 'medias',
@@ -241,76 +209,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
             }else{
             	await SendWhatsAppMediaInternal({ media, ticket });
             }
-        		
-        
-        	/*
-        	 try {
-            	console.log("aqui");
-        		const publicFolder = path.resolve(__dirname, "..", "..", "..", "backend/public");
-        		const filePath: string = `${publicFolder}/company${companyId}/${mediaPath}`;
-                console.log(filePath);
-				const fileData = fs.readFileSync(filePath);
-                console.log("passei");
-                console.log(fileData);
-        
-            	const formData = new FormData();
-    				formData.append("fromMe", true);
-    				formData.append("medias", fileData, {
-      				filename: `${mediaPath}`, 
-    			});
-             
-                console.log(formData);
-             
-              	// Substitua "http://seu-backend.com" pela URL do seu backend
-    		  	const backendUrl = `${process.env.BACKEND_URL}/messages/${ticketId}`;
-				
-             	console.log(backendUrl);
-             
-    		 	// Substitua "SEU_TICKET_ID" pelo ID correto do ticket
-             	// Realiza o POST para o endpoint do backend
-             	const result = await axios.post(backendUrl, formData, {
-             		headers: originalHeaders,
-             	});
-             
-                console.log(result);
-
-             	console.log(result.data);
-             
-             } catch (error) {
-                console.error("Erro ao fazer o upload:", error.message);
-             }
-    		*/
-            /*
-        	const publicFolder = path.resolve(__dirname, "..", "..", "..", "backend/public");
-            console.log(publicFolder);
-        	const filePath: string = `${publicFolder}/company${companyId}/${mediaPath}`;
-            console.log(filePath);
-        	const mimeType: string = lookup(filePath);
-			console.log(mimeType);
-        	const fileData: Buffer = fs.readFileSync(filePath);
-        	const fileStream = fs.createReadStream(filePath);
-        	const media: Express.Multer.File = {
-    			fieldname: 'medias', // Add the appropriate value
-    			originalname: mediaName, // Add the appropriate value
-    			encoding: '7bit', // Add the appropriate value
-    			mimetype: mimeType, // Add the appropriate value
-            	destination: publicFolder, // Add the appropriate value
-            	filename: mediaPath,
-            	path: filePath,
-    			size: fileData.length,			
-    			buffer: Buffer.alloc(0), // Provide an empty buffer since the file is streamed
-    			stream: fileStream
-  			};
-			//console.log(media);
-            
-          
-			const senting = SendWhatsAppMedia({ body, media, ticket });
-			//console.log(senting);
-            
-            */
-        
       	    return res.send();
-        	//await SendWhatsAppMedia({ media, ticket });
     	}
     }catch (error) {
     	console.error("Error checking shortcode:", error);
@@ -319,6 +218,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   
   }
   
+  }
   
   
 
@@ -326,12 +226,10 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     await Promise.all(
       medias.map(async (media: Express.Multer.File) => {
         await SendWhatsAppMedia({ media, ticket });
-        //console.log(media);
       })
     );
   } else {
     await SendWhatsAppMessage({ body, ticket, quotedMsg });
-    //console.log(body);
   }
 
   return res.send();
@@ -347,7 +245,7 @@ export const remove = async (
   const message = await DeleteWhatsAppMessage(messageId);
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-appMessage`, {
+  io.to(message.ticketId.toString()).emit(`company-${companyId}-appMessage`, {
     action: "update",
     message
   });
@@ -534,3 +432,22 @@ export const send = async (req: Request, res: Response): Promise<Response> => {
     }
   }
 };
+
+
+export const edit = async (req: Request, res: Response): Promise<Response> => {
+  const { messageId } = req.params;
+  const { companyId } = req.user;
+  const { body }: MessageData = req.body;
+  console.log(body)
+  const { ticket , message } = await EditWhatsAppMessage({messageId, body});
+
+  const io = getIO();
+ io.emit(`company-${companyId}-appMessage`, {
+    action:"update",
+    message,
+    ticket: ticket,
+    contact: ticket.contact,
+  });
+
+  return res.send();
+}

@@ -19,7 +19,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   SendRefreshToken(res, refreshToken);
 
   const io = getIO();
-  io.of(serializedUser.companyId.toString()).emit(`company-${serializedUser.companyId}-auth`, {
+  io.to(`user-${serializedUser.id}`).emit(`company-${serializedUser.companyId}-auth`, {
     action: "update",
     user: {
       id: serializedUser.id,

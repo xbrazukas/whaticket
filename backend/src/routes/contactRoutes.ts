@@ -11,6 +11,7 @@ const upload = multer(uploadConfig);
 
 contactRoutes.post("/contacts/import", isAuth, ImportPhoneContactsController.store);
 contactRoutes.get("/contacts", isAuth, ContactController.index);
+contactRoutes.get("/wallets/contacts", isAuth, ContactController.indexWallet);
 contactRoutes.get("/contacts/nt", isAuth, ContactController.nt);
 contactRoutes.get("/contacts/list", isAuth, ContactController.list);
 contactRoutes.get("/contacts/:contactId", isAuth, ContactController.show);

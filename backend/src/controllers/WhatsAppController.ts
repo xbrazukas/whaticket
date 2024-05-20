@@ -81,13 +81,13 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   StartWhatsAppSession(whatsapp, companyId);
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-whatsapp`, {
+ io.emit(`company-${companyId}-whatsapp`, {
     action: "update",
     whatsapp
   });
 
   if (oldDefaultWhatsapp) {
-    io.of(companyId.toString()).emit(`company-${companyId}-whatsapp`, {
+   io.emit(`company-${companyId}-whatsapp`, {
       action: "update",
       whatsapp: oldDefaultWhatsapp
     });
@@ -121,13 +121,13 @@ export const update = async (
   });
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-whatsapp`, {
+ io.emit(`company-${companyId}-whatsapp`, {
     action: "update",
     whatsapp
   });
 
   if (oldDefaultWhatsapp) {
-    io.of(companyId.toString()).emit(`company-${companyId}-whatsapp`, {
+   io.emit(`company-${companyId}-whatsapp`, {
       action: "update",
       whatsapp: oldDefaultWhatsapp
     });
@@ -149,7 +149,7 @@ export const remove = async (
   removeWbot(+whatsappId);
 
   const io = getIO();
-  io.of(companyId.toString()).emit(`company-${companyId}-whatsapp`, {
+ io.emit(`company-${companyId}-whatsapp`, {
     action: "delete",
     whatsappId: +whatsappId
   });

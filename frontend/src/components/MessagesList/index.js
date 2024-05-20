@@ -32,6 +32,7 @@ import api from "../../services/api";
 import toastError from "../../errors/toastError";
 import { socketConnection } from "../../services/socket";
 import { AuthContext } from "../../context/Auth/AuthContext";
+import { SocketContext } from "../../context/Socket/SocketContext";
 
 const useStyles = makeStyles((theme) => ({
   messagesListWrapper: {
@@ -322,7 +323,7 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   const messageOptionsMenuOpen = Boolean(anchorEl);
   let currentTicketId = useRef(ticketId);
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  const { user, socket } = useContext(AuthContext)
+  const socketManager = useContext(SocketContext);
 
   //console.log(navigator.userAgent);
 
@@ -365,53 +366,38 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
   }, [pageNumber, ticketId]);
 
   useEffect(() => {
-    if (!ticket &&
-      !ticket.id &&
-      ticket.id !== currentTicketId.current &&
-      ticketId !== currentTicketId.current &&
-      ticketId === undefined
-    ) {
+    if (!ticket.id) {
       return;
     }
 
-    if (user?.companyId) {
+    const companyId = localStorage.getItem("companyId");
 
-      const companyId = user.companyId;
+    const socket = socketManager.GetSocket(companyId);
 
-      //    const socket = socketManager.GetSocket();
-      const connectEvent = () => {
-        socket.emit("joinChatBox", `${ticket.id}`);
-      }
-
-      const onAppMessage = (data) => {
-        if (data.action === "create" && data.ticket.id === ticket.id) {
-          dispatch({ type: "ADD_MESSAGE", payload: data.message });
-          scrollToBottom();
-        }
-
-        if (data.action === "update" && data?.message?.ticketId === ticket.id) {
-          dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
-        }
-      }
-
-      if (socket.connected) {
-        connectEvent();
-      }
-
-      socket.on(`company-${companyId}-appMessage`, onAppMessage);
-
-
-      return () => {
-        if(user.id){
-          socket.off("connect", connectEvent);
-          if(ticket?.id){
-            socket.emit("joinChatBoxLeave", `${ticket.id}`)
-          }
-          socket.off(`company-${companyId}-appMessage`, onAppMessage);
-        }
-      };
+    const onConnect = () => {
+      socket.emit("joinChatBox", `${ticket.id}`);
     }
-  }, [ticket, socket]);
+	
+  	socketManager.onConnect(onConnect);
+
+    const onAppMessage = (data) => {
+	  console.log("AppMessage", data);
+      if (data.action === "create" && data.message.ticketId === currentTicketId.current) {
+        dispatch({ type: "ADD_MESSAGE", payload: data.message });
+        scrollToBottom();
+      }
+
+      if (data.action === "update" && data.message.ticketId === currentTicketId.current) {
+        dispatch({ type: "UPDATE_MESSAGE", payload: data.message });
+      }
+    }
+
+    socket.on(`company-${companyId}-appMessage`, onAppMessage);
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [ticketId, ticket, socketManager]);;
 
   const loadMore = () => {
     setPageNumber((prevPageNumber) => prevPageNumber + 1);
@@ -603,7 +589,7 @@ const MessagesList = ({ ticket, ticketId, isGroup }) => {
       return <DoneAll fontSize="small" className={classes.ackIcons} />;
     }
     if (message.ack === 4 || message.ack === 5) {
-      return <DoneAll fontSize="small" className={classes.ackDoneAllIcon} />;
+      return <DoneAll fontSize="small" className={classes.ackDoneAllIcon} style={{color:'#0377FC'}} />;
     }
   };
   const renderDailyTimestamps = (message, index) => {
