@@ -4,6 +4,7 @@ public/*
 !public/logotipos/
 .env
 .env.test
+.env-ORG
 certs/certificadoEfi.p12
 contacts.csv
 
@@ -16,3 +17,4 @@ yarn-error.log
 # Ignore test-related files
 /coverage.data
 /coverage/
+
